@@ -56,9 +56,9 @@ ${feed.visibility === "unlisted" ? html`<meta name="robots" content="noindex">` 
   return layout(
     feed.name,
     html`<div class="card">
-  <h1>${feed.name}</h1>
-  ${feed.organizer_name ? html`<p class="muted">Kept up to date by ${feed.organizer_name}${feed.area ? html` · ${feed.area}` : feed.zip_code ? html` · ${feed.zip_code}` : ""}</p>` : ""}
-  ${feed.description ? html`<p>${feed.description}</p>` : ""}
+  <h1 dir="auto">${feed.name}</h1>
+  ${feed.organizer_name ? html`<p class="muted">Kept up to date by <span dir="auto">${feed.organizer_name}</span>${feed.area ? html` · <span dir="auto">${feed.area}</span>` : feed.zip_code ? html` · ${feed.zip_code}` : ""}</p>` : ""}
+  ${feed.description ? html`<p dir="auto">${feed.description}</p>` : ""}
   <p><a class="button wide" href="${go(primary.target)}">${primary.label}</a></p>
   <details>
     <summary>Other ways to subscribe</summary>
@@ -78,7 +78,7 @@ ${feed.visibility === "unlisted" ? html`<meta name="robots" content="noindex">` 
   <h2>Coming up</h2>
   ${next.length === 0
     ? html`<p class="muted">No upcoming events yet. Subscribe now and new ones will appear in your calendar on their own.</p>`
-    : html`<ul class="events">${next.map((e) => html`<li><strong>${e.title}</strong><span class="when">${formatWhen(e)}${e.location ? html` · ${e.location}` : ""}</span></li>`)}</ul>`}
+    : html`<ul class="events">${next.map((e) => html`<li><strong dir="auto">${e.title}</strong><span class="when">${formatWhen(e)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></li>`)}</ul>`}
 </div>
 ${copyScript}`,
     head,
@@ -101,7 +101,7 @@ export function shareKitPage(opts: {
   return layout(
     `Share ${opts.name}`,
     html`<div class="card">
-  <h1>Share ${opts.name}</h1>
+  <h1>Share <span dir="auto">${opts.name}</span></h1>
   ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}
   ${opts.pageUrl
     ? html`<p>Send people this page. It has a one-tap subscribe button for their phone.</p>
@@ -145,7 +145,7 @@ export function flyerPage(opts: { name: string; url: string; qrSvg: string; feed
   return layout(
     `${opts.name} flyer`,
     html`<div class="card" style="text-align:center">
-  <h1 style="font-size:2rem">${opts.name}</h1>
+  <h1 dir="auto" style="font-size:2rem">${opts.name}</h1>
   <p style="font-size:1.25rem">Get every event in your phone's calendar. It updates on its own.</p>
   <div class="qr" role="img" aria-label="QR code for ${opts.url}" style="margin:1.5rem 0">${raw(opts.qrSvg)}</div>
   <p style="font-size:1.125rem"><strong>1.</strong> Point your phone's camera at the code. <strong>2.</strong> Tap the link. <strong>3.</strong> Tap Subscribe.</p>

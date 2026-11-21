@@ -118,6 +118,19 @@ export function messagePage(title: string, message: string, link?: { href: strin
   );
 }
 
+export function errorPage(opts: { title: string; message: string; tryThis: string; requestId: string }): Html {
+  return layout(
+    opts.title,
+    html`<div class="card">
+  <h1>${opts.title}</h1>
+  <p role="alert">${opts.message}</p>
+  <p>${opts.tryThis}</p>
+  <p class="row"><a class="button" href="/account">Go to your account</a></p>
+  <p class="muted">If it keeps happening, tell us this code: <code>${opts.requestId}</code></p>
+</div>`,
+  );
+}
+
 export function accountPage(opts: {
   csrf: string;
   email: string | null;
@@ -133,7 +146,7 @@ export function accountPage(opts: {
     html`<div class="card">
   <h1>Your account</h1>
   ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}
-  <p>Signed in as <strong>${opts.email ?? "your account"}</strong>${opts.displayName ? html` (${opts.displayName})` : ""}.</p>
+  <p>Signed in as <strong>${opts.email ?? "your account"}</strong>${opts.displayName ? html` (<span dir="auto">${opts.displayName}</span>)` : ""}.</p>
   <div class="row">
     <form method="post" action="/logout">${csrfField(opts.csrf)}<button type="submit" class="secondary">Sign out</button></form>
     <form method="post" action="/logout-everywhere">${csrfField(opts.csrf)}<button type="submit" class="secondary">Sign out everywhere</button></form>
@@ -143,7 +156,7 @@ export function accountPage(opts: {
   <h2>Your feeds</h2>
   ${opts.feeds.length === 0
     ? html`<p class="muted">You don't have any feeds yet.</p>`
-    : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong>${f.name}</strong> <span class="muted">(${f.visibility})</span><span class="when"><a href="/feeds/${f.id}/share">Share and subscribe links</a></span></li>`)}</ul>`}
+    : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${f.visibility})</span><span class="when"><a href="/feeds/${f.id}/share">Share and subscribe links</a></span></li>`)}</ul>`}
 </div>
 <div class="card">
   <h2>Delete your account</h2>

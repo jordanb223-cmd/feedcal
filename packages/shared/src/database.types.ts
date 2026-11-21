@@ -356,6 +356,9 @@ isOneToOne: false
 "health_check":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"login_attempt_allowed":
+{ Args: { "p_client_ip"?: string,"p_email": string }; Returns: boolean
+                           },
 "public_feed_page":
 { Args: { "p_limit"?: number,"p_slug": string }; Returns: Json
                            },

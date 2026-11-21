@@ -41,6 +41,8 @@ jobs:
       - run: npx supabase start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector,supavisor
       - run: npx supabase db reset
       - run: npx supabase test db
+      - name: Integration tests against the local stack (real sessions and RLS)
+        run: npm run test:integration
       - name: Fail if generated database types are stale
         run: |
           npx supabase gen types typescript > packages/shared/src/database.types.ts

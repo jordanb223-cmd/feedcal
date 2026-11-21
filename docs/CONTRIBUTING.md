@@ -37,6 +37,16 @@ curl -s https://api.github.com/repos/jordanb223-cmd/feedcal/commits | grep -o '"
 - `staging`: no reviewers; restrict to `main`.
 - `production`: required reviewer = repo owner; restrict to tags `v*`.
 
+## Rules for every screen and form
+
+- **Empty state.** Every list says what it is when it's empty, and what to do next ("You don't have any feeds yet").
+- **Error state.** Every screen has a plain-English error: what happened, what to try. Unexpected errors fall through to the HTML error page with the request id (`errorPage` in `views.ts`); JSON routes keep JSON.
+- **Keep what was typed.** A form that fails validation shows the user's input again (escaped), never a blank form.
+- **Redirect after POST (PRG).** A successful POST answers with a 303 to a GET page, so refresh can't resubmit.
+- **Safe to submit twice.** Any action that creates something must be idempotent: a double tap or a retry makes one thing, not two (a unique key or dedupe row in Postgres).
+- **User text is marked `dir="auto"`** (titles, descriptions, names, locations), so Arabic and Hebrew display correctly.
+- **Integration tests** (`npm run test:integration`) run against the local stack with real sessions. Add one when a rule depends on RLS across two users.
+
 ## Rules
 
 Read `docs/BUILD-PLAN.md` (engineering discipline block) before starting a phase. No secrets in code, logs, tests or commits.

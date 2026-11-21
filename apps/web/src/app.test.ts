@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { HealthResponse } from "@feedcal/shared";
-import { createApp } from "./app.js";
+import { createApp, SECURITY_TXT_EXPIRES } from "./app.js";
 import { probeDatabase } from "./db.js";
 import type { Bindings } from "./env.js";
 
@@ -31,6 +31,59 @@ describe("GET /health", () => {
     const res = await app.request("/nope", {}, env);
     expect(res.status).toBe(404);
     expect(await res.json()).toHaveProperty("request_id");
+  });
+});
+
+describe("error pages", () => {
+  const html = { accept: "text/html,application/xhtml+xml" };
+
+  it("a browser gets an HTML 404 with the request id", async () => {
+    const app = createApp({ version: "1", commit: "c", logSink: () => {} });
+    const res = await app.request("/nope", { headers: { ...html, "x-request-id": "req-abcdef12" } }, env);
+    expect(res.status).toBe(404);
+    expect(res.headers.get("content-type")).toContain("text/html");
+    const body = await res.text();
+    expect(body).toContain("Page not found");
+    expect(body).toContain("req-abcdef12");
+  });
+
+  it("an unexpected error shows a plain-English HTML page to a browser, JSON to a machine", async () => {
+    const boom = () => { throw new Error("db exploded with secret detail"); };
+    const app = createApp({ version: "1", commit: "c", logSink: () => {}, supabase: boom as never });
+    const page = await app.request("/login", { headers: { ...html, "x-request-id": "req-12345678" } }, env);
+    expect(page.status).toBe(500);
+    const body = await page.text();
+    expect(body).toContain("Something went wrong");
+    expect(body).toContain("req-12345678");
+    expect(body).not.toContain("secret detail");
+    const api = await app.request("/login", {}, env);
+    expect(api.status).toBe(500);
+    expect(await api.json()).toHaveProperty("request_id");
+  });
+
+  it("calendar files and health never get HTML, even when a browser asks", async () => {
+    const app = createApp({ version: "1", commit: "c", logSink: () => {} });
+    const res = await app.request("/f/nope/extra", { headers: html }, env);
+    expect(res.headers.get("content-type")).toContain("application/json");
+  });
+});
+
+describe("/.well-known/security.txt (RFC 9116)", () => {
+  it("has the required fields and no session work", async () => {
+    const app = createApp({ version: "1", commit: "c", logSink: () => {}, supabase: () => { throw new Error("no db needed"); } });
+    const res = await app.request("https://feedcal.example/.well-known/security.txt", {}, env);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/plain");
+    const body = await res.text();
+    expect(body).toMatch(/^Contact: https:\/\//m);
+    expect(body).toMatch(/^Expires: \d{4}-\d\d-\d\dT/m);
+    expect(body).toContain("Canonical: https://feedcal.example/.well-known/security.txt");
+  });
+
+  it("is renewed at least 30 days before it expires (update SECURITY_TXT_EXPIRES)", () => {
+    const daysLeft = (Date.parse(SECURITY_TXT_EXPIRES) - Date.now()) / 86_400_000;
+    expect(daysLeft).toBeGreaterThan(30);
+    expect(daysLeft).toBeLessThanOrEqual(366);
   });
 });
 

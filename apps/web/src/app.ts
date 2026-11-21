@@ -4,11 +4,26 @@ import { createLogger, Environment, requestIdFrom, type HealthResponse } from "@
 import type { Bindings } from "./env.js";
 import { probeDatabase, type DbProbe } from "./db.js";
 import { registerAuthRoutes } from "./auth.js";
-import { redactPath, requireSameOrigin } from "./security.js";
+import { originOf, redactPath, requireSameOrigin } from "./security.js";
 import { registerFeedRoutes } from "./feed.js";
 import { registerSubscribeRoutes } from "./subscribe.js";
 import { createSupabase } from "./supabase.js";
 import type { AppEnv, Supa } from "./types.js";
+import { errorPage } from "./views.js";
+
+/**
+ * HTML for people, JSON for machines. Browsers send `Accept: text/html`; the health check and
+ * calendar files are always machine routes.
+ */
+export function wantsHtml(c: Context<AppEnv>): boolean {
+  const path = new URL(c.req.url).pathname;
+  if (path === "/health" || path.startsWith("/f/") || path.startsWith("/.well-known/")) return false;
+  return (c.req.header("accept") ?? "").includes("text/html");
+}
+
+export const SECURITY_CONTACT = "https://github.com/jordanb223-cmd/feedcal/security/advisories/new";
+export const SECURITY_POLICY = "https://github.com/jordanb223-cmd/feedcal/blob/main/SECURITY.md";
+export const SECURITY_TXT_EXPIRES = "2027-11-01T00:00:00.000Z";
 
 export interface AppDeps {
   version: string;
@@ -55,8 +70,24 @@ export function createApp(deps: AppDeps) {
     return c.json(body, db.reachable ? 200 : 503);
   });
 
+  // RFC 9116. Expires must be under a year away; a test fails 30 days before it lapses.
+  app.get("/.well-known/security.txt", (c) => {
+    c.header("cache-control", "max-age=86400");
+    return c.text(
+      [
+        `Contact: ${SECURITY_CONTACT}`,
+        `Expires: ${SECURITY_TXT_EXPIRES}`,
+        "Preferred-Languages: en",
+        `Policy: ${SECURITY_POLICY}`,
+        `Canonical: ${originOf(c)}/.well-known/security.txt`,
+        "",
+      ].join("\n"),
+    );
+  });
+
   app.use("*", async (c, next) => {
-    if (new URL(c.req.url).pathname !== "/health") {
+    const path = new URL(c.req.url).pathname;
+    if (path !== "/health" && !path.startsWith("/.well-known/")) {
       c.set("supabase", makeSupabase(c));
       c.set("user", undefined);
     }
@@ -67,11 +98,21 @@ export function createApp(deps: AppDeps) {
   registerFeedRoutes(app);
   registerSubscribeRoutes(app);
 
-  app.notFound((c) => c.json({ error: "Not found", request_id: c.get("requestId") }, 404));
+  app.notFound((c) => {
+    const requestId = c.get("requestId");
+    if (wantsHtml(c)) {
+      return c.html(errorPage({ title: "Page not found", message: "We couldn't find that page. The link may be mistyped, or the page was removed.", tryThis: "Check the link, or go to your account.", requestId }), 404);
+    }
+    return c.json({ error: "Not found", request_id: requestId }, 404);
+  });
 
   app.onError((err, c) => {
+    const requestId = c.get("requestId");
     c.get("log").error("unhandled", { error: err.name });
-    return c.json({ error: "Something went wrong on our side. Please try again.", request_id: c.get("requestId") }, 500);
+    if (wantsHtml(c)) {
+      return c.html(errorPage({ title: "Something went wrong", message: "Something went wrong on our side. Nothing you did caused it.", tryThis: "Please go back and try again in a minute.", requestId }), 500);
+    }
+    return c.json({ error: "Something went wrong on our side. Please try again.", request_id: requestId }, 500);
   });
 
   return app;
