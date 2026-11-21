@@ -287,6 +287,16 @@ describe("Google and the OAuth callback", () => {
     expect(res.headers.get("location")).toBe("/feeds/new");
   });
 
+  it("a link opened in another browser explains how to finish (PKCE verifier missing)", async () => {
+    const { request, auth } = setup();
+    auth.exchangeCodeForSession.mockResolvedValueOnce({ data: {}, error: { code: "bad_code_verifier", status: 400, message: "x" } } as never);
+    const res = await request("/auth/callback?code=0123456789abcdef");
+    expect(res.status).toBe(400);
+    const body = await res.text();
+    expect(body).toContain(esc(MESSAGES.linkOtherBrowser));
+    expect(body).toContain("Ask for a new link");
+  });
+
   it("a provider error shows a plain message", async () => {
     const { request } = setup();
     const res = await request("/auth/callback?error=access_denied");

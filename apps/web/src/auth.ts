@@ -13,6 +13,8 @@ export const MESSAGES = {
   intlEmail: "Feedcal can't send to addresses with accented or non-Latin letters yet. Please use another address.",
   unavailable: "We couldn't send a sign-in link just now. Please try again in a minute.",
   signInFailed: "We couldn't sign you in. Please try again.",
+  // Supabase's built-in email links only finish in the browser that asked for them (PKCE).
+  linkOtherBrowser: "We couldn't finish signing you in. Sign-in links only work in the same browser where you asked for them. If your email app opened a different browser, go back to that browser, ask for a new link, and open it there.",
   googleOff: "Google sign-in isn't available yet. Please use the email link.",
 } as const;
 
@@ -150,7 +152,7 @@ export function registerAuthRoutes(app: Hono<AppEnv>): void {
     const { error } = await c.get("supabase").auth.exchangeCodeForSession(q.data.code);
     if (error) {
       c.get("log").info("oauth_callback_rejected", { code: error.code ?? "unknown" });
-      return c.html(messagePage("Sign-in didn't finish", MESSAGES.signInFailed, { href: "/login", text: "Try again" }), 400);
+      return c.html(messagePage("Sign-in didn't finish", MESSAGES.linkOtherBrowser, { href: "/login", text: "Ask for a new link" }), 400);
     }
     c.get("log").info("signed_in", { method: "oauth" });
     return c.redirect(safeNext(q.data.next), 303);

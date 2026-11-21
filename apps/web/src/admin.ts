@@ -94,7 +94,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
         ${f.excerpt ? html`<blockquote class="muted" dir="auto">${f.excerpt}</blockquote>` : ""}
         ${actions(f.feed, { kind: "flag", id: f.id })}</div>`)}
       ${opsCard}
-      <div class="card"><h2>Audit log</h2><ul class="events">${queue.audit.map((a) => html`<li>${a.action} (${a.target_type})<span class="when">${new Date(a.created_at).toUTCString()}${a.reason ? ` · ${a.reason}` : ""}</span></li>`)}</ul></div>`));
+      <div class="card"><h2>Audit log</h2>${queue.audit.length === 0 ? html`<p class="muted">No admin actions yet.</p>` : ""}<ul class="events">${queue.audit.map((a) => html`<li>${a.action} (${a.target_type})<span class="when">${new Date(a.created_at).toUTCString()}${a.reason ? ` · ${a.reason}` : ""}</span></li>`)}</ul></div>`));
   });
 
   app.post("/admin/mfa", async (c) => {
