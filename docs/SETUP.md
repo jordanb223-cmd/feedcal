@@ -2,11 +2,17 @@
 
 Phase 1 is scaffolded and its local checks pass. These steps unlock the rest of its "passes when." Nothing here has been done yet.
 
-## 1. Local database
-- [ ] Install Docker Desktop and start it.
-- [ ] In the repo: `npm run db:start`, then `npm run db:reset && npm run db:test`.
-- [ ] Run `npm run db:types` and commit the regenerated `packages/shared/src/database.types.ts` (the committed file is a placeholder, so CI's stale-types check fails until you do this).
-- [ ] Copy `apps/web/.dev.vars.example` to `apps/web/.dev.vars`, paste the anon key from `npx supabase status`, run `npm run dev:web`, and open http://localhost:8788/health. It should say `"status":"ok"`.
+## 1. Local database — done 2026-11-20
+- [x] Container runtime: **Colima** (free, open-source) instead of Docker Desktop, installed with `brew install colima docker gitleaks`. Its VM has 4 CPUs, 8 GB memory and a 60 GB disk.
+- [x] `npm run db:start`, `npm run db:reset`, `npm run db:test` pass (3 pgTAP tests).
+- [x] `packages/shared/src/database.types.ts` regenerated from the real schema.
+- [x] `apps/web/.dev.vars` holds the local anon key (git-ignored). `/health` returns `"status":"ok"`.
+
+**After a reboot**, Colima doesn't start on its own. Run:
+```bash
+colima start
+```
+Then `npm run db:start` in the repo. To have Colima start at login instead, run `brew services start colima`. That adds a login item, so it's your choice.
 
 ## 2. GitHub
 - [ ] Create a **private** repo and push `main`.

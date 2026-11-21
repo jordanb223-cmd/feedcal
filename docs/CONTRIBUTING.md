@@ -4,7 +4,8 @@
 
 ```bash
 npm install
-npm run db:start      # needs Docker
+colima start          # Docker engine (or Docker Desktop, if you prefer)
+npm run db:start
 npm run db:reset      # apply migrations + seed
 npm run lint && npm run typecheck && npm test && npm run db:test
 npm run dev:web       # http://localhost:8788/health

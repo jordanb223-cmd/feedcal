@@ -39,7 +39,7 @@ jobs:
       - run: npx supabase test db
       - name: Fail if generated database types are stale
         run: |
-          npx supabase gen types typescript --local > packages/shared/src/database.types.ts
+          npx supabase gen types typescript > packages/shared/src/database.types.ts
           git diff --exit-code -- packages/shared/src/database.types.ts
 
   secrets:
