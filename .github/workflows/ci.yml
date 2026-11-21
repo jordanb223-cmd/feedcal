@@ -39,7 +39,7 @@ jobs:
         with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
       # A throwaway signing secret for the local ingest functions (integration tests only).
-      - run: printf 'INGEST_HMAC_SECRET=%s\nMAILPIT_URL=http://supabase_inbucket_feedcal:8025\nSITE_URL=http://localhost:8788\n' "$(openssl rand -hex 32)" > supabase/functions/.env
+      - run: printf 'INGEST_HMAC_SECRET=%s\nMAILPIT_URL=http://supabase_inbucket_feedcal:8025\nSITE_URL=http://localhost:8788\nBMC_WEBHOOK_SECRET=%s\nBMC_ACCEPT_TEST_EVENTS=true\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > supabase/functions/.env
       - run: npx supabase start -x studio,imgproxy,logflare,vector,supavisor
       - run: npx supabase db reset
       - run: npx supabase test db

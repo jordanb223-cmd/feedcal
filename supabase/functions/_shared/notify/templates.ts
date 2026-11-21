@@ -1,6 +1,6 @@
 // Notification emails, as plain text and simple HTML. Plain English; every email says why it
 // was sent and has a one-click unsubscribe for that kind.
-export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone";
+export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks";
 export interface Rendered { subject: string; text: string; html: string }
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -30,6 +30,12 @@ export function render(kind: Kind, p: Record<string, unknown>, site: string, uns
     const body = `A subscriber to ${p.feed_name} says ${what}:\n\n${p.event_title} (${whenText})${p.details ? `\n\n"${p.details}"` : ""}\n\nCheck the event: ${link}`;
     const html = `<p>A subscriber to <strong>${esc(p.feed_name)}</strong> says ${esc(what)}:</p><p><strong>${esc(p.event_title)}</strong><br>${esc(whenText)}</p>${p.details ? `<blockquote style="border-left:4px solid #e3e3df;margin:0;padding-left:.75rem">${esc(p.details)}</blockquote>` : ""}<p><a href="${esc(link)}">Check the event</a></p>`;
     return { subject, ...wrap(site, unsubscribe, "You get this because you run this feed and asked to hear about reports right away.", body, html) };
+  }
+  if (kind === "supporter_thanks") {
+    const subject = "Thank you for supporting Feedcal";
+    const body = `Thank you. Your support keeps Feedcal free for schools, teams and families.\n\nYour account now shows a supporter badge. You can choose to be listed on the supporters page: ${site}/account`;
+    const html = `<p>Thank you. Your support keeps Feedcal free for schools, teams and families.</p><p>Your account now shows a supporter badge. <a href="${esc(site)}/account">Choose whether to be listed</a> on the supporters page.</p>`;
+    return { subject, ...wrap(site, unsubscribe, "You get this once, because you linked your Buy Me a Coffee support to your account.", body, html) };
   }
   if (kind === "stale_nudge") {
     const link = `${site}/feeds/${p.feed_id}`;

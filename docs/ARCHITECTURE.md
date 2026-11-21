@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 14 (moderation, abuse and safety). Real email needs a provider key and a domain; locally it goes to Mailpit. Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 15 (Buy Me a Coffee donations). Real email needs a provider key and a domain; locally it goes to Mailpit. Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
@@ -29,6 +29,7 @@ Status: Phase 14 (moderation, abuse and safety). Real email needs a provider key
 | AI extraction | `packages/extract` | 9 | Claude API key (in Edge Function env) |
 | Shared schemas/types | `packages/shared` | 1+ | none |
 | Directory | Postgres functions + `apps/web` pages | 13 | none |
+| Donations webhook | `supabase/functions/bmc-webhook` (D36) | 15 | BMC signing secret + service-role key |
 
 ## Request flow today (Phase 1)
 

@@ -7,6 +7,7 @@ import { registerAuthRoutes } from "./auth.js";
 import { registerEmailRoutes } from "./email.js";
 import { registerReviewRoutes } from "./review.js";
 import { registerNotifyRoutes } from "./notify.js";
+import { registerSupportRoutes } from "./support.js";
 import { anonSupabase, registerDirectoryRoutes } from "./directory.js";
 import { registerAdminRoutes, registerPolicyRoutes } from "./admin.js";
 import { originOf, redactPath, requireSameOrigin } from "./security.js";
@@ -96,7 +97,8 @@ export function createApp(deps: AppDeps) {
     const path = new URL(c.req.url).pathname;
     // Public, cacheable pages never touch the session (no Set-Cookie on a shared-cache response).
     const sessionless = path === "/health" || path.startsWith("/.well-known/") || path === "/robots.txt" || path === "/sitemap.xml"
-      || path === "/directory" || path.startsWith("/near/") || path === "/rules" || path === "/terms" || path === "/takedown";
+      || path === "/directory" || path.startsWith("/near/") || path === "/rules" || path === "/terms" || path === "/takedown"
+      || path === "/about/costs" || path === "/supporters";
     if (!sessionless) {
       c.set("supabase", makeSupabase(c));
       c.set("user", undefined);
@@ -113,6 +115,7 @@ export function createApp(deps: AppDeps) {
   registerDirectoryRoutes(app, deps.anonSupabase ?? anonSupabase);
   registerAdminRoutes(app);
   registerPolicyRoutes(app);
+  registerSupportRoutes(app, deps.anonSupabase ?? anonSupabase);
 
   app.notFound((c) => {
     const requestId = c.get("requestId");
