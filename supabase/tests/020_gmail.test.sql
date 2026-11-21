@@ -83,6 +83,12 @@ select is(public.gmail_set_interval('d1700000-0000-4000-8000-000000000001', 3), 
 reset role;
 select is((select next_check_at from private.gmail_connections where feed_id = 'd1700000-0000-4000-8000-000000000001'),
   '2026-11-24 19:00:00+00'::timestamptz, 'the next check moves up');
+-- More mail than one run takes: carry on in minutes, keeping the starting point.
+set local role service_role;
+select public.gmail_check_done('d1700000-0000-4000-8000-000000000001', '2026-11-21 19:00:00+00', null, false, true);
+reset role;
+select ok((select next_check_at < now() + interval '6 minutes' from private.gmail_connections where feed_id = 'd1700000-0000-4000-8000-000000000001'),
+  'more waiting: the next run is minutes away, not days');
 
 -- Google refuses the token: needs reconnecting, one email to the owner.
 set local role service_role;
