@@ -101,12 +101,15 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     if (!parsed.success) return c.html(newFeedPage({ csrf: csrfToken(c), error: "Please give the feed a name.", values: form }), 400);
     const slug = (parsed.data.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "feed")
       + "-" + crypto.randomUUID().slice(0, 6);
+    // Public listing needs a published event (D35), which a new calendar can't have yet: start it
+    // private and tell the owner how to switch.
+    const wantsPublic = parsed.data.visibility === "public";
     const { data, error } = await c.get("supabase").from("feeds")
-      .insert({ name: parsed.data.name, category: parsed.data.category, visibility: parsed.data.visibility, slug } as never)
+      .insert({ name: parsed.data.name, category: parsed.data.category, visibility: wantsPublic ? "unlisted" : parsed.data.visibility, slug } as never)
       .select("id").single();
     if (error || !data) return c.html(newFeedPage({ csrf: csrfToken(c), error: "We couldn't create the feed. Please try again.", values: form }), 400);
     c.get("log").info("feed_created", { feed_id: data.id });
-    return c.redirect(`/feeds/${data.id}/email?done=created`, 303);
+    return c.redirect(`/feeds/${data.id}/email?done=${wantsPublic ? "created_public_later" : "created"}`, 303);
   });
 
   // ---------------------------------------------------------------- feed home + review queue
@@ -335,7 +338,13 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       name: parsed.data.name, description: parsed.data.description || null, visibility: parsed.data.visibility,
       timezone: parsed.data.timezone, auto_publish_threshold: parsed.data.threshold,
     } as never).eq("id", id.data);
-    if (error) return renderSettings(c, id.data, user, "Only the owner can change these settings.");
+    if (error) {
+      const msg = (error as { message?: string }).message ?? "";
+      const listingRule = /^(Public listing|A feed needs|This feed is waiting)/.test(msg);
+      return renderSettings(c, id.data, user, listingRule
+        ? msg.replace('share it with "anyone with the link"', "keep it Private (its link and QR code still work)")
+        : "Only the owner can change these settings.");
+    }
     return c.redirect(`/feeds/${id.data}/settings?done=settings`, 303);
   });
 
