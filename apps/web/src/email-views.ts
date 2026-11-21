@@ -73,6 +73,7 @@ export const EMAIL_NOTICES = {
   released: "Done. That email will be read for events.",
   ignored: "Done. That email was ignored.",
   rotated: "Your calendar has a new email address. The old one no longer works, so update any forwarding rules.",
+  created: "Your feed is ready. Forward emails to the address below, or add events by hand from the feed's page.",
   chosen: "Got it. Feedcal will read that file, and will pick files like it from this sender from now on.",
   never: "Got it. Feedcal will skip files like that from this sender.",
   large: "Got it. Big attachments from this sender will be read.",

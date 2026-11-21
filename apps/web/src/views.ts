@@ -33,7 +33,9 @@ a.button.secondary{background:#fff;color:#1f5f3f}
 .events li:first-child{border-top:0}
 .when{display:block;font-size:.95rem;color:#4f4f4b}
 details summary{cursor:pointer;font-weight:600;padding:.5rem 0}
-textarea,input.copy{width:100%;font:inherit;padding:.75rem;border:2px solid #6b6b66;border-radius:8px}
+textarea,input.copy,select.copy{width:100%;font:inherit;padding:.75rem;border:2px solid #6b6b66;border-radius:8px;background:#fff}
+mark{background:#fff0a8;color:inherit;padding:0 .1em}
+blockquote{margin:0 0 1rem}
 .qr svg{width:12rem;height:12rem;display:block;margin:0 auto}
 @media print{body{background:#fff}.no-print{display:none}.card{padding:0}}
 `;
@@ -155,8 +157,8 @@ export function accountPage(opts: {
 <div class="card">
   <h2>Your feeds</h2>
   ${opts.feeds.length === 0
-    ? html`<p class="muted">You don't have any feeds yet.</p>`
-    : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${f.visibility})</span><span class="when"><a href="/feeds/${f.id}/share">Share and subscribe links</a> · <a href="/feeds/${f.id}/email">Email forwarding</a></span></li>`)}</ul>`}
+    ? html`<p class="muted">You don't have any feeds yet. <a href="/feeds/new">Create one</a>.</p>`
+    : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${f.visibility})</span><span class="when"><a href="/feeds/${f.id}">Review and events</a> · <a href="/feeds/${f.id}/share">Share</a> · <a href="/feeds/${f.id}/email">Email forwarding</a></span></li>`)}</ul>`}
 </div>
 <div class="card">
   <h2>Delete your account</h2>

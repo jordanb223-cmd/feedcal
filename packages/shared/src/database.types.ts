@@ -65,14 +65,14 @@ isOneToOne: false
                   ]
                 },"event_candidates": {
                   Row: {
-                    "all_day": boolean,"attachment_id": string | null,"change_kind": string,"confidence": number,"created_at": string,"decided_at": string | null,"description": string | null,"ends_at": string | null,"event_id": string | null,"evidence_quote": string,"feed_id": string,"from_transcription": boolean,"id": string,"location": string | null,"match_score": number | null,"message_id": string,"model": string | null,"outcome": string | null,"page_index": number | null,"review_reasons": (string)[],"rrule": string | null,"source_kind": string,"starts_at": string,"state": string,"timezone": string,"title": string
+                    "all_day": boolean,"attachment_id": string | null,"change_kind": string,"confidence": number,"created_at": string,"decided_at": string | null,"decided_by": string | null,"description": string | null,"ends_at": string | null,"event_id": string | null,"evidence_quote": string,"feed_id": string,"from_transcription": boolean,"id": string,"location": string | null,"match_score": number | null,"message_id": string,"model": string | null,"outcome": string | null,"page_index": number | null,"reject_note": string | null,"reject_reason": string | null,"review_reasons": (string)[],"rrule": string | null,"source_kind": string,"starts_at": string,"state": string,"timezone": string,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "all_day": boolean,"attachment_id"?: string | null,"change_kind": string,"confidence": number,"created_at"?: string,"decided_at"?: string | null,"description"?: string | null,"ends_at"?: string | null,"event_id"?: string | null,"evidence_quote": string,"feed_id": string,"from_transcription"?: boolean,"id"?: string,"location"?: string | null,"match_score"?: number | null,"message_id": string,"model"?: string | null,"outcome"?: string | null,"page_index"?: number | null,"review_reasons"?: (string)[],"rrule"?: string | null,"source_kind": string,"starts_at": string,"state"?: string,"timezone": string,"title": string
+                    "all_day": boolean,"attachment_id"?: string | null,"change_kind": string,"confidence": number,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"description"?: string | null,"ends_at"?: string | null,"event_id"?: string | null,"evidence_quote": string,"feed_id": string,"from_transcription"?: boolean,"id"?: string,"location"?: string | null,"match_score"?: number | null,"message_id": string,"model"?: string | null,"outcome"?: string | null,"page_index"?: number | null,"reject_note"?: string | null,"reject_reason"?: string | null,"review_reasons"?: (string)[],"rrule"?: string | null,"source_kind": string,"starts_at": string,"state"?: string,"timezone": string,"title": string
                   }
                   Update: {
-                    "all_day"?: boolean,"attachment_id"?: string | null,"change_kind"?: string,"confidence"?: number,"created_at"?: string,"decided_at"?: string | null,"description"?: string | null,"ends_at"?: string | null,"event_id"?: string | null,"evidence_quote"?: string,"feed_id"?: string,"from_transcription"?: boolean,"id"?: string,"location"?: string | null,"match_score"?: number | null,"message_id"?: string,"model"?: string | null,"outcome"?: string | null,"page_index"?: number | null,"review_reasons"?: (string)[],"rrule"?: string | null,"source_kind"?: string,"starts_at"?: string,"state"?: string,"timezone"?: string,"title"?: string
+                    "all_day"?: boolean,"attachment_id"?: string | null,"change_kind"?: string,"confidence"?: number,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"description"?: string | null,"ends_at"?: string | null,"event_id"?: string | null,"evidence_quote"?: string,"feed_id"?: string,"from_transcription"?: boolean,"id"?: string,"location"?: string | null,"match_score"?: number | null,"message_id"?: string,"model"?: string | null,"outcome"?: string | null,"page_index"?: number | null,"reject_note"?: string | null,"reject_reason"?: string | null,"review_reasons"?: (string)[],"rrule"?: string | null,"source_kind"?: string,"starts_at"?: string,"state"?: string,"timezone"?: string,"title"?: string
                   }
                   Relationships: [
                     {
@@ -80,6 +80,12 @@ isOneToOne: false
       columns: ["attachment_id"]
 isOneToOne: false
       referencedRelation: "attachments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_candidates_decided_by_fkey"
+      columns: ["decided_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "event_candidates_event_id_fkey"
@@ -195,14 +201,14 @@ isOneToOne: false
                   ]
                 },"feeds": {
                   Row: {
-                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id": string,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"timezone": string,"visibility": string,"zip_code": string | null
+                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"delete_requested_at": string | null,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id": string,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"timezone": string,"visibility": string,"zip_code": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id"?: string,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"timezone"?: string,"visibility"?: string,"zip_code"?: string | null
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id"?: string,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"timezone"?: string,"visibility"?: string,"zip_code"?: string | null
                   }
                   Update: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"id"?: string,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"timezone"?: string,"visibility"?: string,"zip_code"?: string | null
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"id"?: string,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"timezone"?: string,"visibility"?: string,"zip_code"?: string | null
                   }
                   Relationships: [
                     {
@@ -373,6 +379,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"undo_log": {
+                  Row: {
+                    "before": NonNullable<Json>,"created_at": string,"feed_id": string,"id": string,"kind": string,"target": string,"undone_at": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "before": NonNullable<Json>,"created_at"?: string,"feed_id": string,"id"?: string,"kind": string,"target": string,"undone_at"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "before"?: NonNullable<Json>,"created_at"?: string,"feed_id"?: string,"id"?: string,"kind"?: string,"target"?: string,"undone_at"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "undo_log_feed_id_fkey"
+      columns: ["feed_id"]
+isOneToOne: false
+      referencedRelation: "feeds"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "undo_log_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"zip_codes": {
                   Row: {
                     "city": string,"location": unknown,"state": string,"zip": string
@@ -396,8 +428,20 @@ isOneToOne: false
             "account_status":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"add_editor":
+{ Args: { "p_email": string,"p_feed_id": string }; Returns: string
+                           },
+"approve_all_sure":
+{ Args: { "p_feed_id": string }; Returns: number
+                           },
+"approve_candidate":
+{ Args: { "p_candidate_id": string,"p_edits"?: Json }; Returns: string
+                           },
 "cancel_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"cancel_event":
+{ Args: { "p_event_id": string }; Returns: string
                            },
 "choose_attachment":
 { Args: { "p_attachment_id": string }; Returns: Json
@@ -422,11 +466,17 @@ isOneToOne: false
               "attachment_rule": Json,"attachments": Json,"feed_id": string,"job_id": number,"message_id": string
             }[]
                            },
+"clear_attachment_rule":
+{ Args: { "p_source_id": string }; Returns: boolean
+                           },
 "decide_message":
 { Args: { "p_message_id": string,"p_release": boolean }; Returns: boolean
                            },
 "decide_sender":
 { Args: { "p_source_id": string,"p_trust": boolean }; Returns: number
+                           },
+"discard_draft":
+{ Args: { "p_event_id": string }; Returns: string
                            },
 "due_account_deletions":
 { Args: Record<PropertyKey, never>; Returns: string[]
@@ -479,6 +529,9 @@ isOneToOne: false
 "public_feed_page":
 { Args: { "p_limit"?: number,"p_slug": string }; Returns: Json
                            },
+"publish_draft":
+{ Args: { "p_event_id": string }; Returns: boolean
+                           },
 "purge_account_data":
 { Args: { "p_user_id": string }; Returns: Json
                            },
@@ -500,8 +553,14 @@ isOneToOne: false
 "record_triage":
 { Args: { "p_message_id": string,"p_results": Json }; Returns: number
                            },
+"reject_candidate":
+{ Args: { "p_candidate_id": string,"p_note"?: string,"p_reason": string }; Returns: string
+                           },
 "request_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"request_feed_deletion":
+{ Args: { "p_feed_id": string }; Returns: string
                            },
 "requeue_waiting_extractions":
 { Args: { "p_limit"?: number }; Returns: number
@@ -512,6 +571,9 @@ isOneToOne: false
 "rotate_intake_address":
 { Args: { "p_feed_id": string }; Returns: string
                            },
+"save_event":
+{ Args: { "p_event_id": string,"p_feed_id": string,"p_fields": Json }; Returns: string
+                           },
 "set_sender_large_attachments":
 { Args: { "p_allow": boolean,"p_source_id": string }; Returns: boolean
                            },
@@ -520,6 +582,9 @@ isOneToOne: false
                            },
 "take_quota":
 { Args: { "p_feed_id": string,"p_kind": string,"p_wanted": number }; Returns: number
+                           },
+"undo":
+{ Args: { "p_undo_id": string }; Returns: string
                            }
           }
           Enums: {

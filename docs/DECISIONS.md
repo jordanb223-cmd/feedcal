@@ -199,3 +199,22 @@ What was checked, against what, and what changed:
 - **Change to Phase 9:** "changed"/"cancelled" are no longer automatic review reasons. Before, a trusted school's "practice moves to 6 PM" could never reach subscribers without the owner acting, against this phase's "time change shows up in a subscribed phone calendar". Rain dates and other unsure changes still go to review through low confidence.
 - **EXDATE** in the calendar output, in DTSTART's form (a DATE for all-day series, TZID local time otherwise). ical.js confirms the occurrence is skipped. Only weekly rules are matched for single occurrences (`private.occurs_at`), which covers practices; other rules are treated as separate events.
 - **Not verified:** a time change seen updating in a real subscribed phone calendar (needs the hosted deploy and a phone). What's proven: SEQUENCE goes up, DTSTAMP and LAST-MODIFIED follow `updated_at`, and the .ics parses (D22, D24).
+
+## D32 — Organizer review screen (Phase 11, 2026-11-21)
+- **Pages** (server-rendered, mobile-first, one column):
+  - `/feeds`: dashboard, with each feed's subscriber estimate, last update and how many items need review.
+  - `/feeds/new`
+  - `/feeds/<id>`: review queue, drafts, coming up.
+  - `/feeds/<id>/events/new` and `/feeds/<id>/events/<eid>`: editor, with history from `event_revisions`.
+  - `/feeds/<id>/settings`
+  - `POST /undo/<id>`
+- **Review card:** what would change (before → after for updates and conflicts), "Sure" (confidence ≥ 0.85, no warnings, not a conflict) or "Check this", plain-English warnings, and the evidence quote highlighted in ~120 characters of the email text or page text around it. When the quote came from a photo, the photo is shown (signed URL); for a scanned PDF there's a link to the original file. Rendering a single PDF page as an image would need a PDF renderer in the Worker, so it's left out.
+- **Actions** are member-checked SECURITY DEFINER RPCs that write revisions naming the person: approve (with optional edits), reject with a reason (`not_an_event` / `wrong_date` / `wrong_time` / `wrong_details` / `duplicate` / `other`, plus a note, kept on the candidate for growing the evaluation set), approve all Sure (never conflicts, possible injections or low-confidence items), publish or discard a draft, manual create, edit and cancel. Discarding a draft never deletes it; it becomes a cancelled, unpublished event that nothing shows.
+- **10-second undo** (`undo_log`) for reject, discard draft, cancel event and delete feed. The page shows an Undo button with a 10-second countdown (a small inline script; without it the server still enforces the window).
+- **Deleting a feed** stops it being served immediately: it turns private and gets an unguessable link hash. Undo puts back the visibility, slug and link hash exactly, using a transaction-local flag so the unlisted-slug trigger doesn't re-randomise it. A pg_cron purge deletes it 10 seconds or more after the request.
+- **Editors** are added by the email they signed in with (`add_editor`). An unknown address gets "ask them to sign in once", never an error that reveals accounts.
+- **Bugs found and fixed:**
+  - Signed-in users couldn't create feeds at all. The Phase 6 intake-address trigger called a private function without SECURITY DEFINER; the Phase 11 end-to-end test found it.
+  - An audit of every trigger on user-writable tables found the same class of bug in four more: `feeds_unlisted_slug`, `enforce_transition` (members changing an event's status directly), and `messages_trash_raw` / `attachments_trash_file` (members deleting a message).
+  - All are SECURITY DEFINER now, each with a regression test.
+- **Not verified:** the plan's pass test ("a first-time organizer reviews a week's email on a phone in under 2 minutes, without instructions") needs a real person. The page was checked at phone width (375 px) in the browser.

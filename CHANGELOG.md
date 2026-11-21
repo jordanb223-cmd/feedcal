@@ -20,6 +20,9 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 - Under "Recent emails" you can see what Feedcal read from each attachment and tap "This one has the schedule" or "Never use files like this". It remembers your choice for that sender's next emails.
 - Feedcal can find the events in an email and its attachments, once an AI key is set. Every event must quote the sentence it came from, times are never guessed, and emails that try to give the AI instructions are held for you to check.
 - When a school or coach sends a change (a new time, a new date, a cancellation), the event updates in everyone's calendar instead of appearing twice. A cancelled single practice disappears from a weekly series. Feedcal never deletes an event on its own.
+- A dashboard for your feeds, and a review screen made for phones: see what Feedcal found with the sentence it came from highlighted, then approve, edit, or reject it. "Approve all marked Sure" handles the easy ones. Add and edit events by hand, with each event's history.
+- Settings for each feed: name, who can find it, time zone, how sure Feedcal must be to publish on its own, trusted senders, editors, and delete (with 10 seconds to undo).
+- Fixed: creating a new feed failed for signed-in users.
 - Forwarding the same email twice is harmless; Feedcal keeps one copy and deletes copies after 30 days.
 
 ### Fixed
