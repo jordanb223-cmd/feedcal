@@ -239,7 +239,7 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
     ${visibilityChoice(s.visibility)}
     <p><label for="timezone">Time zone</label><input class="copy" id="timezone" name="timezone" value="${s.timezone}" pattern="[A-Za-z]+(/[A-Za-z0-9_+-]+){0,2}"></p>
     <p><label for="threshold">Publish automatically when Feedcal is at least this sure (from trusted senders)</label>
-      <select class="copy" id="threshold" name="threshold">${[0.7, 0.8, 0.85, 0.9, 0.95, 1].map((n) => html`<option value="${n}" ${Math.abs(s.threshold - n) < 0.001 ? "selected" : ""}>${n === 1 ? "Never: I review everything" : `${Math.round(n * 100)}%`}</option>`)}</select></p>
+      <select class="copy" id="threshold" name="threshold">${[0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1].map((n) => html`<option value="${n}" ${Math.abs(s.threshold - n) < 0.001 ? "selected" : ""}>${n === 1 ? "Never: I review everything" : `${Math.round(n * 100)}%`}</option>`)}</select></p>
     <button type="submit">Save settings</button>
   </form>`
     : html`<p class="muted">Only the owner can change these settings.</p>`}

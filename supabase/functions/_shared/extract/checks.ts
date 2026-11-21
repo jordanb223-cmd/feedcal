@@ -75,6 +75,8 @@ export function personalDetails(e: { title: string; description: string | null }
 
 export type RejectReason = "quote_not_found" | "unknown_source" | "bad_timezone" | "time_not_in_quote" | "end_before_start" | "date_out_of_range" | "bad_recurrence";
 
+export const LOW_CONFIDENCE = 0.5;
+
 /** Hard failures reject the event; soft ones keep it but send it to review. */
 export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: RejectReason; review?: string[]; fromTranscription: boolean } {
   const source = sourceFor(e, input);
@@ -92,7 +94,9 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   const day = 86_400_000;
   if (start < ref - 31 * day || start > ref + 550 * day) return { reject: "date_out_of_range", fromTranscription: source.fromTranscription };
   const review: string[] = [];
-  if (e.confidence < 0.7) review.push("low_confidence");
+  // Below this, always ask the owner. Between it and the feed's own setting (85% unless the owner
+  // lowers it), the reconciler decides. Lowered from 0.7 so an owner's 50-60% setting can work (D40).
+  if (e.confidence < LOW_CONFIDENCE) review.push("low_confidence");
   if (source.fromTranscription) review.push("from_transcription");
   if (personalDetails(e).length) review.push("personal_details");
   // Changes and cancellations aren't flagged here: from a trusted sender at high confidence they
