@@ -75,7 +75,7 @@ Local sign-in needs none of this: Mailpit at http://127.0.0.1:54324 catches the 
   - Authorized redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
   - Consent screen scopes: only `openid`, `email` and `profile`.
 - [ ] Supabase → Authentication → Providers → Google: paste the client ID and secret.
-- [ ] Turn it on for a Pages project: `printf on | npx wrangler pages secret put GOOGLE_SIGN_IN --project-name <project>`.
+- [ ] Turn it on for an environment: in GitHub, **Settings → Environments → production** (or staging) **→ Add variable** `GOOGLE_SIGN_IN` = `on`. The next deploy shows the button.
 - [ ] To use Google locally: set `[auth.external.google] enabled = true` in `config.toml`, export `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`, restart Supabase, and add `GOOGLE_SIGN_IN=on` to `apps/web/.dev.vars`. Also add `http://127.0.0.1:54321/auth/v1/callback` to the OAuth client's redirect URIs.
 
 **Account deletion schedule.** Since Phase 16 (D37), pg_cron calls `delete-accounts` every day at 04:41 UTC, as it does the other jobs. Nothing to set up beyond the deploy. To run it by hand:
