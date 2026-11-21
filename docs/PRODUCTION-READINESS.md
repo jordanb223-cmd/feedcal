@@ -80,7 +80,7 @@ Assessed 2026-11-20, against the code on `main` (after Phase 5 and the state-mac
 | 38 | Confirm every package exists and is the one you meant | Checked 2026-11-20: all 17 direct dependencies resolve to their official repos (publisher-declared field: strong evidence, not proof). Lockfile committed. | ✅ Done |
 | 39 | Dependency scanning | `npm audit --audit-level=high` in CI (0 findings); Dependabot weekly for npm and Actions. | ✅ Done |
 | 40 | Input sanitization everywhere | Hono's `html` template escapes every value; there's no raw HTML from users. Phase 7 will parse email HTML, which must be sanitized. | ✅ Done (Phase 7 note in Prompt E) |
-| 41 | SQL injection, XSS, CSRF and the OWASP list | `docs/SECURITY-REVIEW.md`, OWASP Top 10:2025: 9 pass, 1 partial (A09 alerting, Phase 18) (D37). An item-by-item ASVS level 1 pass is not done. | ➕ Act (item-by-item ASVS; A09 alerting in Phase 18) |
+| 41 | SQL injection, XSS, CSRF and the OWASP list | `docs/SECURITY-REVIEW.md`, OWASP Top 10:2025: 10 of 10 pass (D37, D38). An item-by-item ASVS level 1 pass is not done. | ➕ Act (item-by-item ASVS level 1) |
 | 42 | File uploads scanned, size-limited, stored where they can't execute | No uploads yet. Phase 6 stores email attachments in private buckets. Size limits are planned (rule 10). Malware scanning isn't planned. Files are only read by our code and never served to other users. | 🗓 Planned (Phases 6/8; Prompt E adds type and size checks) |
 | 43 | CORS that isn't "allow everything" | No CORS headers on any route (tested on the feed route). | ✅ Done |
 | 44 | Security headers on every response | A full CSP with no inline scripts, HSTS (one day to start), nosniff, COOP, Permissions-Policy and X-Frame-Options, on pages, feeds and errors (tested; D37). | ✅ Done (raise HSTS after launch: SETUP §13) |
@@ -131,13 +131,13 @@ Assessed 2026-11-20, against the code on `main` (after Phase 5 and the state-mac
 |---|---|---|---|
 | 80 | Structured logs searchable at 3am | JSON lines with `request_id`, no personal data. Nowhere to search them after the fact yet. | 🗓 Planned (Phase 18; Prompt H) |
 | 81 | Error tracking that groups bugs | None. | 🗓 Planned (Phase 18; Prompt H) |
-| 82 | Uptime checks from outside | None. | ➕ Act (free: a scheduled GitHub Action that checks `/health` and opens an issue; Prompt H) |
-| 83 | Alerts that page a human, tuned | None. | ➕ Act (with 82: one alert to your phone; Prompt H) |
+| 82 | Uptime checks from outside | `uptime.yml` checks health URLs and one feed (latency ≤ 500 ms) every 15 minutes; two failures in a row open an "outage" issue assigned to the owner (D38). Off until `UPTIME_HEALTH_URLS` is set. | ➕ Act (owner: set the variable and secret, SETUP §14) |
+| 83 | Alerts that page a human, tuned | Database alerts every 5 minutes email admins once per alert, resolve by themselves, and have a tested drill (D38). Outage issues notify the owner through GitHub. | ✅ Done (staging drill after deploy) |
 | 84 | Dashboards for latency, errors, throughput | None. | ⏸ Later. Trigger: real traffic |
 | 85 | Tracing across services | Request ids already tie a request's log lines together. Few services. | ❌ N/A for now |
 | 86 | An on-call rotation | One person. | ❌ N/A (alerts go to your phone, 83) |
-| 87 | Runbooks | None. | ➕ Act (rollback, stuck queue, secret rotation, purge; Prompts C and H) |
-| 88 | Postmortems that change something | None. | ⏸ Later (template now in Prompt H; use after the first incident) |
+| 87 | Runbooks | `docs/RUNBOOKS.md` and ten runbooks in `docs/runbooks/`, named in each alert email (D38). | ✅ Done |
+| 88 | Postmortems that change something | Template: `docs/runbooks/postmortem-template.md` (D38). None written yet: no incidents. | ⏸ Later (use after the first incident) |
 | 89 | A status page | None. | ⏸ Later. Trigger: public launch |
 
 ### Testing
@@ -147,7 +147,7 @@ Assessed 2026-11-20, against the code on `main` (after Phase 5 and the state-mac
 | 90 | Unit tests by someone who knows the logic | 119 unit + 152 database tests, written by Claude from the plan. Reading by eye found two real bugs the tests missed (the daylight-saving time, the seed). A person should check what the tests claim. | ➕ Act (you review the test names and golden files once; Prompt I) |
 | 91 | Integration tests for every third-party API | Supabase Auth was tested end to end locally. Google, Apple and Outlook subscriptions aren't tested (needs staging). The AI provider comes later. | 🗓 Planned (Phase 5 phone test; Phase 9; Prompt I) |
 | 92 | End-to-end tests for the flows that matter | The end-to-end scripts so far (sign-in, deletion, feed) ran from a scratch folder and **aren't in the repo or CI**. | ➕ Act (commit them as Playwright tests; Prompt I) |
-| 93 | Load testing before launch | None. | ⏸ Later. Trigger: before the launch announcement (Phase 18) |
+| 93 | Load testing before launch | `npm run test:load`: 28 requests a second for 60 s locally, p95 135 ms; ETags remove the body but not the database work (D38). Hosted load untested. | ✅ Done (local); hosted before announcement |
 | 94 | Test data that looks real but isn't | The seed uses fake people at `example.test`. | ✅ Done |
 | 95 | Regression tests | Every bug found so far got a guard test (DST change times, seed sign-in, SEQUENCE). | ✅ Done (keep the habit) |
 | 96 | Testing on a five-year-old laptop | Pages are small and server-rendered; not tested on old hardware. | ⏸ Later. Trigger: the Phase 5 phone test, with one old device |

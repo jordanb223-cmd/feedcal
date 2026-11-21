@@ -31,6 +31,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 - A "What Feedcal costs" page, and a way to support Feedcal on Buy Me a Coffee once it's set up. Supporters can link their support to their account for a badge and a thank-you, and choose whether their name appears on the supporters page. Nothing is linked or listed unless you ask.
 - Download everything Feedcal holds about you, or any calendar as a file, from your account page. A plain-English privacy page says what's kept and for how long.
 - Deleted accounts are now removed on schedule, 14 days after you ask.
+- Feedcal can be added to your phone's home screen.
+- Behind the scenes: Feedcal now watches itself (stuck emails, AI spending, failing email, overdue deletions, floods of requests) and tells the team. AI work pauses before it overspends; nothing is lost, it just waits.
 - Stronger protection: the site blocks scripts from anywhere else, you're signed out when the browser closes, and repeated guessing or flooding gets slowed down.
 - "Report this calendar" on every public page, and a team review queue. New accounts can share by link straight away; public listing opens after 7 days, needs a confirmed email and one published event, and spammy text waits for a quick review.
 - A verified badge for organizers who use their organisation's email.

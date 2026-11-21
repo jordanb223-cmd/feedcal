@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 16 (security hardening and privacy). Threats: `docs/THREAT-MODEL.md`; review: `docs/SECURITY-REVIEW.md`. Real email needs a provider key and a domain; locally it goes to Mailpit. Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 18 (operations: alerts, budget, uptime, runbooks), after Phase 16 (security hardening and privacy). Phase 17 (Gmail) waits on Phase 16's hosted restore drill. Threats: `docs/THREAT-MODEL.md`; review: `docs/SECURITY-REVIEW.md`. Real email needs a provider key and a domain; locally it goes to Mailpit. Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
@@ -31,6 +31,8 @@ Status: Phase 16 (security hardening and privacy). Threats: `docs/THREAT-MODEL.m
 | Directory | Postgres functions + `apps/web` pages | 13 | none |
 | Donations webhook | `supabase/functions/bmc-webhook` (D36) | 15 | BMC signing secret + service-role key |
 | Backups | `.github/workflows/backup.yml` + `scripts/backup.sh` (D37) | 16 | Database URL + backup passphrase (GitHub secrets) |
+| Alerts and budget | `private.check_alerts` (pg_cron, every 5 min), `private.ai_spend_daily`, `/admin` Operations (D38) | 18 | none |
+| Uptime | `.github/workflows/uptime.yml` (D38) | 18 | A feed link (GitHub secret) |
 
 ## Request flow today (Phase 1)
 

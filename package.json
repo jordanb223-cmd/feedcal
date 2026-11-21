@@ -23,7 +23,8 @@
     "test:functions": "deno test --no-prompt --allow-read=supabase/functions supabase/functions && deno check supabase/functions/*/index.ts",
     "db:states": "node scripts/gen-state-machines.mjs",
     "zcta:load": "node scripts/load-zcta.mjs",
-    "test:integration": "FEEDCAL_INTEGRATION=1 vitest run --no-file-parallelism tests/integration"
+    "test:integration": "FEEDCAL_INTEGRATION=1 vitest run --no-file-parallelism tests/integration",
+    "test:load": "FEEDCAL_LOAD=1 vitest run --no-file-parallelism --silent=false tests/load"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "1.6.0",

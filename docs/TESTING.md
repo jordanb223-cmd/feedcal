@@ -11,6 +11,8 @@
 | `npm run test:integration` | Against the local stack: a stranger can't reach another user's share kit; email intake end to end (Worker code → Edge Functions → Storage → SQL → queue); parsing end to end (queue → `process-messages` → stored text and attachments); triage end to end (pages kept, the owner's "this one" as a real user, the next email routed by the learned rule); a signed Buy Me a Coffee webhook through the real `bmc-webhook` function counts once, and a forged one gets 401 (Phase 15); the daily account purge (anon-key call) deletes only accounts past their grace period, and the export holds only the caller's data (Phase 16) |
 | CI `Secret scan` | gitleaks over the full git history |
 | Restore drill (by hand) | `scripts/restore-drill.sh`: back up local data, wipe, restore, compare counts and an events checksum; or restore an encrypted backup file (`docs/runbooks/restore.md`) |
+| `npm run test:load` (by hand) | 1,000 feeds at 28 requests a second for 60 s through the real app and local database, without and with ETags; prints p50/p95/p99 and size (D38) |
+| Alert drill (by hand) | `/admin` → Operations → "Run the alert drill": every alert emails each admin once, marked as a drill (local Mailpit or real inboxes) |
 | ZAP baseline (weekly) | `.github/workflows/zap.yml`: passive scan of staging, once staging exists |
 
 Regenerate calendar golden files only after reading the diff:

@@ -106,6 +106,18 @@ describe.skipIf(!enabled)("moderation, end to end: report → one admin click (w
     expect((await asStranger(`/c/${slug}`)).status).toBe(404);
   });
 
+  it("Phase 18: the admin sees operations and runs the alert drill; every alert emails them once", async () => {
+    const page = await asAlice("/admin");
+    const body = await page.clone().text();
+    expect(body).toContain("Operations");
+    expect(body).toContain("AI spend today $");
+    const before = await db.from("admin_audit").select("id", { count: "exact", head: true }).eq("action", "alert_drill");
+    const res = await post(asAlice, "/admin/alert-drill", {}, page);
+    expect(await res.text()).toContain("Every alert fired once");
+    const after = await db.from("admin_audit").select("id", { count: "exact", head: true }).eq("action", "alert_drill");
+    expect((after.count ?? 0) - (before.count ?? 0)).toBe(1);
+  });
+
   it("people who aren't admins get a plain 404 for the console", async () => {
     await db.from("admins").delete().eq("user_id", ALICE);
     expect((await asAlice("/admin")).status).toBe(404);

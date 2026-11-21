@@ -1,6 +1,17 @@
 // Notification emails, as plain text and simple HTML. Plain English; every email says why it
 // was sent and has a one-click unsubscribe for that kind.
-export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks";
+export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks" | "ops_alert";
+
+/** Operations alerts (D38) go to admins and have no unsubscribe: an ignored alert is the failure. */
+export const NO_UNSUBSCRIBE: ReadonlySet<Kind> = new Set<Kind>(["ops_alert"]);
+const ALERT_TEXT: Record<string, { title: string; check: string }> = {
+  queue_backlog: { title: "Emails are waiting in a queue", check: "Open docs/runbooks/queue-backlog.md. Check the Edge Function logs for the named queue." },
+  ai_spend_daily: { title: "AI spend is over today's budget", check: "Open docs/runbooks/bad-extraction-wave.md. Look for one feed sending many emails." },
+  ai_throttle: { title: "AI work is paused: the month's budget is 80% used", check: "Emails wait until next month or a higher budget. See docs/runbooks/ai-outage.md." },
+  email_failures: { title: "Many emails from Feedcal are failing", check: "Check the email provider's dashboard for bounces or a suspended key." },
+  purge_stuck: { title: "Account deletions are overdue", check: "Open docs/runbooks/purge-stuck.md." },
+  abuse_spike: { title: "Many requests are being rate-limited", check: "Open docs/runbooks/spam-wave.md." },
+};
 export interface Rendered { subject: string; text: string; html: string }
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -22,6 +33,15 @@ function wrap(site: string, unsubscribe: string, why: string, bodyText: string, 
 }
 
 export function render(kind: Kind, p: Record<string, unknown>, site: string, unsubscribe: string): Rendered {
+  if (kind === "ops_alert") {
+    const a = ALERT_TEXT[String(p.kind)] ?? { title: `Alert: ${String(p.kind)}`, check: "See docs/RUNBOOKS.md." };
+    const drill = p.drill === true;
+    const subject = `${drill ? "[Drill] " : ""}Feedcal alert: ${a.title}`;
+    const detail = JSON.stringify(p.detail ?? {});
+    const body = `${drill ? "This is a drill. Nothing is wrong.\n\n" : ""}${a.title}.\n\nDetails: ${detail}\n\nWhat to do: ${a.check}\n\nOperations panel: ${site}/admin`;
+    const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;color:#1d1d1b">${drill ? "<p><strong>This is a drill. Nothing is wrong.</strong></p>" : ""}<p><strong>${esc(a.title)}.</strong></p><p>Details: <code>${esc(detail)}</code></p><p>What to do: ${esc(a.check)}</p><p><a href="${esc(site)}/admin">Operations panel</a></p><hr style="border:0;border-top:1px solid #e3e3df;margin:2rem 0 1rem"><p style="color:#4f4f4b;font-size:14px">You get this because you're a Feedcal admin.</p></body></html>`;
+    return { subject, text: `${body}\n\n—\nYou get this because you're a Feedcal admin.`, html };
+  }
   if (kind === "report") {
     const what = REPORT_KINDS[String(p.kind)] ?? "something";
     const subject = `Someone reported a problem with "${p.event_title}"`;
