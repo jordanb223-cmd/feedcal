@@ -2,6 +2,7 @@
 // can show. Nothing here calls the model.
 import type { ExtractedEvent } from "./schema.ts";
 import type { ExtractInput } from "./prompt.ts";
+import { dateGate } from "./dates.ts";
 
 /** Whitespace, curly quotes, dashes and case normalised, so a faithful quote always matches. */
 export function normalise(text: string): string {
@@ -78,7 +79,7 @@ export type RejectReason = "quote_not_found" | "unknown_source" | "bad_timezone"
 export const LOW_CONFIDENCE = 0.5;
 
 /** Hard failures reject the event; soft ones keep it but send it to review. */
-export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: RejectReason; review?: string[]; fromTranscription: boolean } {
+export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: RejectReason; review?: string[]; fromTranscription: boolean; dateConfirmed?: boolean } {
   const source = sourceFor(e, input);
   if (!source) return { reject: "unknown_source", fromTranscription: false };
   if (!quoteFound(e.evidence_quote, source.text)) return { reject: "quote_not_found", fromTranscription: source.fromTranscription };
@@ -99,7 +100,11 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   if (e.confidence < LOW_CONFIDENCE) review.push("low_confidence");
   if (source.fromTranscription) review.push("from_transcription");
   if (personalDetails(e).length) review.push("personal_details");
+  // D41: the date rules. A contradiction or ambiguity always waits for the owner; a date the
+  // quote proves lets a trusted sender's event publish at 50% instead of the feed's bar.
+  const gate = dateGate({ start: e.start, allDay: e.all_day, timezone: e.timezone, quote: e.evidence_quote, referenceDate: input.referenceDate });
+  review.push(...gate.review);
   // Changes and cancellations aren't flagged here: from a trusted sender at high confidence they
   // apply automatically (D31), so subscribers see a moved practice without the owner stepping in.
-  return { review, fromTranscription: source.fromTranscription };
+  return { review, fromTranscription: source.fromTranscription, dateConfirmed: gate.confirmed };
 }
