@@ -11,7 +11,8 @@ values
 
 insert into public.profiles (id, display_name) values
   ('11111111-1111-4111-8111-111111111111', 'Alice Organizer'),
-  ('22222222-2222-4222-8222-222222222222', 'Bob Coach');
+  ('22222222-2222-4222-8222-222222222222', 'Bob Coach')
+on conflict (id) do update set display_name = excluded.display_name;
 
 insert into public.feeds (id, owner_id, name, slug, description, category, zip_code, location, visibility) values
   ('aaaaaaaa-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',

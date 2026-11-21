@@ -7,4 +7,6 @@ export interface Bindings {
   ENVIRONMENT: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY?: string;
+  /** "on" once the Google OAuth client is configured for this environment. */
+  GOOGLE_SIGN_IN?: string;
 }

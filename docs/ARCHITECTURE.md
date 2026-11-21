@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 2 (data model). Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 3 (sign-in). Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
@@ -33,6 +33,14 @@ Status: Phase 2 (data model). Components marked *planned* don't exist yet. Schem
 ## Request flow today (Phase 1)
 
 `GET /health` → request-id middleware → `public.health_check()` RPC with the anon key → JSON with version, commit, environment, database reachability. 200 when the database answers, 503 when it doesn't.
+
+## Sign-in flow (Phase 3)
+
+- **Magic link:** `POST /login` → Supabase emails a link to `/auth/confirm?token_hash=…` → that page shows a button → `POST /auth/confirm` calls `verifyOtp` → session cookies (HttpOnly, SameSite=Lax, Secure over HTTPS) → `/account`.
+- **Google:** `POST /auth/google` → Supabase → Google → `/auth/callback?code=…` → `exchangeCodeForSession` → the `next` path, which must be on this site.
+- **Every POST** passes the origin check and the CSRF check first (D17).
+- **Signed-in pages** check the session with the Auth server on every request (D15).
+- **Account deletion:** `/account` → `request_account_deletion()`. After 14 days, the `delete-accounts` Edge Function purges the account (D18).
 
 ## Environments
 

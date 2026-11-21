@@ -1,6 +1,6 @@
 # Data model
 
-Status: Phase 2. The source of truth is `supabase/migrations/`. This page explains it; if they ever disagree, the migrations win, and this page should be fixed.
+Status: Phase 3. The source of truth is `supabase/migrations/`. This page explains it; if they ever disagree, the migrations win, and this page should be fixed.
 
 ## Diagram
 
@@ -51,7 +51,7 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 
 ## Tables
 
-**profiles.** One per signed-in user, same id as `auth.users`. Phase 3 adds the trigger that creates it on signup; the seed and tests insert it directly. `deleted_at` marks an account in its deletion grace period.
+**profiles.** One per signed-in user, same id as `auth.users`. A trigger on `auth.users` creates it at signup, taking the display name from the Google profile when there is one. `deleted_at` marks an account in its deletion grace period.
 
 **feeds.** A calendar feed.
 - `slug` is lowercase letters, digits and hyphens, at most 80 characters, unique.
@@ -104,6 +104,9 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 | `get_feed_token(p_feed_id)` [Rev 1] | signed-in members | Returns the current token from Vault. Anyone else gets error `42501`. |
 | `rotate_feed_token(p_feed_id)` [Rev 1] | signed-in owner | Makes a new token, overwrites the hash and the Vault copy, and returns the new token. The old link stops matching. |
 | `health_check()` | anon, signed-in | Returns `true` (Phase 1). |
+| `request_account_deletion()` / `cancel_account_deletion()` | signed-in user, for themselves | Sets or clears `profiles.deleted_at`. Returns the deletion date (14 days out). |
+| `due_account_deletions()` | service role | Lists accounts whose 14 days have passed. |
+| `purge_account_data(p_user_id)` | service role | Hands each owned feed to its longest-standing editor, or deletes it if there is none. Removes the user from all feeds, replaces `user:<id>` revision actors with `system`, and wipes the display name. Safe to run twice. |
 | `private.*` | used inside policies and triggers | Not exposed by the API (the `private` schema isn't in the API's exposed schemas). |
 
 Tokens are 43 characters, URL-safe base64 of 32 random bytes from `pgcrypto`. The hash is Postgres's built-in `sha256()` of the UTF-8 token.

@@ -43,3 +43,15 @@ Every feed gets a token on insert, in the same transaction as its Vault secret, 
 
 ## D14 — public_feed_page returns upcoming events only (2026-11-20)
 A subscribe page shows the next few events; returning a feed's whole history to anon is unnecessary exposure. It returns at most 200 events, with a default of 50. See the recurring-event gap in DATA-MODEL.md.
+
+## D15 — Session checks ask the Auth server (`getUser`), not `getClaims` (2026-11-20)
+Found while testing Phase 3. The local stack signs access tokens with ES256 (`kid` present). For those, `@supabase/supabase-js` 2.119.2 `getClaims()` checks only the signature against the public key and never asks the server. After "sign out everywhere", the old cookies still opened `/account`. The Auth server itself answered `403 session_not_found` for the same token. `currentUser()` now calls `getUser()`. That's one extra request per signed-in page, and revoked sessions stop working at once. Public pages and feed URLs don't check sessions, so they don't pay this cost.
+
+## D16 — Magic links verified by our server, behind a button (2026-11-20)
+The email template links to `/auth/confirm?token_hash=…&type=email`, which is Supabase's server-side "token hash" pattern. The GET only shows a "Sign in" button; the POST calls `verifyOtp`. Email security scanners that open links automatically therefore can't use up the one-time link. Because the error comes back to our server, it can say "expired or already used" in plain English. Docs: https://supabase.com/docs/guides/auth/server-side/email-based-auth-with-pkce-flow-for-ssr
+
+## D17 — CSRF: double-submit cookie plus an origin check (2026-11-20)
+Every POST must carry an `Origin` (or, failing that, `Referer`) equal to the site's own origin, and a form token equal to an HttpOnly cookie (`__Host-feedcal_csrf` over HTTPS). Either check failing returns 403 before any handler runs. The app has no JSON API yet; origin checks cover future API routes.
+
+## D18 — Account deletion: SQL purge plus an Edge Function (2026-11-20)
+`request_account_deletion()` stamps `profiles.deleted_at`. After 14 days, `due_account_deletions()` lists the account. `purge_account_data()` hands each owned feed to its longest-standing editor, deletes feeds with no editor (their Vault secrets go too), and wipes the name and revision actor. The `delete-accounts` Edge Function then deletes the auth user. The function only accepts the service-role key. **Scheduling it is not set up yet** (see SETUP.md).

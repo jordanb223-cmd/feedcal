@@ -335,7 +335,13 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "get_feed_token":
+            "cancel_account_deletion":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"due_account_deletions":
+{ Args: Record<PropertyKey, never>; Returns: string[]
+                           },
+"get_feed_token":
 { Args: { "p_feed_id": string }; Returns: string
                            },
 "health_check":
@@ -343,6 +349,12 @@ isOneToOne: false
                            },
 "public_feed_page":
 { Args: { "p_limit"?: number,"p_slug": string }; Returns: Json
+                           },
+"purge_account_data":
+{ Args: { "p_user_id": string }; Returns: Json
+                           },
+"request_account_deletion":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "rotate_feed_token":
 { Args: { "p_feed_id": string }; Returns: string

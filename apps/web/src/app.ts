@@ -1,19 +1,25 @@
 import { Hono } from "hono";
-import { createLogger, Environment, requestIdFrom, type HealthResponse, type Logger } from "@feedcal/shared";
+import type { Context } from "hono";
+import { createLogger, Environment, requestIdFrom, type HealthResponse } from "@feedcal/shared";
 import type { Bindings } from "./env.js";
 import { probeDatabase, type DbProbe } from "./db.js";
-
-type Variables = { requestId: string; log: Logger };
+import { registerAuthRoutes } from "./auth.js";
+import { requireSameOrigin } from "./security.js";
+import { createSupabase } from "./supabase.js";
+import type { AppEnv, Supa } from "./types.js";
 
 export interface AppDeps {
   version: string;
   commit: string;
   probe?: (env: Bindings) => Promise<DbProbe>;
   logSink?: (line: string) => void;
+  /** Tests inject a fake; production builds a per-request server client. */
+  supabase?: (c: Context<AppEnv>) => Supa;
 }
 
 export function createApp(deps: AppDeps) {
-  const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+  const app = new Hono<AppEnv>();
+  const makeSupabase = deps.supabase ?? createSupabase;
   const probe = deps.probe ?? ((env: Bindings) => probeDatabase(env.SUPABASE_URL, env.SUPABASE_ANON_KEY));
 
   app.use("*", async (c, next) => {
@@ -25,6 +31,10 @@ export function createApp(deps: AppDeps) {
     await next();
     c.header("x-request-id", requestId);
     c.header("x-content-type-options", "nosniff");
+    c.header("referrer-policy", "same-origin");
+    c.header("content-security-policy", "frame-ancestors 'none'");
+    // Pages that read or set the session must never be cached by Cloudflare or a proxy.
+    if (!c.res.headers.has("cache-control")) c.header("cache-control", "private, no-store");
     log.info("request", { method: c.req.method, path: new URL(c.req.url).pathname, status: c.res.status, ms: Date.now() - started });
   });
 
@@ -42,6 +52,16 @@ export function createApp(deps: AppDeps) {
     c.header("cache-control", "no-store");
     return c.json(body, db.reachable ? 200 : 503);
   });
+
+  app.use("*", async (c, next) => {
+    if (new URL(c.req.url).pathname !== "/health") {
+      c.set("supabase", makeSupabase(c));
+      c.set("user", undefined);
+    }
+    await next();
+  });
+  app.use("*", requireSameOrigin);
+  registerAuthRoutes(app);
 
   app.notFound((c) => c.json({ error: "Not found", request_id: c.get("requestId") }, 404));
 

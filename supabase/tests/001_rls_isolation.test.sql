@@ -9,7 +9,8 @@ insert into auth.users (id, instance_id, aud, role, email, encrypted_password, c
   ('44444444-4444-4444-8444-444444444444', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'stranger@example.test', '', now(), now());
 insert into public.profiles (id, display_name) values
   ('33333333-3333-4333-8333-333333333333', 'Owner'),
-  ('44444444-4444-4444-8444-444444444444', 'Stranger');
+  ('44444444-4444-4444-8444-444444444444', 'Stranger')
+on conflict (id) do update set display_name = excluded.display_name;
 
 insert into public.feeds (id, owner_id, name, slug, visibility) values
   ('f0000000-0000-4000-8000-000000000001', '33333333-3333-4333-8333-333333333333', 'Private feed', 'test-private', 'private'),
