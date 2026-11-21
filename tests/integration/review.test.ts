@@ -43,9 +43,11 @@ describe.skipIf(!enabled)("review screen, end to end", { timeout: 60_000 }, () =
 
   beforeAll(async () => {
     const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
-    db = createClient<Database>(s.API_URL!, s.SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
-    alice = await session(s.API_URL!, s.ANON_KEY!, s.SERVICE_ROLE_KEY!, "alice@example.test");
-    bob = await session(s.API_URL!, s.ANON_KEY!, s.SERVICE_ROLE_KEY!, "bob@example.test");
+    const { API_URL: url, ANON_KEY: anon, SERVICE_ROLE_KEY: service } = s;
+    if (!url || !anon || !service) throw new Error("Local Supabase isn't running");
+    db = createClient<Database>(url, service, { auth: { persistSession: false } });
+    alice = await session(url, anon, service, "alice@example.test");
+    bob = await session(url, anon, service, "bob@example.test");
   });
 
   it("creates a feed from the dashboard", async () => {
