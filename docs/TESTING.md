@@ -5,9 +5,9 @@
 | Command | What it covers |
 |---|---|
 | `npm test` | Unit tests: web routes, sign-in, CSRF and origin checks, calendar output (golden files, ical.js validation), subscribe and share pages |
-| `npm run test:functions` | Edge Function logic (Deno) |
+| `npm run test:functions` | Edge Function logic (Deno), including the 26 Phase 7 parsing fixtures in `supabase/functions/_shared/parse/fixtures` (rebuild them with the command at the top of `build.ts`) |
 | `npm run db:test` | pgTAP: RLS isolation, tokens, accounts, feeds, subscribe counts, seed sanity, sign-in limits, email intake |
-| `npm run test:integration` | Against the local stack: a stranger can't reach another user's share kit; email intake end to end (Worker code → Edge Functions → Storage → SQL → queue) |
+| `npm run test:integration` | Against the local stack: a stranger can't reach another user's share kit; email intake end to end (Worker code → Edge Functions → Storage → SQL → queue); parsing end to end (queue → `process-messages` → stored text and attachments) |
 | CI `Secret scan` | gitleaks over the full git history |
 
 Regenerate calendar golden files only after reading the diff:

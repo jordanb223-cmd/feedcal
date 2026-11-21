@@ -74,7 +74,9 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 
 **private.ingest_tickets / private.storage_trash / private.app_settings.** One-time upload tickets; files waiting for deletion through the Storage API; where pg_cron finds the Edge Functions. Not reachable through the API.
 
-**attachments.** Files on a message. `chosen` is the "This one has the schedule" flag. Status values: `pending`, `skipped`, `text_layer`, `transcribed`, `failed`.
+**messages (Phase 7 columns).** `reference_date` (the original's sent date, used to read "this Friday") and `reference_date_source`; `original_sender` and `original_subject` (from the innermost forward); `clean_text` (what the AI will read); `stripped_text` (quoted replies and signatures, kept as evidence, never sent to the AI); `language`; `parse_details` (forward notes, depth, body source, discarded images); `parsed_at`; `parse_attempts`.
+
+**attachments.** Files on a message. Phase 7 adds `inline`, `content_id`, `width`, `height`; files live in the private `attachments` bucket at `<feed>/<message>/<sha256>`; one row per distinct file per message. `chosen` is the "This one has the schedule" flag. Status values: `pending`, `skipped`, `text_layer`, `transcribed`, `failed`.
 
 **attachment_pages [Rev 2].** One row per page. `text` holds either the PDF text layer (`text_source = text_layer`) or the vision model's verbatim transcription (`transcription`). Phase 9 checks evidence quotes against this text. `image_path` is the page image shown next to the quote on the review card.
 
@@ -120,6 +122,7 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `decide_sender(p_source_id, p_trust)` / `decide_message(p_message_id, p_release)` | signed-in members | Phase 6. Approve or decline a waiting sender (or one message). Approving queues its waiting mail. |
 | `rotate_intake_address(p_feed_id)` | signed-in owner | Phase 6. New forwarding address; the old one stops at once. |
 | `claim_storage_trash` / `forget_storage_trash` | service role | Phase 6. Used by the `storage-trash` Edge Function. |
+| `claim_process_jobs` / `finish_process_job` / `fail_process_job` / `record_parsed_message` | service role | Phase 7 (D28). Queue access for `process-messages`. Recording is idempotent and never touches quarantined or already-parsed mail; 5 failed tries mark the message `failed`. |
 | `request_account_deletion()` / `cancel_account_deletion()` | signed-in user, for themselves | Sets or clears `profiles.deleted_at`. Returns the deletion date (14 days out). |
 | `due_account_deletions()` | service role | Lists accounts whose 14 days have passed. |
 | `purge_account_data(p_user_id)` | service role | Hands each owned feed to its longest-standing editor, or deletes it if there is none. Removes the user from all feeds, replaces `user:<id>` revision actors with `system`, and wipes the display name. Safe to run twice. |

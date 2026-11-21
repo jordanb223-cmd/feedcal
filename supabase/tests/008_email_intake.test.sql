@@ -2,6 +2,15 @@
 begin;
 select * from no_plan();
 
+-- Start from the seed, whatever earlier local runs (e.g. integration tests) left behind.
+-- All of this is rolled back at the end.
+delete from public.forwarding_confirmations;
+delete from public.messages where id not in ('dddddddd-0000-4000-8000-000000000001', 'dddddddd-0000-4000-8000-000000000002');
+delete from public.sources where id <> 'cccccccc-0000-4000-8000-000000000001';
+delete from private.ingest_tickets;
+delete from private.storage_trash;
+select pgmq.purge_queue('process_message');
+
 -- Helpers: start + commit as the service role would.
 create function pg_temp.start(p_local text, p_bytes bigint default 1000) returns jsonb
   language sql as $$ select public.ingest_start(p_local, p_bytes) $$;
