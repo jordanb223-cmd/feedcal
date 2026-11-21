@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 11 (organizer review screen). Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 12 (notifications and motivation). Real email needs a provider key and a domain; locally it goes to Mailpit. Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 

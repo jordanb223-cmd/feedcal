@@ -208,6 +208,8 @@ async function renderAccount(c: Context<AppEnv>, user: SessionUser, notice?: str
       : null;
   const graceDays = account.success ? account.data.grace_days : null;
   const { data: feeds } = await c.get("supabase").from("feeds").select("id, name, visibility").order("name");
+  const { data: prefs } = await sb.from("notification_settings").select("weekly_digest, instant_reports, staleness, milestones").eq("user_id", user.id).maybeSingle();
+  const done = c.req.query("done") === "notifications" ? "Email choices saved." : undefined;
   return c.html(
     accountPage({
       csrf: csrfToken(c),
@@ -216,7 +218,8 @@ async function renderAccount(c: Context<AppEnv>, user: SessionUser, notice?: str
       deletionDate,
       graceDays,
       feeds: (feeds ?? []).map((f) => ({ id: f.id, name: f.name, visibility: f.visibility })),
-      ...(notice ? { notice } : {}),
+      ...(prefs ? { notifications: prefs } : {}),
+      ...(notice ?? done ? { notice: (notice ?? done) as string } : {}),
     }),
     status,
   );

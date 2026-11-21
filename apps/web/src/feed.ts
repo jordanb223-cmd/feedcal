@@ -102,16 +102,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     return c.body(ics, 200);
   });
 
-  // Every event's description links here. The real report form arrives in Phase 12; until then
-  // the link must not be dead.
-  app.get("/report/:uid", (c) =>
-    c.html(
-      messagePage(
-        "Report a problem",
-        "Reporting from the calendar isn't open yet. For now, please contact the person who shared this calendar with you.",
-      ),
-    ),
-  );
+  // (The "Report a problem" page each event links to lives in notify.ts since Phase 12.)
 
   // Make a new link; the old one stops working at once. Owner only (enforced in the database).
   app.post("/feeds/:id/rotate-token", async (c) => {

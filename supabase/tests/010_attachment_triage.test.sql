@@ -31,17 +31,17 @@ create temp table ids as select
 grant select on ids to authenticated;
 select is(public.record_triage('a8000000-0000-4000-8000-000000000001', jsonb_build_array(
   jsonb_build_object('id', (select news from ids), 'status', 'text_layer', 'pages_total', 12,
-    'pages', jsonb_build_array(jsonb_build_object('index', 3, 'text', 'Fri Nov 21 Picture day 8:30 AM', 'source', 'text_layer')),
+    'pages', jsonb_build_array(jsonb_build_object('index', 3, 'text', 'Sat Nov 21 Picture day 8:30 AM', 'source', 'text_layer')),
     'triage', jsonb_build_object('stage', 2, 'reason', 'text_layer', 'keptPages', jsonb_build_array(3))),
   jsonb_build_object('id', (select sched from ids), 'status', 'skipped', 'pages_total', 1, 'pages', '[]'::jsonb,
     'triage', jsonb_build_object('stage', 2, 'reason', 'no_schedule_found')))), 1, 'one page kept');
 select is((select row(status, pages, triage ->> 'reason')::text from public.attachments where id = (select news from ids)), row('text_layer', 12, 'text_layer')::text, 'the attachment records stage and reason');
-select is((select text from public.attachment_pages where attachment_id = (select news from ids)), 'Fri Nov 21 Picture day 8:30 AM', 'the kept page text is stored');
+select is((select text from public.attachment_pages where attachment_id = (select news from ids)), 'Sat Nov 21 Picture day 8:30 AM', 'the kept page text is stored');
 select is((select pages_for_ai from public.messages where id = 'a8000000-0000-4000-8000-000000000001'), 1::smallint, 'the message knows how many pages go to the AI');
 select is((select count(*)::int from pgmq.q_extract_message), 1, 'then it goes on to extraction');
 select is(public.record_triage('a8000000-0000-4000-8000-000000000001', jsonb_build_array(
   jsonb_build_object('id', (select news from ids), 'status', 'text_layer', 'pages_total', 12,
-    'pages', jsonb_build_array(jsonb_build_object('index', 3, 'text', 'Fri Nov 21 Picture day 8:30 AM', 'source', 'text_layer')),
+    'pages', jsonb_build_array(jsonb_build_object('index', 3, 'text', 'Sat Nov 21 Picture day 8:30 AM', 'source', 'text_layer')),
     'triage', jsonb_build_object('stage', 2, 'reason', 'text_layer')))), 1, 'recording again replaces pages, never duplicates');
 select is((select count(*)::int from public.attachment_pages where attachment_id = (select news from ids)), 1, '...still one page');
 

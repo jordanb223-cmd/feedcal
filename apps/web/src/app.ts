@@ -6,6 +6,7 @@ import { probeDatabase, type DbProbe } from "./db.js";
 import { registerAuthRoutes } from "./auth.js";
 import { registerEmailRoutes } from "./email.js";
 import { registerReviewRoutes } from "./review.js";
+import { registerNotifyRoutes } from "./notify.js";
 import { originOf, redactPath, requireSameOrigin } from "./security.js";
 import { registerFeedRoutes } from "./feed.js";
 import { registerSubscribeRoutes } from "./subscribe.js";
@@ -101,6 +102,7 @@ export function createApp(deps: AppDeps) {
   registerSubscribeRoutes(app);
   registerEmailRoutes(app);
   registerReviewRoutes(app);
+  registerNotifyRoutes(app);
 
   app.notFound((c) => {
     const requestId = c.get("requestId");

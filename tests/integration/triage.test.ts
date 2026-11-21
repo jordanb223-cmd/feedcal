@@ -32,7 +32,7 @@ async function pdf(pages: string[][]): Promise<Buffer> {
 }
 
 const PROSE = ["Thank you to every family who helped with the reading program this term.", "Please label jackets and lunch boxes."];
-const DATES = ["Fri Nov 21 | Picture day | 8:30 AM", "Tue Nov 25 | Early dismissal | 12:30 PM", "Thu Dec 11 | Winter concert | 6:30 PM"];
+const DATES = ["Sat Nov 21 | Picture day | 8:30 AM", "Wed Nov 25 | Early dismissal | 12:30 PM", "Fri Dec 11 | Winter concert | 6:30 PM"];
 
 function email(tag: string, files: { name: string; type: string; data: Buffer }[]): string {
   const b = `b-${tag}`;
