@@ -7,6 +7,20 @@ updates:
     groups:
       dev-tooling:
         dependency-type: development
+    ignore:
+      # TypeScript majors wait for typescript-eslint to support them (8.73 needs < 6.1).
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      # Node types follow the Node version in .nvmrc (22), not the newest Node.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # These mirror the exact versions the Edge Functions import (npm:<name>@<version> in
+      # supabase/functions). Update both together by hand, or the tests check a different
+      # version from the one production runs.
+      - dependency-name: "@anthropic-ai/sdk"
+      - dependency-name: linkedom
+      - dependency-name: postal-mime
+      - dependency-name: unpdf
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }

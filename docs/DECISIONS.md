@@ -373,3 +373,8 @@ What was checked, against what, and what changed:
   2. **When a domain is bought (about $10-15 a year):** make **forwarding with a Gmail filter** the main setup for every organizer ("from this sender → forward to this calendar's Feedcal address"). It needs no Google permission and never expires. The Gmail connection stays as an optional extra.
   3. **Only if Feedcal grows and has income:** Google verification plus the yearly assessment, so anyone can connect Gmail without reconnecting.
 - **Open work for step 2 (not built, not checked):** Gmail sends a confirmation code to a new forwarding address before it forwards. Feedcal would need to recognise that email and show the code (or the confirm link) to the organizer. A guided "set up the Gmail filter" page with the sender filled in from their example email would match the D39 flow.
+
+## D43 — What Dependabot may propose (2026-11-21)
+
+- **Why.** Dependabot's grouped dev-tooling PR (#15) failed CI: it moved TypeScript 6 → 7, which `typescript-eslint` 8.73 doesn't support (its peer range is `>=4.8.4 <6.1.0`, so `npm ci` stops with ERESOLVE), and `@types/node` 22 → 26 while the project runs Node 22 (`.nvmrc`). It also bumped `@anthropic-ai/sdk`, `linkedom`, `postal-mime` and `unpdf` in `package.json` only. Those four are pinned there to match the Edge Functions' own imports (`npm:<name>@<version>`), so merging would have left tests checking different versions from production.
+- **Decision.** `.github/dependabot.yml` ignores TypeScript and `@types/node` major versions, and ignores the four mirrored packages entirely; they're updated by hand in both places in one PR. #15 was closed. GitHub Actions updates are unchanged.
