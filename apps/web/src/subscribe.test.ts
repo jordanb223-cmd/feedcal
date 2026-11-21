@@ -210,6 +210,6 @@ describe("share kit", () => {
     expect(body).toContain("Room 12");
     expect(body).toMatch(/<svg[^>]*>/);
     expect(body).toContain("Point your phone");
-    expect(body).toContain("window.print()");
+    expect(body).toContain("data-print");
   });
 });

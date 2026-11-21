@@ -1,7 +1,9 @@
-// Edge Function: delete accounts whose 14-day grace period has passed.
-// Callable only with the service-role key (a scheduler, never a browser).
+// Edge Function: delete accounts whose 14-day grace period has passed. pg_cron calls it daily
+// with the anon key, like storage-trash (D37): it only ever purges accounts that are already
+// due, so a stranger calling it can't delete anything early. Supabase's gateway still requires
+// a valid project JWT (verify_jwt).
 import { createClient } from "npm:@supabase/supabase-js@2.119.2";
-import { isServiceRole, runPurge, type PurgeClient } from "./purge.ts";
+import { runPurge, type PurgeClient } from "./purge.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
@@ -11,9 +13,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const url = Deno.env.get("SUPABASE_URL");
   if (req.method !== "POST") return json({ error: "Use POST." }, 405);
-  if (!isServiceRole(req.headers.get("authorization"), serviceKey) || !url || !serviceKey) {
-    return json({ error: "Not allowed." }, 403);
-  }
+  if (!url || !serviceKey) return json({ error: "Not configured." }, 500);
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const client: PurgeClient = {

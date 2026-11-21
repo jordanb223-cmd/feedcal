@@ -35,12 +35,3 @@ export async function runPurge(client: PurgeClient, max = 50): Promise<PurgeResu
   return result;
 }
 
-/** Constant-time comparison of the bearer token with the service-role key. */
-export function isServiceRole(authorization: string | null, serviceKey: string | undefined): boolean {
-  if (!serviceKey || !authorization?.startsWith("Bearer ")) return false;
-  const given = authorization.slice("Bearer ".length);
-  if (given.length !== serviceKey.length) return false;
-  let diff = 0;
-  for (let i = 0; i < given.length; i++) diff |= given.charCodeAt(i) ^ serviceKey.charCodeAt(i);
-  return diff === 0;
-}

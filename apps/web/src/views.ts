@@ -1,44 +1,11 @@
-import { html, raw } from "hono/html";
+import { html } from "hono/html";
+import { ASSET_PATHS } from "./assets.js";
 import type { HtmlEscapedString } from "hono/utils/html";
 
 type Html = HtmlEscapedString | Promise<HtmlEscapedString>;
 
 // Colors checked for WCAG AA contrast: text #1d1d1b on #f6f6f4 (16.5:1), white on #1f5f3f (7.6:1),
 // muted #4f4f4b on #ffffff (8.3:1), error #8a1c1c on #fdf1f1 (7.9:1).
-const styles = `
-*{box-sizing:border-box}
-body{margin:0;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1d1d1b;background:#f6f6f4}
-main{max-width:30rem;margin:0 auto;padding:2rem 1rem}
-.card{background:#fff;border-radius:12px;padding:1.5rem;margin:0 0 1rem}
-h1{font-size:1.5rem;line-height:1.3;margin:0 0 1rem}
-h2{font-size:1.25rem;line-height:1.3;margin:0 0 .75rem}
-p{margin:0 0 1rem}
-.muted{color:#4f4f4b}
-label{display:block;font-weight:600;margin:0 0 .25rem}
-input[type=email]{width:100%;font:inherit;padding:.75rem;border:2px solid #6b6b66;border-radius:8px}
-button,.button{display:inline-block;font:inherit;font-weight:600;padding:.75rem 1.25rem;border-radius:8px;border:2px solid #1f5f3f;background:#1f5f3f;color:#fff;cursor:pointer;text-decoration:none}
-button.secondary{background:#fff;color:#1f5f3f}
-button.danger{background:#8a1c1c;border-color:#8a1c1c}
-form{margin:0 0 1rem}
-:focus-visible{outline:3px solid #1a4fd6;outline-offset:2px}
-.error{background:#fdf1f1;color:#8a1c1c;border-left:4px solid #8a1c1c;padding:.75rem 1rem;border-radius:4px}
-.check{display:flex;gap:.5rem;align-items:flex-start;font-weight:400}
-.row{display:flex;flex-wrap:wrap;gap:.5rem}
-.sep{text-align:center;margin:1rem 0}
-a.button{margin:0 0 .5rem}
-a.button.secondary{background:#fff;color:#1f5f3f}
-.wide{display:block;width:100%;text-align:center}
-.events{list-style:none;padding:0;margin:0}
-.events li{padding:.75rem 0;border-top:1px solid #e3e3df}
-.events li:first-child{border-top:0}
-.when{display:block;font-size:.95rem;color:#4f4f4b}
-details summary{cursor:pointer;font-weight:600;padding:.5rem 0}
-textarea,input.copy,select.copy{width:100%;font:inherit;padding:.75rem;border:2px solid #6b6b66;border-radius:8px;background:#fff}
-mark{background:#fff0a8;color:inherit;padding:0 .1em}
-blockquote{margin:0 0 1rem}
-.qr svg{width:12rem;height:12rem;display:block;margin:0 auto}
-@media print{body{background:#fff}.no-print{display:none}.card{padding:0}}
-`;
 
 export function layout(title: string, body: Html, head: Html | string = ""): Html {
   return html`<!doctype html>
@@ -48,10 +15,11 @@ export function layout(title: string, body: Html, head: Html | string = ""): Htm
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title} · Feedcal</title>
 ${head}
-<style>${raw(styles)}</style>
+<link rel="stylesheet" href="${ASSET_PATHS.css}">
+<script src="${ASSET_PATHS.js}" defer></script>
 </head>
 <body><main id="main">${body}
-<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/about/costs">Support Feedcal</a></footer></main></body>
+<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/privacy">Privacy</a> · <a href="/about/costs">Support Feedcal</a></footer></main></body>
 </html>`;
 }
 
@@ -174,6 +142,12 @@ export function accountPage(opts: {
     <p><label class="check"><input type="checkbox" name="milestones" value="1" ${n.milestones ? "checked" : ""}> A thank-you when a feed reaches 10, 50 or 100 followers</label></p>
     <button type="submit" class="secondary">Save email choices</button>
   </form>
+</div>
+<div class="card">
+  <h2>Your data</h2>
+  <p><a href="/account/export">Download everything Feedcal holds about you</a> (JSON).</p>
+  ${opts.feeds.length > 0 ? html`<p>Each calendar as a file: ${opts.feeds.map((f, i) => html`${i > 0 ? ", " : ""}<a href="/account/export/${f.id}.ics" dir="auto">${f.name}</a>`)}.</p>` : ""}
+  <p class="muted"><a href="/privacy">How Feedcal handles your data</a></p>
 </div>
 <div class="card">
   <h2>Supporting Feedcal</h2>

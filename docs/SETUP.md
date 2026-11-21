@@ -78,10 +78,9 @@ Local sign-in needs none of this: Mailpit at http://127.0.0.1:54324 catches the 
 - [ ] Turn it on for a Pages project: `printf on | npx wrangler pages secret put GOOGLE_SIGN_IN --project-name <project>`.
 - [ ] To use Google locally: set `[auth.external.google] enabled = true` in `config.toml`, export `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`, restart Supabase, and add `GOOGLE_SIGN_IN=on` to `apps/web/.dev.vars`. Also add `http://127.0.0.1:54321/auth/v1/callback` to the OAuth client's redirect URIs.
 
-**Account deletion schedule (not set up yet).**
-- [ ] The `delete-accounts` Edge Function deploys with the rest (CI deploys every folder in `supabase/functions`). Nothing calls it on a schedule yet. Until a daily trigger exists (pg_cron + pg_net, planned with the other jobs in Phase 12), accounts past their 14 days aren't purged. To run it by hand:
+**Account deletion schedule.** Since Phase 16 (D37), pg_cron calls `delete-accounts` every day at 04:41 UTC, as it does the other jobs. Nothing to set up beyond the deploy. To run it by hand:
   ```bash
-  curl -X POST -H "Authorization: Bearer <service-role key>" https://<project-ref>.supabase.co/functions/v1/delete-accounts
+  curl -X POST -H "Authorization: Bearer <anon key>" https://<project-ref>.supabase.co/functions/v1/delete-accounts
   ```
 
 ## 7. Email forwarding (Phase 6), waiting on the domain
@@ -125,6 +124,13 @@ Locally, emails go to Mailpit (http://127.0.0.1:54324): `supabase/functions/.env
 - [ ] Copy its signing secret into the Supabase project: `npx supabase secrets set BMC_WEBHOOK_SECRET=<secret> --project-ref <ref>`. Never commit it.
 - [ ] On **staging only**, also set `BMC_ACCEPT_TEST_EVENTS=true`, then send a test event from BMC's dashboard. Check that `private.bmc_events` has one row with outcome `applied`, then check the function's logs. If the outcome is `no_supporter`, BMC's field names differ from the guesses in `supabase/functions/_shared/bmc.ts` (D36). Send the log line (it holds no personal data) and that file gets fixed.
 - [ ] Locally, `supabase/functions/.env` needs `BMC_WEBHOOK_SECRET=<any random text>` for the integration test.
+
+## 13. Backups and security settings (Phase 16)
+- [ ] **Backups.** Make a long random passphrase and keep it in your password manager; without it, backups can't be read. Add two repository secrets (GitHub → Settings → Secrets and variables → Actions): `BACKUP_PASSPHRASE`, and `BACKUP_DB_URL`, production's connection string (Supabase → Connect → session pooler URI, with the database password). The `Backup` workflow then runs daily. Run it once by hand (Actions → Backup → Run workflow), then do the restore drill in `docs/runbooks/restore.md`.
+- [ ] **Advisor on hosted projects.** `npx supabase db advisors --remote` (after `supabase link`) for staging and production. Expect no warnings; send any output so it gets fixed.
+- [ ] **HSTS.** Once the real domain serves HTTPS without problems for a week, raise HSTS on the Pages projects: `printf 31536000 | npx wrangler pages secret put HSTS_MAX_AGE --project-name <project>`.
+- [ ] **Cloudflare rate limiting** (free plan: one rule), once the domain exists: limit `/f/*` per IP as a second layer to the app's own limit (THREAT-MODEL T2).
+- [ ] **Lawyer review** of `/privacy` along with the other policy drafts.
 
 ## When it's all done
 Merge a pull request into `main`: CI passes, staging deploys, and `https://feedcal-web-staging.pages.dev/health` returns `"status":"ok"`. For production, push a tag like `v0.1.0` and approve the `production` deployment in GitHub.

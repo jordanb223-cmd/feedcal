@@ -13,4 +13,6 @@ export interface Bindings {
   INTAKE_DOMAIN?: string;
   /** Buy Me a Coffee page name (D36). Unset: no donation link is shown. */
   BMC_USERNAME?: string;
+  /** HSTS max-age in seconds (D37). Default one day; a year once the domain is settled. */
+  HSTS_MAX_AGE?: string;
 }

@@ -643,6 +643,9 @@ isOneToOne: false
 "due_account_deletions":
 { Args: Record<PropertyKey, never>; Returns: string[]
                            },
+"export_my_data":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "fail_extract_job":
 { Args: { "p_job_id": number,"p_message_id": string }; Returns: string
                            },
@@ -653,6 +656,9 @@ isOneToOne: false
 { Args: { "p_job_id": number,"p_message_id": string }; Returns: string
                            },
 "feed_calendar":
+{ Args: { "p_client_ip"?: string,"p_token": string,"p_ua_family"?: string,"p_user_agent"?: string }; Returns: Json
+                           },
+"feed_calendar_guarded":
 { Args: { "p_client_ip"?: string,"p_token": string,"p_ua_family"?: string,"p_user_agent"?: string }; Returns: Json
                            },
 "feed_subscribe_stats":
@@ -710,6 +716,9 @@ isOneToOne: false
                            },
 "purge_account_data":
 { Args: { "p_user_id": string }; Returns: Json
+                           },
+"rate_check":
+{ Args: { "p_bucket": string,"p_client_ip": string }; Returns: boolean
                            },
 "reconcile_pending":
 { Args: { "p_limit"?: number }; Returns: number

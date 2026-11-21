@@ -26,7 +26,7 @@ describe("support pages (D36)", () => {
     const res = await app.request(`${BASE}/about/costs`, {}, env({ BMC_USERNAME: "feedcal" }));
     const on = await res.text();
     expect(on).toContain('href="https://buymeacoffee.com/feedcal"');
-    expect(on).not.toMatch(/<script[^>]+src=/);
+    expect(on).not.toMatch(/<script[^>]+src="(?!\/assets\/)/);  // only our own script
     expect(res.headers.get("set-cookie")).toBeNull();
   });
 

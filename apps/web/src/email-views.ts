@@ -1,5 +1,4 @@
 import { html } from "hono/html";
-import { copyScript } from "./subscribe-views.js";
 import { layout } from "./views.js";
 
 type Html = ReturnType<typeof layout>;
@@ -214,7 +213,6 @@ ${opts.isOwner
   <form method="post" action="/feeds/${opts.feedId}/rotate-intake">${csrf}<button type="submit" class="danger">Get a new address</button></form>
 </div>`
   : ""}
-<p><a href="/account">Back to your account</a></p>
-${copyScript}`,
+<p><a href="/account">Back to your account</a></p>`,
   );
 }

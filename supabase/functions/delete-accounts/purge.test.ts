@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { isServiceRole, runPurge, type PurgeClient } from "./purge.ts";
+import { runPurge, type PurgeClient } from "./purge.ts";
 
 function fakeClient(due: string[], failOn = new Set<string>()): PurgeClient & { deleted: string[] } {
   const deleted: string[] = [];
@@ -30,12 +30,4 @@ Deno.test("a failure skips that account's auth deletion and continues", async ()
 Deno.test("respects the per-run maximum", async () => {
   const client = fakeClient(["a", "b", "c"]);
   assertEquals((await runPurge(client, 2)).due, 2);
-});
-
-Deno.test("only the exact service-role key is accepted", () => {
-  assertEquals(isServiceRole("Bearer secret-key", "secret-key"), true);
-  assertEquals(isServiceRole("Bearer anon-key", "secret-key"), false);
-  assertEquals(isServiceRole("secret-key", "secret-key"), false);
-  assertEquals(isServiceRole(null, "secret-key"), false);
-  assertEquals(isServiceRole("Bearer ", undefined), false);
 });

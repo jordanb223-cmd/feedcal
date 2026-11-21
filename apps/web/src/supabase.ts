@@ -8,7 +8,7 @@ import type { AppEnv, Supa } from "./types.js";
 /**
  * One Supabase client per request, using the anon key and the user's session cookies.
  * Session cookies are HttpOnly: no browser script ever reads them, because the app has
- * no browser-side Supabase client.
+ * no browser-side Supabase client. They're session cookies: closing the browser signs you out.
  */
 export function createSupabase(c: Context<AppEnv>): Supa {
   const anonKey = c.env.SUPABASE_ANON_KEY;
@@ -25,8 +25,9 @@ export function createSupabase(c: Context<AppEnv>): Supa {
             httpOnly: true,
             secure,
             sameSite: "Lax",
-            ...(options.maxAge !== undefined ? { maxAge: options.maxAge } : {}),
-            ...(options.expires !== undefined ? { expires: options.expires } : {}),
+            // Session-only (D37): no maxAge or expires, so the browser forgets the sign-in when it
+            // closes. A cookie being cleared (maxAge 0) is the one exception.
+            ...(options.maxAge === 0 ? { maxAge: 0 } : {}),
           });
         }
         for (const [key, value] of Object.entries(headers)) c.header(key, value);

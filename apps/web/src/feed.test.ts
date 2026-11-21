@@ -49,7 +49,7 @@ describe("GET /f/<token>.ics", () => {
     expect(body).toContain("SUMMARY:Potluck");
     // Long lines are folded (RFC 5545); unfold before matching.
     expect(body.replace(/\r\n /g, "")).toContain(`Report a problem: ${BASE}/report/eeeeeeee-0000-4000-8000-000000000001%40feedcal.app`);
-    expect(rpc).toHaveBeenCalledWith("feed_calendar", {
+    expect(rpc).toHaveBeenCalledWith("feed_calendar_guarded", {
       p_token: TOKEN, p_ua_family: "google", p_client_ip: "203.0.113.7", p_user_agent: "Google-Calendar-Importer",
     });
   });

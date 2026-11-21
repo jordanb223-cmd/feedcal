@@ -8,9 +8,11 @@ import { registerEmailRoutes } from "./email.js";
 import { registerReviewRoutes } from "./review.js";
 import { registerNotifyRoutes } from "./notify.js";
 import { registerSupportRoutes } from "./support.js";
+import { registerAssetRoutes } from "./assets.js";
+import { registerPrivacyRoutes } from "./privacy.js";
 import { anonSupabase, registerDirectoryRoutes } from "./directory.js";
 import { registerAdminRoutes, registerPolicyRoutes } from "./admin.js";
-import { originOf, redactPath, requireSameOrigin } from "./security.js";
+import { originOf, redactPath, requireSameOrigin, securityHeaders } from "./security.js";
 import { registerFeedRoutes } from "./feed.js";
 import { registerSubscribeRoutes } from "./subscribe.js";
 import { createSupabase } from "./supabase.js";
@@ -55,9 +57,8 @@ export function createApp(deps: AppDeps) {
     const started = Date.now();
     await next();
     c.header("x-request-id", requestId);
-    c.header("x-content-type-options", "nosniff");
-    c.header("referrer-policy", "same-origin");
-    c.header("content-security-policy", "frame-ancestors 'none'");
+    // Routes may set a stricter value (feeds and subscribe hand-offs use no-referrer); keep it.
+    for (const [k, v] of Object.entries(securityHeaders(c, c.env?.SUPABASE_URL, c.env?.HSTS_MAX_AGE))) if (!c.res.headers.has(k)) c.header(k, v);
     // Pages that read or set the session must never be cached by Cloudflare or a proxy.
     if (!c.res.headers.has("cache-control")) c.header("cache-control", "private, no-store");
     log.info("request", { method: c.req.method, path: redactPath(new URL(c.req.url).pathname), status: c.res.status, ms: Date.now() - started });
@@ -98,7 +99,7 @@ export function createApp(deps: AppDeps) {
     // Public, cacheable pages never touch the session (no Set-Cookie on a shared-cache response).
     const sessionless = path === "/health" || path.startsWith("/.well-known/") || path === "/robots.txt" || path === "/sitemap.xml"
       || path === "/directory" || path.startsWith("/near/") || path === "/rules" || path === "/terms" || path === "/takedown"
-      || path === "/about/costs" || path === "/supporters";
+      || path === "/about/costs" || path === "/supporters" || path === "/privacy" || path.startsWith("/assets/");
     if (!sessionless) {
       c.set("supabase", makeSupabase(c));
       c.set("user", undefined);
@@ -114,6 +115,8 @@ export function createApp(deps: AppDeps) {
   registerNotifyRoutes(app);
   registerDirectoryRoutes(app, deps.anonSupabase ?? anonSupabase);
   registerAdminRoutes(app);
+  registerAssetRoutes(app);
+  registerPrivacyRoutes(app);
   registerPolicyRoutes(app);
   registerSupportRoutes(app, deps.anonSupabase ?? anonSupabase);
 
