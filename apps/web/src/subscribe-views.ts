@@ -90,6 +90,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
   </details>
   <p class="muted">${n > 0 ? html`At least ${n} ${n === 1 ? "calendar follows" : "calendars follow"} this. ` : ""}Updated ${formatUpdated(feed.last_updated_at)}.</p>
   ${n > 0 ? html`<p class="muted" style="font-size:.875rem">How we count: calendar apps that checked for updates in the last 7 days. Google checks once for all its users, so the real number is often higher.</p>` : ""}
+  ${subscriberNotes(feed.verified === true)}
 </div>
 <div class="card">
   <h2>Coming up</h2>
@@ -170,4 +171,16 @@ export function flyerPage(opts: { name: string; url: string; qrSvg: string; feed
   <p class="no-print"><button type="button" data-print>Print</button> <a class="button secondary" href="/feeds/${opts.feedId}/share">Back</a></p>
 </div>`,
   );
+}
+
+// D44: what a subscriber should know. They never see the terms page, so it's said here.
+export const NOTE_ACCURACY = "Feedcal fills this calendar in automatically, from emails and other calendars, and it can make mistakes. Check important details (dates, times, places) with the organizer.";
+export const NOTE_UNOFFICIAL = "Not run or endorsed by any school, team or group named in it, unless they say so.";
+export const NOTE_REFRESH = "Your calendar app checks for changes on its own schedule, so updates can take a few hours to show.";
+function subscriberNotes(verified: boolean) {
+  return html`<div class="notes muted" style="font-size:.875rem">
+    <p>${NOTE_ACCURACY}</p>
+    ${verified ? "" : html`<p>${NOTE_UNOFFICIAL}</p>`}
+    <p>${NOTE_REFRESH}</p>
+  </div>`;
 }

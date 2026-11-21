@@ -86,7 +86,7 @@ export function newFeedPage(opts: { csrf: string; error?: string; values?: Recor
   <form method="post" action="/feeds/new">${csrf(opts.csrf)}
     <p><label for="name">Name</label><input class="copy" id="name" name="name" required maxlength="120" value="${v.name ?? ""}" placeholder="Room 12 families" dir="auto"></p>
     <p><label for="category">Kind</label><select class="copy" id="category" name="category">${CATEGORIES.map((c) => html`<option value="${c}" ${v.category === c ? "selected" : ""}>${c}</option>`)}</select></p>
-    ${visibilityChoice(v.visibility)}
+    ${visibilityChoice(v.visibility, { zip: v.zip_code || null })}
     <button type="submit">Create feed</button>
   </form>
 </div>`);
@@ -225,6 +225,7 @@ ${opts.history.length
 // ---------------------------------------------------------------- settings
 export interface SettingsData {
   name: string; description: string; visibility: string; timezone: string; threshold: number; isOwner: boolean;
+  zip: string | null; zipSuggestion: { zip: string; places: number } | null;
   editors: { userId: string; label: string; role: string }[];
   senders: { id: string; email: string; trusted: boolean; blocked: boolean; rule: string | null }[];
 }
@@ -241,7 +242,7 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
     ? html`<form method="post" action="/feeds/${opts.feedId}/settings">${csrf(t)}
     <p><label for="name">Name</label><input class="copy" id="name" name="name" required maxlength="120" value="${s.name}" dir="auto"></p>
     <p><label for="description">Description</label><textarea id="description" name="description" rows="2" maxlength="2000" dir="auto">${s.description}</textarea></p>
-    ${visibilityChoice(s.visibility)}
+    ${visibilityChoice(s.visibility, { zip: s.zip, suggestion: s.zipSuggestion })}
     <p><label for="timezone">Time zone</label><input class="copy" id="timezone" name="timezone" value="${s.timezone}" pattern="[A-Za-z]+(/[A-Za-z0-9_+-]+){0,2}"></p>
     <p><label for="threshold">Publish automatically when Feedcal is at least this sure (from trusted senders)</label>
       <select class="copy" id="threshold" name="threshold">${[0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1].map((n) => html`<option value="${n}" ${Math.abs(s.threshold - n) < 0.001 ? "selected" : ""}>${n === 1 ? "Never: I review everything" : `${Math.round(n * 100)}%`}</option>`)}</select></p>

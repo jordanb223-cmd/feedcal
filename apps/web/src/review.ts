@@ -53,9 +53,15 @@ const doneOf = (c: Context<AppEnv>) => {
   return d && d in DONE ? d : undefined;
 };
 
+// D44: only ZIPs in the loaded list (public.zip_codes) are accepted, so a typo can't place a calendar.
+async function knownZip(c: Context<AppEnv>, zip: string): Promise<boolean> {
+  const { data } = await c.get("supabase").from("zip_codes").select("zip").eq("zip", zip).maybeSingle();
+  return Boolean(data);
+}
+
 async function loadFeed(c: Context<AppEnv>, id: string) {
   const { data } = await c.get("supabase").from("feeds")
-    .select("id, name, description, owner_id, visibility, timezone, auto_publish_threshold, delete_requested_at").eq("id", id).maybeSingle();
+    .select("id, name, description, owner_id, visibility, timezone, auto_publish_threshold, zip_code, delete_requested_at").eq("id", id).maybeSingle();
   return data && !data.delete_requested_at ? data : null;
 }
 
@@ -97,15 +103,20 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       name: z.string().trim().min(1).max(120),
       category: z.enum(CATEGORIES),
       visibility: z.enum(["public", "unlisted", "private"]),
+      zip_code: z.string().trim().regex(/^(\d{5})?$/).default(""),
     }).safeParse(form);
-    if (!parsed.success) return c.html(newFeedPage({ csrf: csrfToken(c), error: "Please give the feed a name.", values: form }), 400);
+    if (!parsed.success) return c.html(newFeedPage({ csrf: csrfToken(c), error: "Please give the feed a name (and a 5-digit ZIP code, or none).", values: form }), 400);
+    if (parsed.data.zip_code && !(await knownZip(c, parsed.data.zip_code))) {
+      return c.html(newFeedPage({ csrf: csrfToken(c), error: `We don't know the ZIP code ${parsed.data.zip_code}. Check it, or leave it blank.`, values: form }), 400);
+    }
     const slug = (parsed.data.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "feed")
       + "-" + crypto.randomUUID().slice(0, 6);
     // Public listing needs a published event (D35), which a new calendar can't have yet: start it
     // private and tell the owner how to switch.
     const wantsPublic = parsed.data.visibility === "public";
     const { data, error } = await c.get("supabase").from("feeds")
-      .insert({ name: parsed.data.name, category: parsed.data.category, visibility: wantsPublic ? "unlisted" : parsed.data.visibility, slug } as never)
+      .insert({ name: parsed.data.name, category: parsed.data.category, visibility: wantsPublic ? "unlisted" : parsed.data.visibility, slug,
+        zip_code: parsed.data.zip_code || null } as never)
       .select("id").single();
     if (error || !data) return c.html(newFeedPage({ csrf: csrfToken(c), error: "We couldn't create the feed. Please try again.", values: form }), 400);
     c.get("log").info("feed_created", { feed_id: data.id });
@@ -289,16 +300,20 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     const feed = await loadFeed(c, feedId);
     if (!feed) return notFound(c);
     const sb = c.get("supabase");
-    const [{ data: editors }, { data: sources }] = await Promise.all([
+    const [{ data: editors }, { data: sources }, { data: zipFound }] = await Promise.all([
       sb.from("feed_editors").select("user_id, role").eq("feed_id", feedId),
       sb.from("sources").select("id, sender_email, trusted, blocked, attachment_rule").eq("feed_id", feedId).order("created_at"),
+      // D44: a ZIP found in this calendar's addresses (owner only; editors get an error and no suggestion).
+      feed.owner_id === user.id && !feed.zip_code ? sb.rpc("feed_zip_suggestion", { p_feed_id: feedId }) : Promise.resolve({ data: null }),
     ]);
+    const suggestion = z.object({ zip: z.string().regex(/^\d{5}$/), places: z.number() }).safeParse(zipFound);
     const { data: profiles } = await sb.from("profiles").select("id, display_name").in("id", (editors ?? []).map((e) => e.user_id));
     return c.html(settingsPage({
       csrf: csrfToken(c), feedId, ...(error ? { error } : {}), done: doneOf(c), undo: undoOf(c, `/feeds/${feedId}/settings`),
       s: {
         name: feed.name, description: feed.description ?? "", visibility: feed.visibility, timezone: feed.timezone,
         threshold: feed.auto_publish_threshold === null ? 0.85 : Number(feed.auto_publish_threshold), isOwner: feed.owner_id === user.id,
+        zip: feed.zip_code ?? null, zipSuggestion: suggestion.success ? suggestion.data : null,
         editors: (editors ?? []).map((e) => ({ userId: e.user_id, role: e.role, label: e.user_id === user.id ? "You" : (profiles ?? []).find((p) => p.id === e.user_id)?.display_name ?? "An editor" })),
         senders: (sources ?? []).filter((x) => x.sender_email).map((x) => {
           const rule = x.attachment_rule as { prefer?: unknown[]; never?: unknown[]; allowLarge?: boolean } | null;
@@ -327,8 +342,12 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       name: z.string().trim().min(1).max(120), description: z.string().max(2000).default(""),
       visibility: z.enum(["public", "unlisted", "private"]), timezone: z.string().regex(/^[A-Za-z]+(\/[A-Za-z0-9_+-]+){0,2}$/),
       threshold: z.coerce.number().min(0).max(1),
+      zip_code: z.string().trim().regex(/^(\d{5})?$/).default(""),
     }).safeParse(form);
-    if (!parsed.success) return renderSettings(c, id.data, user, "Please check the name and time zone.");
+    if (!parsed.success) return renderSettings(c, id.data, user, "Please check the name, time zone and ZIP code (5 digits).");
+    if (parsed.data.zip_code && !(await knownZip(c, parsed.data.zip_code))) {
+      return renderSettings(c, id.data, user, `We don't know the ZIP code ${parsed.data.zip_code}. Check it, or leave it blank.`);
+    }
     try {
       new Intl.DateTimeFormat("en-US", { timeZone: parsed.data.timezone });
     } catch {
@@ -336,7 +355,7 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     }
     const { error } = await c.get("supabase").from("feeds").update({
       name: parsed.data.name, description: parsed.data.description || null, visibility: parsed.data.visibility,
-      timezone: parsed.data.timezone, auto_publish_threshold: parsed.data.threshold,
+      timezone: parsed.data.timezone, auto_publish_threshold: parsed.data.threshold, zip_code: parsed.data.zip_code || null,
     } as never).eq("id", id.data);
     if (error) {
       const msg = (error as { message?: string }).message ?? "";

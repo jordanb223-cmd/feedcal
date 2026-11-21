@@ -670,6 +670,9 @@ isOneToOne: false
 "feed_subscribe_stats":
 { Args: { "p_feed_id": string }; Returns: Json
                            },
+"feed_zip_suggestion":
+{ Args: { "p_feed_id": string }; Returns: Json
+                           },
 "finish_extract_job":
 { Args: { "p_job_id": number }; Returns: boolean
                            },

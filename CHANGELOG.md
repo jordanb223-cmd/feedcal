@@ -7,6 +7,14 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-21
+
+### Added
+- Public calendars have an area (ZIP code), so people nearby can find them. Feedcal fills it in from addresses in the calendar's emails and events; you just confirm it when you choose Public. Private calendars are never asked.
+- Notes for subscribers on every calendar page and in the calendar itself: it's filled in automatically and can make mistakes, it isn't an official calendar of the groups named in it (unless the organizer is Verified), and calendar apps can take a few hours to show changes.
+- The privacy policy now explains what happens when you connect Gmail.
+- Approving a sender now says what that means: events with a clear date go on the calendar without asking you.
+
 ## [0.2.3] - 2026-11-21
 
 ### Changed

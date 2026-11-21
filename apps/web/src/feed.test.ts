@@ -54,6 +54,12 @@ describe("GET /f/<token>.ics", () => {
     });
   });
 
+  it("the calendar's description tells subscribers it can make mistakes (D44)", async () => {
+    const { request } = setup(() => ({ data: calendarData(), error: null }));
+    const ics = (await (await request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
+    expect(ics).toMatch(/X-WR-CALDESC:.*can make mistakes/);
+  });
+
   it("answers 304 when the calendar hasn't changed", async () => {
     const { request } = setup(() => ({ data: calendarData(), error: null }));
     const first = await request(`/f/${TOKEN}.ics`);

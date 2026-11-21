@@ -86,6 +86,18 @@ describe("GET /c/<slug>", () => {
     expect(body).toContain(`<meta property="og:title" content="${title}">`);
   });
 
+  it("tells subscribers it can make mistakes, isn't official, and updates on the app's schedule (D44)", async () => {
+    const { request } = setup(() => ({ data: page(), error: null }));
+    const body = await (await request("/c/sutterville-kindergarten", { headers: { "user-agent": IPHONE } })).text();
+    expect(body).toContain("it can make mistakes");
+    expect(body).toContain("Not run or endorsed by any school");
+    expect(body).toContain("updates can take a few hours");
+    const verified = page();
+    (verified.feed as Record<string, unknown>).verified = true;
+    const { request: r2 } = setup(() => ({ data: verified, error: null }));
+    expect(await (await r2("/c/sutterville-kindergarten", { headers: { "user-agent": IPHONE } })).text()).not.toContain("Not run or endorsed");
+  });
+
   it("puts the right button first for the device, and always lists the others", async () => {
     const { request } = setup(() => ({ data: page(), error: null }));
     const iphone = await (await request("/c/sutterville-kindergarten", { headers: { "user-agent": IPHONE } })).text();

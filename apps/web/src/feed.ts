@@ -6,6 +6,7 @@ import { currentUser, MESSAGES } from "./auth.js";
 import { csrfValid, originOf } from "./security.js";
 import type { AppEnv } from "./types.js";
 import { messagePage } from "./views.js";
+import { NOTE_ACCURACY } from "./subscribe-views.js";
 
 const DEFAULT_TIME_ZONE = "America/Los_Angeles";
 const FeedId = z.uuid();
@@ -90,7 +91,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
       source: e.source,
     }));
     const origin = originOf(c);
-    const { ics, warnings } = buildCalendar({ name: feed.name, description: feed.description }, calendarEvents, {
+    const { ics, warnings } = buildCalendar({ name: feed.name, description: [feed.description, NOTE_ACCURACY].filter(Boolean).join("\n\n") }, calendarEvents, {
       defaultTimeZone: DEFAULT_TIME_ZONE,
       reportUrl: (uid) => `${origin}/report/${encodeURIComponent(uid)}`,
       product: "Feedcal",
