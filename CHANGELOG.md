@@ -7,6 +7,15 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-21
+
+### Added
+- A "Support Feedcal" link to Buy Me a Coffee on the costs page and your account's support page.
+
+### Fixed
+- If a sign-in link opens in a different browser from the one you asked in, the page now explains how to finish.
+- The admin console says "No admin actions yet" instead of showing an empty list.
+
 ## [0.1.0] - 2026-11-21
 
 The first release: everything built so far, for a private beta.
