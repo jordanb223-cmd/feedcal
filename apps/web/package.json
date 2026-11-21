@@ -1,0 +1,14 @@
+{
+  "name": "@feedcal/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs && wrangler pages dev dist --port 8788"
+  },
+  "dependencies": {
+    "@feedcal/shared": "0.1.0",
+    "hono": "^4.10.0"
+  }
+}

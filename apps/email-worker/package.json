@@ -1,0 +1,8 @@
+{
+  "name": "@feedcal/email-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "wrangler dev" },
+  "dependencies": { "@feedcal/shared": "0.1.0" }
+}

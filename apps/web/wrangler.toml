@@ -1,0 +1,16 @@
+# Cloudflare Pages config. Secrets (SUPABASE_ANON_KEY) are set with
+# `wrangler pages secret put` per environment, never here.
+name = "feedcal-web"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "local"
+SUPABASE_URL = "http://127.0.0.1:54321"
+
+[env.preview.vars]
+ENVIRONMENT = "staging"
+
+[env.production.vars]
+ENVIRONMENT = "production"

@@ -1,0 +1,11 @@
+# Email Worker. Holds only the ingest HMAC secret (Phase 6), never the
+# Supabase service-role key.
+name = "feedcal-email-worker"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[env.staging]
+name = "feedcal-email-worker-staging"
+
+[env.production]
+name = "feedcal-email-worker-production"

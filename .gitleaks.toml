@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Example env files hold no values"
+paths = ['''\.dev\.vars\.example$''', '''\.env\.example$''']
