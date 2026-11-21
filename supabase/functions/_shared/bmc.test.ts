@@ -1,7 +1,8 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { BmcEvent, signatureValid, supporterOf } from "./bmc.ts";
 
-const SECRET = "whsec_test_123456";
+// Random per run, so no secret-looking literal sits in the repo (gitleaks).
+const SECRET: string = crypto.randomUUID();
 // A recorded-shape payload (outer fields from BMC's help centre; data fields as BMC test events send them: UNVERIFIED).
 const BODY = JSON.stringify({ event_id: 1234, type: "donation.created", live_mode: true, created: 1719825600, attempt: 1,
   data: { supporter_name: "Jamie", supporter_email: "Jamie@Example.test", amount: 5, currency: "usd", support_note: "Thanks!" } });
