@@ -17,7 +17,7 @@ UPDATE_GOLDEN=1 npx vitest run packages/ics
 
 ## Phase 6 hand test: a real Gmail forward (needs SETUP §7)
 1. Create a test feed, open **Email forwarding** from the account page, and copy the address.
-2. In a real Gmail account, add it as a forwarding address. **Pass:** within a minute the confirmation code shows on the email page. Type it into Gmail.
+2. In a real Gmail account, add it as a forwarding address. **Pass:** within a minute a "Confirm on google.com" button (and the code) shows on the email page. Click it, refresh Gmail settings, and the address shows as verified. Note the confirmation email's real sender and subject in the results (D27).
 3. Make a filter that forwards one sender's mail, then have that sender email you. **Pass:** "Use emails from … ?" appears; tap Yes.
 4. Forward the same email again by hand. **Pass:** no second copy (the waiting count doesn't change; the Worker log says `duplicate`).
 5. Send a 21 MB attachment. **Pass:** the sender gets the "larger than 20 MB" bounce.

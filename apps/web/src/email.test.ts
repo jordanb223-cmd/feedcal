@@ -68,6 +68,7 @@ describe("GET /feeds/<id>/email", () => {
     const body = await (await request(`/feeds/${FEED}/email`)).text();
     expect(body).toContain('value="feed-aliceschoolfeed23456@in.feedcal.test"');
     expect(body).toContain("957493560");
+    expect(body).toContain("Confirm on google.com");
     expect(body).toContain('href="https://mail-settings.google.com/mail/vf-abc" rel="noreferrer noopener"');
     expect(body).toContain("Use emails from chair@pta.example.test for this calendar?");
     expect(body).toContain("2 emails waiting");
