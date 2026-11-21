@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-21
+
+### Added
+- Gmail: read earlier emails too. When you pick your example, a box (ticked by default) also reads that sender's emails from the 30 days before it. Calendars already connected get a "Read the last 30 days" button. Still only that one sender, 3 emails every 5 minutes until caught up.
+
 ## [0.2.1] - 2026-11-21
 
 ### Fixed

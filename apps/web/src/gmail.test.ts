@@ -19,7 +19,7 @@ function app(status: unknown, opts: { owner?: boolean; invoke?: unknown } = {}) 
       if (opts.owner === false) return { data: null, error: { code: "42501" } };
       if (fn === "gmail_status") return { data: status, error: null };
       if (fn === "gmail_start") return { data: { state: "s".repeat(64), code_challenge: "c".repeat(43) }, error: null };
-      if (fn === "gmail_choose_example") return { data: true, error: null };
+      if (fn === "gmail_choose_example" || fn === "gmail_look_back") return { data: true, error: null };
       return { data: null, error: null };
     },
     functions: { invoke: async (name: string, o: unknown) => { calls.push({ fn: `invoke:${name}`, args: o }); return { data: opts.invoke ?? { candidates: CANDS }, error: null }; } },
@@ -75,7 +75,27 @@ describe("Gmail page (D39)", () => {
     expect(t.calls.some((c) => c.fn === "gmail_choose_example")).toBe(false); // nothing saved yet
     const done = await t.post(`/feeds/${ID}/gmail/confirm`, { gmail_id: "abc123", interval: "3" });
     expect(done.headers.get("location")).toBe(`/feeds/${ID}/gmail?result=confirmed`);
-    expect(t.calls.find((c) => c.fn === "gmail_choose_example")?.args).toEqual({ p_feed_id: ID, p_gmail_id: "abc123", p_interval_days: 3 });
+    expect(t.calls.find((c) => c.fn === "gmail_choose_example")?.args).toEqual({ p_feed_id: ID, p_gmail_id: "abc123", p_interval_days: 3, p_look_back: false });
+  });
+
+  it("the 30-day look-back is offered, ticked, said out loud, and passed on", async () => {
+    const t = app({ connected: true, status: "choose_example", candidates: [] });
+    const picked = await (await t.post(`/feeds/${ID}/gmail/search`, { words: "Room F" })).text();
+    expect(picked).toMatch(/name="look_back" value="1" checked/);
+    const t2 = app({ connected: true, status: "choose_example", candidates: CANDS });
+    const review = await (await t2.post(`/feeds/${ID}/gmail/review`, { gmail_id: "abc123", interval: "7", look_back: "1" })).text();
+    expect(review).toContain("from the 30 days before your example");
+    expect(review).toContain('name="look_back" value="1"');
+    await t2.post(`/feeds/${ID}/gmail/confirm`, { gmail_id: "abc123", interval: "7", look_back: "1" });
+    expect(t2.calls.find((c) => c.fn === "gmail_choose_example")?.args).toEqual({ p_feed_id: ID, p_gmail_id: "abc123", p_interval_days: 7, p_look_back: true });
+  });
+
+  it("an active calendar has a Read the last 30 days button", async () => {
+    const t = app({ connected: true, status: "active", sender_email: "office@school.example", interval_days: 7 });
+    expect(await (await t.get(`/feeds/${ID}/gmail`)).text()).toContain("Read the last 30 days");
+    const res = await t.post(`/feeds/${ID}/gmail/look-back`, {});
+    expect(res.headers.get("location")).toBe(`/feeds/${ID}/gmail?result=look_back`);
+    expect(t.calls.find((c) => c.fn === "gmail_look_back")?.args).toEqual({ p_feed_id: ID });
   });
 
   it("active: shows the sender, schedule and next check, with disconnect", async () => {

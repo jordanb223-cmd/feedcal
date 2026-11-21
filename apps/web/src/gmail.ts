@@ -38,6 +38,8 @@ const RESULTS: Record<string, string> = {
   expired: "That took too long. Please connect again.",
   failed: "Something went wrong connecting Gmail. Please try again.",
   interval: "Schedule saved.",
+  look_back: "Feedcal will now read emails from this sender from the last 30 days, 3 at a time every 5 minutes, until it's caught up.",
+  look_back_failed: "That didn't work. Gmail needs to be connected and a sender picked first.",
 };
 
 const csrfField = (t: string) => html`<input type="hidden" name="csrf" value="${t}">`;
@@ -104,6 +106,8 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
           <span><strong dir="auto">${x.subject || "(no subject)"}</strong><br><span class="muted" dir="auto">${x.from_name ? `${x.from_name} · ` : ""}${x.from_email || "no sender address, can't be used"} · ${day(x.date)}</span></span></label></p>`)}
         <p><label for="interval">How often should Feedcal check for new emails from this sender?</label>
           <select id="interval" name="interval"><option value="7" selected>Every 7 days</option><option value="3">Every 3 days</option></select></p>
+        <p><label class="check"><input type="checkbox" name="look_back" value="1" checked>
+          <span>Also read earlier emails from this sender, from the 30 days before your example</span></label></p>
         <button type="submit">Next</button></form></div>`
       : opts.candidates ? html`<div class="card"><p class="muted">No emails matched. Try different words.</p></div>` : ""}
     <div class="card">${disconnect}</div>`);
@@ -122,6 +126,9 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
       <label for="interval">Check</label>
       <select id="interval" name="interval"><option value="7" ${s.interval_days === 7 ? "selected" : ""}>every 7 days</option><option value="3" ${s.interval_days === 3 ? "selected" : ""}>every 3 days</option></select>
       <button type="submit" class="secondary">Save</button></form>
+    <form method="post" action="/feeds/${id}/gmail/look-back">${csrfField(t)}
+      <button type="submit" class="secondary">Read the last 30 days</button></form>
+    <p class="muted" style="font-size:.875rem">Reads earlier emails from this sender only, back 30 days, 3 every 5 minutes. Emails already read are skipped.</p>
     <p class="muted">New emails go through the same steps as forwarded ones: the first email from a new sender waits for your OK on the <a href="/feeds/${id}/email">Email page</a>.</p>
   </div><div class="card">${disconnect}</div>`);
 }
@@ -185,6 +192,7 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
     if (!csrfValid(c, body.csrf)) return c.html(page(c, o.id, o.name, o.status, { error: MESSAGES.badForm }), 403);
     const pick = (o.status.candidates ?? []).find((x) => x.id === body.gmail_id && x.from_email);
     const interval = body.interval === "3" ? 3 : 7;
+    const lookBack = body.look_back === "1";
     if (!pick) return c.html(page(c, o.id, o.name, o.status, { error: "Pick one of the emails first." }), 400);
     const t = csrfToken(c);
     return c.html(layout(`Gmail for ${o.name}`, html`<div class="card">${feedNav(o.id, "gmail")}
@@ -193,10 +201,11 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
         <li>Look <strong>only</strong> for emails <strong>from ${pick.from_name ? `${pick.from_name} ` : ""}&lt;${pick.from_email}&gt;</strong>. Nothing else in your Gmail is searched or read.</li>
         <li>Check <strong>every ${interval} days</strong>.</li>
         <li>Read your example now ("<span dir="auto">${pick.subject || "(no subject)"}</span>", ${day(pick.date)}), then each new email from that sender, and add their events to ${o.name}'s calendar.</li>
+        ${lookBack ? html`<li>Also read earlier emails from that sender, from the 30 days before your example, 3 every 5 minutes until caught up.</li>` : ""}
         <li>You can change this or disconnect at any time. Disconnecting deletes Feedcal's copies.</li>
       </ul>
       <form method="post" action="/feeds/${o.id}/gmail/confirm" class="row">${csrfField(t)}
-        <input type="hidden" name="gmail_id" value="${pick.id}"><input type="hidden" name="interval" value="${interval}">
+        <input type="hidden" name="gmail_id" value="${pick.id}"><input type="hidden" name="interval" value="${interval}">${lookBack ? html`<input type="hidden" name="look_back" value="1">` : ""}
         <button type="submit">Confirm</button> <a class="button secondary" href="/feeds/${o.id}/gmail">Pick a different email</a>
       </form></div>`));
   });
@@ -206,7 +215,7 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
     if ("res" in o) return o.res;
     const body = await form(c);
     if (!csrfValid(c, body.csrf)) return c.html(page(c, o.id, o.name, o.status, { error: MESSAGES.badForm }), 403);
-    const { data, error } = await c.get("supabase").rpc("gmail_choose_example", { p_feed_id: o.id, p_gmail_id: body.gmail_id ?? "", p_interval_days: body.interval === "3" ? 3 : 7 });
+    const { data, error } = await c.get("supabase").rpc("gmail_choose_example", { p_feed_id: o.id, p_gmail_id: body.gmail_id ?? "", p_interval_days: body.interval === "3" ? 3 : 7, p_look_back: body.look_back === "1" });
     if (error || data !== true) return c.html(page(c, o.id, o.name, o.status, { error: "That email isn't in your latest search any more. Search again." }), 400);
     c.get("log").info("gmail_example_confirmed");
     return c.redirect(`/feeds/${o.id}/gmail?result=confirmed`, 303);
@@ -219,6 +228,15 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
     if (!csrfValid(c, body.csrf)) return c.html(page(c, o.id, o.name, o.status, { error: MESSAGES.badForm }), 403);
     await c.get("supabase").rpc("gmail_set_interval", { p_feed_id: o.id, p_interval_days: body.interval === "3" ? 3 : 7 });
     return c.redirect(`/feeds/${o.id}/gmail?result=interval`, 303);
+  });
+
+  app.post("/feeds/:id/gmail/look-back", async (c) => {
+    const o = await owner(c);
+    if ("res" in o) return o.res;
+    if (!csrfValid(c, (await form(c)).csrf)) return c.html(page(c, o.id, o.name, o.status, { error: MESSAGES.badForm }), 403);
+    const { data, error } = await c.get("supabase").rpc("gmail_look_back", { p_feed_id: o.id });
+    c.get("log").info("gmail_look_back", { ok: !error && data === true });
+    return c.redirect(`/feeds/${o.id}/gmail?result=${!error && data === true ? "look_back" : "look_back_failed"}`, 303);
   });
 
   app.post("/feeds/:id/gmail/disconnect", async (c) => {

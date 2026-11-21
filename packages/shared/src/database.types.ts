@@ -689,7 +689,7 @@ isOneToOne: false
 { Args: { "p_checked_at": string,"p_error"?: string,"p_feed_id": string,"p_more"?: boolean,"p_reconnect"?: boolean }; Returns: undefined
                            },
 "gmail_choose_example":
-{ Args: { "p_feed_id": string,"p_gmail_id": string,"p_interval_days": number }; Returns: boolean
+{ Args: { "p_feed_id": string,"p_gmail_id": string,"p_interval_days": number,"p_look_back"?: boolean }; Returns: boolean
                            },
 "gmail_claim_checks":
 { Args: { "p_limit"?: number }; Returns: {
@@ -698,6 +698,9 @@ isOneToOne: false
                            },
 "gmail_disconnect":
 { Args: { "p_feed_id": string }; Returns: Json
+                           },
+"gmail_look_back":
+{ Args: { "p_feed_id": string }; Returns: boolean
                            },
 "gmail_oauth_complete":
 { Args: { "p_google_email": string,"p_refresh_token": string,"p_state": string }; Returns: string
