@@ -63,6 +63,16 @@ export function zonedToUtc(local: string, tz: string): string {
   return new Date(guess).toISOString();
 }
 
+// Children's safety (Phase 14): personal details in an event's title or description send it to
+// review instead of publishing. Locations are exempt (venues have street addresses).
+const PHONE = /(\+?1[\s.-]?)?\(?\b\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b/;
+const EMAIL = /\b[^\s@]+@[^\s@]+\.[a-z]{2,}\b/i;
+const HOME_ADDRESS = /\b\d{1,5}\s+[A-Za-z0-9.'-]+(\s+[A-Za-z0-9.'-]+){0,3}\s+(st|street|ave|avenue|rd|road|dr|drive|ln|lane|ct|court|way|blvd|boulevard|pl|place|cir|circle|ter|terrace)\b\.?/i;
+export function personalDetails(e: { title: string; description: string | null }): string[] {
+  const text = `${e.title}\n${e.description ?? ""}`;
+  return [PHONE.test(text) ? "phone" : "", EMAIL.test(text) ? "email" : "", HOME_ADDRESS.test(text) ? "street_address" : ""].filter(Boolean);
+}
+
 export type RejectReason = "quote_not_found" | "unknown_source" | "bad_timezone" | "time_not_in_quote" | "end_before_start" | "date_out_of_range" | "bad_recurrence";
 
 /** Hard failures reject the event; soft ones keep it but send it to review. */
@@ -84,6 +94,7 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   const review: string[] = [];
   if (e.confidence < 0.7) review.push("low_confidence");
   if (source.fromTranscription) review.push("from_transcription");
+  if (personalDetails(e).length) review.push("personal_details");
   // Changes and cancellations aren't flagged here: from a trusted sender at high confidence they
   // apply automatically (D31), so subscribers see a moved practice without the owner stepping in.
   return { review, fromTranscription: source.fromTranscription };

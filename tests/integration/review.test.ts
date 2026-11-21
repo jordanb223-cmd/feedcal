@@ -46,6 +46,8 @@ describe.skipIf(!enabled)("review screen, end to end", { timeout: 60_000 }, () =
     const { API_URL: url, ANON_KEY: anon, SERVICE_ROLE_KEY: service } = s;
     if (!url || !anon || !service) throw new Error("Local Supabase isn't running");
     db = createClient<Database>(url, service, { auth: { persistSession: false } });
+    // An established account (new accounts are limited to 3 feeds for 30 days; Phase 14).
+    await db.from("profiles").update({ created_at: new Date(Date.now() - 60 * 86_400_000).toISOString() } as never).eq("id", "11111111-1111-4111-8111-111111111111");
     alice = await session(url, anon, service, "alice@example.test");
     bob = await session(url, anon, service, "bob@example.test");
   });

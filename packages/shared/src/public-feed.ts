@@ -15,6 +15,7 @@ export const PublicFeedPage = z.object({
     organizer_name: z.string().nullable(),
     subscribers_at_least: z.number().int().nonnegative(),
     may_be_out_of_date: z.boolean().optional().default(false),
+    verified: z.boolean().optional().default(false),
     feed_token: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
   }),
   events: z.array(

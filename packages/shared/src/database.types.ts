@@ -23,7 +23,47 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "attachment_pages": {
+            "admin_audit": {
+                  Row: {
+                    "action": string,"admin_id": string | null,"created_at": string,"id": number,"reason": string | null,"target_id": string,"target_type": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": string,"admin_id"?: string | null,"created_at"?: string,"id"?: never,"reason"?: string | null,"target_id": string,"target_type": string
+                  }
+                  Update: {
+                    "action"?: string,"admin_id"?: string | null,"created_at"?: string,"id"?: never,"reason"?: string | null,"target_id"?: string,"target_type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "admin_audit_admin_id_fkey"
+      columns: ["admin_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"admins": {
+                  Row: {
+                    "added_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "added_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "added_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "admins_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"attachment_pages": {
                   Row: {
                     "attachment_id": string,"created_at": string,"image_path": string | null,"page_index": number,"text": string | null,"text_source": string
                   }
@@ -219,16 +259,36 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"feeds": {
+                },"feed_reports": {
                   Row: {
-                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"delete_requested_at": string | null,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id": string,"import_url": string | null,"imported_at": string | null,"imported_source_name": string | null,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"stale_nudged_at": string | null,"timezone": string,"verified": boolean,"visibility": string,"zip_code": string | null
+                    "created_at": string,"details": string | null,"feed_id": string,"id": string,"kind": string,"reporter_hash": string | null,"status": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id"?: string,"import_url"?: string | null,"imported_at"?: string | null,"imported_source_name"?: string | null,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"stale_nudged_at"?: string | null,"timezone"?: string,"verified"?: boolean,"visibility"?: string,"zip_code"?: string | null
+                    "created_at"?: string,"details"?: string | null,"feed_id": string,"id"?: string,"kind": string,"reporter_hash"?: string | null,"status"?: string
                   }
                   Update: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"id"?: string,"import_url"?: string | null,"imported_at"?: string | null,"imported_source_name"?: string | null,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"stale_nudged_at"?: string | null,"timezone"?: string,"verified"?: boolean,"visibility"?: string,"zip_code"?: string | null
+                    "created_at"?: string,"details"?: string | null,"feed_id"?: string,"id"?: string,"kind"?: string,"reporter_hash"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "feed_reports_feed_id_fkey"
+      columns: ["feed_id"]
+isOneToOne: false
+      referencedRelation: "feeds"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"feeds": {
+                  Row: {
+                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"delete_requested_at": string | null,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"hidden_at": string | null,"hidden_reason": string | null,"id": string,"import_url": string | null,"imported_at": string | null,"imported_source_name": string | null,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"stale_nudged_at": string | null,"timezone": string,"verified": boolean,"visibility": string,"zip_code": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"hidden_at"?: string | null,"hidden_reason"?: string | null,"id"?: string,"import_url"?: string | null,"imported_at"?: string | null,"imported_source_name"?: string | null,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"stale_nudged_at"?: string | null,"timezone"?: string,"verified"?: boolean,"visibility"?: string,"zip_code"?: string | null
+                  }
+                  Update: {
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"hidden_at"?: string | null,"hidden_reason"?: string | null,"id"?: string,"import_url"?: string | null,"imported_at"?: string | null,"imported_source_name"?: string | null,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"stale_nudged_at"?: string | null,"timezone"?: string,"verified"?: boolean,"visibility"?: string,"zip_code"?: string | null
                   }
                   Relationships: [
                     {
@@ -299,6 +359,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"moderation_flags": {
+                  Row: {
+                    "created_at": string,"excerpt": string | null,"feed_id": string,"id": string,"reasons": (string)[],"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"excerpt"?: string | null,"feed_id": string,"id"?: string,"reasons": (string)[],"status"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"excerpt"?: string | null,"feed_id"?: string,"id"?: string,"reasons"?: (string)[],"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "moderation_flags_feed_id_fkey"
+      columns: ["feed_id"]
+isOneToOne: false
+      referencedRelation: "feeds"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"notification_settings": {
                   Row: {
                     "instant_reports": boolean,"milestones": boolean,"staleness": boolean,"updated_at": string,"user_id": string,"weekly_digest": boolean
@@ -321,14 +401,14 @@ isOneToOne: true
                   ]
                 },"profiles": {
                   Row: {
-                    "created_at": string,"deleted_at": string | null,"display_name": string | null,"id": string
+                    "created_at": string,"deleted_at": string | null,"display_name": string | null,"id": string,"suspended_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"deleted_at"?: string | null,"display_name"?: string | null,"id": string
+                    "created_at"?: string,"deleted_at"?: string | null,"display_name"?: string | null,"id": string,"suspended_at"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"deleted_at"?: string | null,"display_name"?: string | null,"id"?: string
+                    "created_at"?: string,"deleted_at"?: string | null,"display_name"?: string | null,"id"?: string,"suspended_at"?: string | null
                   }
                   Relationships: [
                     
@@ -473,6 +553,30 @@ isOneToOne: false
                            },
 "add_imported_feed":
 { Args: { "p_category": string,"p_name": string,"p_owner": string,"p_source_name": string,"p_url": string,"p_zip": string }; Returns: string
+                           },
+"admin_dismiss":
+{ Args: { "p_id": string,"p_kind": string,"p_reason"?: string }; Returns: undefined
+                           },
+"admin_hide_feed":
+{ Args: { "p_feed_id": string,"p_reason": string }; Returns: undefined
+                           },
+"admin_queue":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"admin_set_verified":
+{ Args: { "p_feed_id": string,"p_reason"?: string,"p_verified": boolean }; Returns: undefined
+                           },
+"admin_status":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"admin_suspend_user":
+{ Args: { "p_reason": string,"p_user_id": string }; Returns: undefined
+                           },
+"admin_unhide_feed":
+{ Args: { "p_feed_id": string,"p_reason": string }; Returns: undefined
+                           },
+"admin_unsuspend_user":
+{ Args: { "p_reason": string,"p_user_id": string }; Returns: undefined
                            },
 "approve_all_sure":
 { Args: { "p_feed_id": string }; Returns: number
@@ -647,6 +751,9 @@ isOneToOne: false
 "state_machines":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"submit_feed_report":
+{ Args: { "p_client_ip"?: string,"p_details"?: string,"p_kind": string,"p_slug": string }; Returns: string
+                           },
 "submit_report":
 { Args: { "p_client_ip"?: string,"p_details"?: string,"p_event_uid": string,"p_kind": string }; Returns: string
                            },
@@ -658,6 +765,9 @@ isOneToOne: false
                            },
 "unsubscribe":
 { Args: { "p_kind": string,"p_token": string,"p_user": string }; Returns: boolean
+                           },
+"verify_feed_by_domain":
+{ Args: { "p_feed_id": string }; Returns: boolean
                            }
           }
           Enums: {

@@ -258,6 +258,11 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
   </form>`
     : html`<p class="muted">Only the owner can change these settings.</p>`}
 </div>
+${s.isOwner ? html`<div class="card">
+  <h2>Verified badge</h2>
+  <p>Families trust calendars from verified organizers. We verify automatically when you sign in with your organisation's email and it sends this feed's emails.</p>
+  <form method="post" action="/feeds/${opts.feedId}/verify">${csrf(t)}<button type="submit" class="secondary">Check verification</button></form>
+</div>` : ""}
 <div class="card">
   <h2>Subscribe link</h2>
   <p><a href="/feeds/${opts.feedId}/share">See the subscribe link, QR code and flyer</a>. If the link reached the wrong people, you can make a new one there.</p>

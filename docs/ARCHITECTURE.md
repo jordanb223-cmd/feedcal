@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 13 (public directory). Real email needs a provider key and a domain; locally it goes to Mailpit. Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 14 (moderation, abuse and safety). Real email needs a provider key and a domain; locally it goes to Mailpit. Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 

@@ -81,7 +81,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
   return layout(
     feed.name,
     html`<div class="card">
-  <h1 dir="auto">${feed.name}</h1>
+  <h1 dir="auto">${feed.name}${feed.verified ? html` <span title="Verified organizer" style="font-size:1rem">✓ Verified</span>` : ""}</h1>
   ${feed.may_be_out_of_date ? html`<p class="error">This calendar hasn't been updated in over 90 days, so it may be out of date.</p>` : ""}
   ${feed.organizer_name ? html`<p class="muted">Kept up to date by <span dir="auto">${feed.organizer_name}</span>${feed.area ? html` · <span dir="auto">${feed.area}</span>` : feed.zip_code ? html` · ${feed.zip_code}` : ""}</p>` : ""}
   ${feed.description ? html`<p dir="auto">${feed.description}</p>` : ""}
@@ -106,6 +106,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
     ? html`<p class="muted">No upcoming events yet. Subscribe now and new ones will appear in your calendar on their own.</p>`
     : html`<ul class="events">${next.map((e) => html`<li><strong dir="auto">${e.title}</strong><span class="when">${formatWhen(e)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></li>`)}</ul>`}
 </div>
+<p class="muted no-print" style="text-align:center"><a href="/c/${feed.slug}/report">Report this calendar</a></p>
 ${copyScript}`,
     head,
   );

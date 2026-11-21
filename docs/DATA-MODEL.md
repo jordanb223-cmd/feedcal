@@ -128,6 +128,9 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `decide_sender(p_source_id, p_trust)` / `decide_message(p_message_id, p_release)` | signed-in members | Phase 6. Approve or decline a waiting sender (or one message). Approving queues its waiting mail. |
 | `rotate_intake_address(p_feed_id)` | signed-in owner | Phase 6. New forwarding address; the old one stops at once. |
 | `claim_storage_trash` / `forget_storage_trash` | service role | Phase 6. Used by the `storage-trash` Edge Function. |
+| `submit_feed_report(p_slug, p_kind, p_details, p_client_ip)` | anon, signed-in | Phase 14 (D35). "Report this calendar": spam, wrong info, inappropriate, impersonation, privacy; rate-limited, hashed. |
+| `admin_queue` / `admin_hide_feed` / `admin_unhide_feed` / `admin_suspend_user` / `admin_unsuspend_user` / `admin_set_verified` / `admin_dismiss` | admins with a second factor (aal2) | Phase 14. Every action writes `admin_audit`. |
+| `verify_feed_by_domain(p_feed_id)` | signed-in owner | Phase 14. Verified badge when the owner's organisation domain is a trusted sender. |
 | `directory_search(p_query, p_zip, p_miles, p_category, p_limit)` | anon, signed-in (SECURITY INVOKER) | Phase 13 (D34). Public feeds only, ranked by text match, distance, followers, freshness and verification. |
 | `add_imported_feed` / `claim_imports` / `record_import` | service role | Phase 13. Operator-added public calendars, re-fetched daily; vanished events are cancelled, never deleted. |
 | `submit_report(p_event_uid, p_kind, p_details, p_client_ip)` | anon, signed-in | Phase 12 (D33). A subscriber's "Report a problem"; 10 an hour per network (hashed); queues an instant email to the feed's people. |
