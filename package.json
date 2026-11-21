@@ -20,7 +20,8 @@
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript > packages/shared/src/database.types.ts",
     "dev:web": "npm run dev -w @feedcal/web",
-    "test:functions": "deno test --no-prompt supabase/functions && deno check supabase/functions/*/index.ts"
+    "test:functions": "deno test --no-prompt supabase/functions && deno check supabase/functions/*/index.ts",
+    "db:states": "node scripts/gen-state-machines.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261121.1",

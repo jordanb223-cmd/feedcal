@@ -11,7 +11,7 @@ npm run lint && npm run typecheck && npm test && npm run db:test
 npm run dev:web       # http://localhost:8788/health
 ```
 
-After any migration: `npm run db:types` and commit `packages/shared/src/database.types.ts`. CI fails if it's stale.
+After any migration: `npm run db:types` and commit `packages/shared/src/database.types.ts`. If the migration changes a state machine, also run `npm run db:states` (see docs/STATE-MACHINES.md). CI fails if either is stale.
 
 ## Branches and releases
 

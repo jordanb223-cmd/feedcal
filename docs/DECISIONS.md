@@ -89,3 +89,15 @@ GitHub's docs say that on GitHub Free, private repositories get no environments,
 - **Count wording (Rev 4).** "At least N calendars follow this", with a line saying how it's counted (distinct calendar clients over 7 days; Google counts once for all its users).
 - **Share kit.** `/feeds/<id>/share` replaces `/feeds/<id>/link` (which now gets a 301). Rotation redirects back to it after the POST, so refreshing can't rotate twice. QR codes are server-side SVG from `uqr` (MIT, no dependencies, works in Workers).
 - **Found while testing:** the Phase 2 seed left `auth.users` token columns NULL, so seeded people couldn't sign in. Fixed; `005_seed_users_can_sign_in.test.sql` guards it.
+
+## D24 — State machines live in the database; code and docs are generated from it (2026-11-20)
+- **The survey** found eight implicit state machines (docs/STATE-MACHINES.md). Four were status columns that any value could jump to. Account deletion's "14 days" was written in five places.
+- **Decision.** The database is the single source of truth.
+  - `private.state_transitions` lists every legal move, and one trigger (`private.enforce_transition`) refuses any other move on UPDATE. Its error names the allowed moves.
+  - `public.state_machines()` exposes the rules. `npm run db:states` generates `state-machines.generated.ts` and the diagrams, the same pattern as `db:types`, and CI fails if they're stale.
+  - Hand-written labels are typed against the generated states, so a new state without a label won't compile.
+- **Why the database, not TypeScript.** Phases 6–12 will change these columns from Edge Functions, SQL jobs and the web app. Only the database sees every writer.
+- **Effect on users (UX):** clear status labels, and edits that actually reach subscribers' calendars (below). **On developers (DX):** one place to change a rule, generated types, errors that say what's allowed. **On AI agents (AX):** rules readable from one function and one doc; a wrong move fails loudly with the fix in the message, not silently.
+- **Without breaking anything:** inserts aren't restricted, and every existing test passes unchanged (152 database tests).
+- **Bug fixed along the way.** Nothing raised an event's `SEQUENCE` on edits, and calendar apps use it to decide whether an edit is newer. `private.events_bump_sequence` now raises it on any change a subscriber can see, unless the caller already raised it.
+- **One grace period.** `private.deletion_grace()` defines it; `request_account_deletion`, `due_account_deletions` and the new `account_status()` read it; the account page shows what `account_status()` returns.

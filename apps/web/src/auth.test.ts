@@ -26,7 +26,7 @@ function fakeSupabase(opts: { user?: { sub: string; email: string } | null; otpE
     signInWithOAuth: vi.fn(async () => ({ data: { url: "http://db.test/auth/v1/authorize?provider=google" }, error: null })),
     signOut: vi.fn(async () => ({ error: null })),
   };
-  const rpc = vi.fn(async () => ({ data: null, error: null }));
+  const rpc = vi.fn<(fn: string) => Promise<{ data: unknown; error: unknown }>>(async () => ({ data: null, error: null }));
   const from = vi.fn(() => ({
     select: () => ({
       eq: () => ({ maybeSingle: async () => ({ data: { display_name: null, deleted_at: null } }) }),
@@ -252,10 +252,22 @@ describe("sessions and the account page", () => {
     const { cookie, token } = await csrfFrom(request, "/account");
     const res = await request(...post("/account/delete", { csrf: token }, { cookie, origin: BASE }));
     expect(res.status).toBe(400);
-    expect(rpc).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalledWith("request_account_deletion");
     const ok = await request(...post("/account/delete", { csrf: token, confirm: "yes" }, { cookie, origin: BASE }));
     expect(ok.status).toBe(200);
     expect(rpc).toHaveBeenCalledWith("request_account_deletion");
+  });
+
+  it("the account page shows the grace period and date from the database", async () => {
+    const fake = fakeSupabase({ user: { sub: "u1", email: "a@example.test" } });
+    fake.rpc.mockImplementation(async (fn: string) =>
+      fn === "account_status"
+        ? { data: { state: "scheduled_for_deletion", deletion_requested_at: "2026-11-20T10:00:00Z", deletes_on: "2026-12-04T10:00:00Z", grace_days: 14 }, error: null }
+        : { data: null, error: null },
+    );
+    const app = createApp({ version: "1", commit: "c", supabase: () => fake.client, logSink: () => {} });
+    const body = await (await app.request(`${BASE}/account`, {}, env)).text();
+    expect(body).toContain("will be deleted on <strong>December 4, 2026</strong>");
   });
 
   it("session pages are never cached", async () => {
