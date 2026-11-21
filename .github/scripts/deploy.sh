@@ -45,6 +45,19 @@ printf '%s' "https://$SUPABASE_PROJECT_REF.supabase.co" | npx wrangler pages sec
 printf '%s' "$ANON_KEY" | npx wrangler pages secret put SUPABASE_ANON_KEY --project-name "$PAGES_PROJECT"
 echo "::endgroup::"
 
+echo "::group::Scheduler settings (where pg_cron finds the Edge Functions)"
+# Management API "Run sql query" (experimental): supabase.com/docs/reference/api/v1-run-a-query.
+# Not yet run against a hosted project.
+# Values are the public project URL and public anon key, not secrets (D26).
+SETTINGS_SQL="insert into private.app_settings (key, value) values
+  ('functions_url', 'https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1'),
+  ('functions_key', '$ANON_KEY')
+  on conflict (key) do update set value = excluded.value;"
+jq -n --arg q "$SETTINGS_SQL" '{query: $q}' | curl --fail --silent --show-error -X POST \
+  "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "content-type: application/json" --data @- >/dev/null
+echo "::endgroup::"
+
 echo "::group::Web app"
 GITHUB_SHA="$DEPLOY_SHA" npm run build -w @feedcal/web
 npx wrangler pages deploy apps/web/dist --project-name "$PAGES_PROJECT" --branch main --commit-hash "$DEPLOY_SHA"

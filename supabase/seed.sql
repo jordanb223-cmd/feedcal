@@ -67,3 +67,7 @@ insert into public.events (feed_id, title, starts_at, ends_at, timezone, status,
   ('bbbbbbbb-0000-4000-8000-000000000001', 'U10 practice',
    date_trunc('day', now()) + interval '2 days 1 hour', null, 'America/Los_Angeles', 'confirmed', 0.880,
    'dddddddd-0000-4000-8000-000000000002', 'Practice moved to Thursday', true);
+
+-- Fixed intake address for Alice's public feed, so local email tests can address it.
+-- (Real feeds get a random one from private.new_intake_address().)
+update public.feeds set intake_address = 'feed-aliceschoolfeed23456' where id = 'aaaaaaaa-0000-4000-8000-000000000001';

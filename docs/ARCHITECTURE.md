@@ -1,16 +1,16 @@
 # Architecture
 
-Status: Phase 5 (subscribe and share pages). Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 6 (email intake by forwarding; hosted email waits on a domain). Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
 ```
  Organizer's mail ──► Cloudflare Email Routing ──► Email Worker (apps/email-worker)
-                                                        │ HMAC-signed calls (Phase 6)
+                                                        │ HMAC-signed calls (Phase 6, D26)
                                                         ▼
-                         Supabase Edge Functions: ingest-start / ingest-commit   (planned)
+                         Supabase Edge Functions: ingest-start / ingest-commit
                                                         │
-                                        Storage (inbound-raw, private) + pgmq queue
+                       Storage (inbound-raw, private) + pgmq queue "process_message"
                                                         ▼
                      Queue consumer: parse → triage → extract → reconcile         (planned)
                                                         │
@@ -23,7 +23,7 @@ Status: Phase 5 (subscribe and share pages). Components marked *planned* don't e
 | Component | Where | Phase | Holds which secrets |
 |---|---|---|---|
 | Web + feed server | `apps/web` → Cloudflare Pages (`_worker.js`) | 1 (health), 4–5, 11, 13 | Supabase anon key only |
-| Email intake | `apps/email-worker` → Cloudflare Email Worker | 1 (stub, rejects all), 6 | Ingest HMAC secret only (Phase 6) |
+| Email intake | `apps/email-worker` → Cloudflare Email Worker (not deployed: needs the domain) | 6 | Ingest HMAC secret only |
 | Queues and jobs | `supabase/functions` + pgmq + pg_cron | 6–12 | Service-role key (server side only) |
 | Calendar generator | `packages/ics` | 4 | none |
 | AI extraction | `packages/extract` | 9 | Claude API key (in Edge Function env) |

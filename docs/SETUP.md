@@ -84,5 +84,20 @@ Local sign-in needs none of this: Mailpit at http://127.0.0.1:54324 catches the 
   curl -X POST -H "Authorization: Bearer <service-role key>" https://<project-ref>.supabase.co/functions/v1/delete-accounts
   ```
 
+## 7. Email forwarding (Phase 6), waiting on the domain
+Everything is built and tested locally. Hosted email needs a domain on Cloudflare, which costs money, so it waits.
+- [ ] Add the domain to Cloudflare, then **Email → Email Routing** on the subdomain `in.<domain>`, with a **catch-all** rule sending to the Worker `feedcal-email-worker-staging` (and `-production`).
+- [ ] Make one signing secret per environment and put the same value in both places (you paste it; it never goes in the repo):
+  ```bash
+  openssl rand -hex 32
+  npx wrangler secret put INGEST_HMAC_SECRET --env staging -c apps/email-worker/wrangler.toml
+  npx supabase secrets set --project-ref <staging ref> INGEST_HMAC_SECRET=<same value> INTAKE_DOMAIN=in.<domain>
+  ```
+- [ ] Deploy the Worker: `npx wrangler deploy --env staging -c apps/email-worker/wrangler.toml`.
+- [ ] Set `INTAKE_DOMAIN` on the Pages project: `printf 'in.<domain>' | npx wrangler pages secret put INTAKE_DOMAIN --project-name feedcal-web-staging`.
+- [ ] Run the Phase 6 hand test in docs/TESTING.md.
+
+Locally: `supabase/functions/.env` (gitignored) holds a local-only `INGEST_HMAC_SECRET`; make one with `printf 'INGEST_HMAC_SECRET=%s\n' "$(openssl rand -hex 32)" > supabase/functions/.env`, then restart Supabase. Add `INTAKE_DOMAIN=in.feedcal.test` to `apps/web/.dev.vars` to see a full address on the email page.
+
 ## When it's all done
 Merge a pull request into `main`: CI passes, staging deploys, and `https://feedcal-web-staging.pages.dev/health` returns `"status":"ok"`. For production, push a tag like `v0.1.0` and approve the `production` deployment in GitHub.

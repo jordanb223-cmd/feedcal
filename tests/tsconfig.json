@@ -2,5 +2,5 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": { "outDir": "dist-types", "rootDir": "..", "types": ["node", "@cloudflare/workers-types"], "noEmit": false },
   "include": ["**/*.ts"],
-  "references": [{ "path": "../apps/web" }, { "path": "../packages/shared" }]
+  "references": [{ "path": "../apps/web" }, { "path": "../apps/email-worker" }, { "path": "../packages/shared" }]
 }

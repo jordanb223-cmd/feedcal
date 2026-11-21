@@ -62,13 +62,17 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 - `search` is generated from name (weight A), description (B) and category (C), with a GIN index.
 - `location` is a PostGIS point (SRID 4326), with a GiST index.
 - `last_updated_at` is bumped by any change to the feed's events.
-- `intake_address` is filled in Phase 6.
+- `intake_address` is the local part of the feed's forwarding address, `feed-` plus 20 random base32 characters (100 bits). A trigger sets it on insert; only `rotate_intake_address` changes it. Visible to members only.
 
 **feed_editors.** Members of a feed. A trigger adds the owner as the `owner` row when the feed is created. There can be only one owner row per feed, and it can't be added or removed through the API.
 
-**sources.** Senders a feed trusts. `attachment_rule` (jsonb) holds the learned "which attachment has the schedule" pattern (Phase 8). Each sender email is unique per feed, ignoring case.
+**sources.** Senders seen by a feed. `trusted` and `blocked` change only through `decide_sender` (Phase 6). `attachment_rule` (jsonb) holds the learned "which attachment has the schedule" pattern (Phase 8). Each sender email is unique per feed, ignoring case.
 
-**messages.** Forwarded emails. They're unique per `(feed_id, message_id_header)`, so the same email arriving twice is stored once. `expires_at` defaults to 30 days after insert. Status values: `received`, `parsed`, `extracted`, `needs_review`, `ignored`, `failed`.
+**messages.** Forwarded emails. They're unique per `(feed_id, message_id_header)` and per `(feed_id, sha256)` (sha256 of the body, below the headers), so the same email arriving twice is stored once. Phase 6 adds `raw_bytes`, `attachment_count`, `auth_spf`/`auth_dkim`/`auth_dmarc` (from Cloudflare's header), and `quarantine_reason` (`new_sender` or `failed_authentication`; null once decided). Deleting a message queues its raw file for deletion. `expires_at` defaults to 30 days after insert. Status values: `received`, `parsed`, `extracted`, `needs_review`, `ignored`, `failed`.
+
+**forwarding_confirmations.** Gmail's forwarding confirmation codes, shown on the email setup page for 7 days. The link must be on `mail-settings.google.com` or `mail.google.com`. Members can read; only `ingest_commit` writes.
+
+**private.ingest_tickets / private.storage_trash / private.app_settings.** One-time upload tickets; files waiting for deletion through the Storage API; where pg_cron finds the Edge Functions. Not reachable through the API.
 
 **attachments.** Files on a message. `chosen` is the "This one has the schedule" flag. Status values: `pending`, `skipped`, `text_layer`, `transcribed`, `failed`.
 
@@ -111,6 +115,11 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `state_machines()` | anon, signed-in | Every legal status move (D24). No user data. Source for `npm run db:states`. |
 | `account_status()` | signed-in user | `{state: active or scheduled_for_deletion, deletion_requested_at, deletes_on, grace_days}`. |
 | `health_check()` | anon, signed-in | Returns `true` (Phase 1). |
+| `login_attempt_allowed(p_email, p_client_ip)` | anon, signed-in | D25. Records a sign-in email attempt; false over 5/address or 20/IP per hour. Hashes only. |
+| `ingest_start(p_local_part, p_bytes)` / `ingest_commit(...)` | service role | Phase 6 (D26). Ticket, then dedupe, allowlist, quarantine, Gmail code, enqueue on `process_message`. Commit is safe to repeat. |
+| `decide_sender(p_source_id, p_trust)` / `decide_message(p_message_id, p_release)` | signed-in members | Phase 6. Approve or decline a waiting sender (or one message). Approving queues its waiting mail. |
+| `rotate_intake_address(p_feed_id)` | signed-in owner | Phase 6. New forwarding address; the old one stops at once. |
+| `claim_storage_trash` / `forget_storage_trash` | service role | Phase 6. Used by the `storage-trash` Edge Function. |
 | `request_account_deletion()` / `cancel_account_deletion()` | signed-in user, for themselves | Sets or clears `profiles.deleted_at`. Returns the deletion date (14 days out). |
 | `due_account_deletions()` | service role | Lists accounts whose 14 days have passed. |
 | `purge_account_data(p_user_id)` | service role | Hands each owned feed to its longest-standing editor, or deletes it if there is none. Removes the user from all feeds, replaces `user:<id>` revision actors with `system`, and wipes the display name. Safe to run twice. |

@@ -156,7 +156,7 @@ export function accountPage(opts: {
   <h2>Your feeds</h2>
   ${opts.feeds.length === 0
     ? html`<p class="muted">You don't have any feeds yet.</p>`
-    : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${f.visibility})</span><span class="when"><a href="/feeds/${f.id}/share">Share and subscribe links</a></span></li>`)}</ul>`}
+    : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${f.visibility})</span><span class="when"><a href="/feeds/${f.id}/share">Share and subscribe links</a> · <a href="/feeds/${f.id}/email">Email forwarding</a></span></li>`)}</ul>`}
 </div>
 <div class="card">
   <h2>Delete your account</h2>

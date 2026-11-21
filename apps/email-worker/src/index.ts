@@ -1,7 +1,7 @@
-import { handleEmail } from "./handler.js";
+import { handleEmail, type WorkerEnv } from "./handler.js";
 
 export default {
-  async email(message: ForwardableEmailMessage): Promise<void> {
-    handleEmail(message);
+  async email(message: ForwardableEmailMessage, env: WorkerEnv): Promise<void> {
+    await handleEmail(message, env);
   },
-} satisfies ExportedHandler;
+} satisfies ExportedHandler<WorkerEnv>;
