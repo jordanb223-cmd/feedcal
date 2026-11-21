@@ -21,3 +21,11 @@ Deno.test("imports current events with zones, all-day ranges, recurrence and can
   assertEquals(events[2]?.rrule, "FREQ=MONTHLY;BYDAY=1WE");
   assertEquals(events[3]?.status, "cancelled");
 });
+
+Deno.test("a TZID without a VTIMEZONE is read in that zone, whatever the machine's zone (CI runs in UTC)", () => {
+  const [e] = parseIcs(ICS, "America/New_York", NOW);
+  assertEquals(e?.starts_at, "2026-12-02T18:00:00.000Z"); // 10:00 Los Angeles, not New York, not the machine
+  assertEquals(e?.timezone, "America/Los_Angeles");
+  const floating = parseIcs(["BEGIN:VCALENDAR", "VERSION:2.0", "BEGIN:VEVENT", "UID:f@x", "DTSTART:20261202T100000", "SUMMARY:Floating", "END:VEVENT", "END:VCALENDAR"].join("\r\n"), "America/Chicago", NOW);
+  assertEquals(floating[0]?.starts_at, "2026-12-02T16:00:00.000Z"); // floating → the feed's zone
+});
