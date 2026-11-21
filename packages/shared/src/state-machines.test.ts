@@ -15,7 +15,9 @@ describe("state machines (generated from the database)", () => {
 
   it("lists next states", () => {
     expect(nextStates("message_status", "parsed").sort()).toEqual(["extracted", "failed", "ignored", "needs_review"]);
-    expect(nextStates("attachment_status", "transcribed")).toEqual([]);
+    // Phase 8: the owner can have a file re-read, or rule it out.
+    expect(nextStates("attachment_status", "transcribed").sort()).toEqual(["pending", "skipped"]);
+    expect(nextStates("report_status", "resolved")).toEqual(["open"]);
   });
 
   it("every state that appears in a transition has a label", () => {

@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 7 (email parsing). Hosted email still waits on a domain. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 8 (attachment triage). Hosted email still waits on a domain; vision reading waits on an API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
@@ -12,7 +12,7 @@ Status: Phase 7 (email parsing). Hosted email still waits on a domain. Component
                                                         │
                        Storage (inbound-raw, private) + pgmq queue "process_message"
                                                         ▼
-         process-messages (Phase 7, every minute): parse → [triage → extract → reconcile: planned]
+   process-messages (7) → triage-attachments (8), every minute → [extract → reconcile: planned]
                                                         │
                                                         ▼
                                 Supabase Postgres (RLS on every table)

@@ -32,7 +32,23 @@ export const STATE_MACHINES = {
       },
       {
         "from": "text_layer",
+        "to": "pending"
+      },
+      {
+        "from": "text_layer",
+        "to": "skipped"
+      },
+      {
+        "from": "text_layer",
         "to": "transcribed"
+      },
+      {
+        "from": "transcribed",
+        "to": "pending"
+      },
+      {
+        "from": "transcribed",
+        "to": "skipped"
       }
     ]
   },

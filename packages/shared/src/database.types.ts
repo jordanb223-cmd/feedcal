@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"attachments": {
                   Row: {
-                    "bytes": number | null,"chosen": boolean,"content_id": string | null,"created_at": string,"filename": string | null,"height": number | null,"id": string,"inline": boolean,"message_id": string,"mime": string | null,"pages": number | null,"sha256": string | null,"status": string,"storage_path": string | null,"width": number | null
+                    "bytes": number | null,"chosen": boolean,"content_id": string | null,"created_at": string,"filename": string | null,"height": number | null,"id": string,"inline": boolean,"message_id": string,"mime": string | null,"pages": number | null,"sha256": string | null,"status": string,"storage_path": string | null,"triage": Json | null,"triaged_at": string | null,"width": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "bytes"?: number | null,"chosen"?: boolean,"content_id"?: string | null,"created_at"?: string,"filename"?: string | null,"height"?: number | null,"id"?: string,"inline"?: boolean,"message_id": string,"mime"?: string | null,"pages"?: number | null,"sha256"?: string | null,"status"?: string,"storage_path"?: string | null,"width"?: number | null
+                    "bytes"?: number | null,"chosen"?: boolean,"content_id"?: string | null,"created_at"?: string,"filename"?: string | null,"height"?: number | null,"id"?: string,"inline"?: boolean,"message_id": string,"mime"?: string | null,"pages"?: number | null,"sha256"?: string | null,"status"?: string,"storage_path"?: string | null,"triage"?: Json | null,"triaged_at"?: string | null,"width"?: number | null
                   }
                   Update: {
-                    "bytes"?: number | null,"chosen"?: boolean,"content_id"?: string | null,"created_at"?: string,"filename"?: string | null,"height"?: number | null,"id"?: string,"inline"?: boolean,"message_id"?: string,"mime"?: string | null,"pages"?: number | null,"sha256"?: string | null,"status"?: string,"storage_path"?: string | null,"width"?: number | null
+                    "bytes"?: number | null,"chosen"?: boolean,"content_id"?: string | null,"created_at"?: string,"filename"?: string | null,"height"?: number | null,"id"?: string,"inline"?: boolean,"message_id"?: string,"mime"?: string | null,"pages"?: number | null,"sha256"?: string | null,"status"?: string,"storage_path"?: string | null,"triage"?: Json | null,"triaged_at"?: string | null,"width"?: number | null
                   }
                   Relationships: [
                     {
@@ -211,14 +211,14 @@ isOneToOne: false
                   ]
                 },"messages": {
                   Row: {
-                    "attachment_count": number | null,"auth_dkim": string | null,"auth_dmarc": string | null,"auth_spf": string | null,"clean_text": string | null,"created_at": string,"expires_at": string,"feed_id": string,"id": string,"language": string | null,"message_id_header": string | null,"original_sender": string | null,"original_subject": string | null,"parse_attempts": number,"parse_details": Json | null,"parsed_at": string | null,"quarantine_reason": string | null,"raw_bytes": number | null,"received_at": string,"reference_date": string | null,"reference_date_source": string | null,"sender": string | null,"sha256": string | null,"source_id": string | null,"status": string,"storage_path": string | null,"stripped_text": string | null,"subject": string | null
+                    "attachment_count": number | null,"auth_dkim": string | null,"auth_dmarc": string | null,"auth_spf": string | null,"clean_text": string | null,"created_at": string,"expires_at": string,"feed_id": string,"id": string,"language": string | null,"message_id_header": string | null,"original_sender": string | null,"original_subject": string | null,"pages_for_ai": number | null,"parse_attempts": number,"parse_details": Json | null,"parsed_at": string | null,"quarantine_reason": string | null,"raw_bytes": number | null,"received_at": string,"reference_date": string | null,"reference_date_source": string | null,"sender": string | null,"sha256": string | null,"source_id": string | null,"status": string,"storage_path": string | null,"stripped_text": string | null,"subject": string | null,"triaged_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "attachment_count"?: number | null,"auth_dkim"?: string | null,"auth_dmarc"?: string | null,"auth_spf"?: string | null,"clean_text"?: string | null,"created_at"?: string,"expires_at"?: string,"feed_id": string,"id"?: string,"language"?: string | null,"message_id_header"?: string | null,"original_sender"?: string | null,"original_subject"?: string | null,"parse_attempts"?: number,"parse_details"?: Json | null,"parsed_at"?: string | null,"quarantine_reason"?: string | null,"raw_bytes"?: number | null,"received_at"?: string,"reference_date"?: string | null,"reference_date_source"?: string | null,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"stripped_text"?: string | null,"subject"?: string | null
+                    "attachment_count"?: number | null,"auth_dkim"?: string | null,"auth_dmarc"?: string | null,"auth_spf"?: string | null,"clean_text"?: string | null,"created_at"?: string,"expires_at"?: string,"feed_id": string,"id"?: string,"language"?: string | null,"message_id_header"?: string | null,"original_sender"?: string | null,"original_subject"?: string | null,"pages_for_ai"?: number | null,"parse_attempts"?: number,"parse_details"?: Json | null,"parsed_at"?: string | null,"quarantine_reason"?: string | null,"raw_bytes"?: number | null,"received_at"?: string,"reference_date"?: string | null,"reference_date_source"?: string | null,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"stripped_text"?: string | null,"subject"?: string | null,"triaged_at"?: string | null
                   }
                   Update: {
-                    "attachment_count"?: number | null,"auth_dkim"?: string | null,"auth_dmarc"?: string | null,"auth_spf"?: string | null,"clean_text"?: string | null,"created_at"?: string,"expires_at"?: string,"feed_id"?: string,"id"?: string,"language"?: string | null,"message_id_header"?: string | null,"original_sender"?: string | null,"original_subject"?: string | null,"parse_attempts"?: number,"parse_details"?: Json | null,"parsed_at"?: string | null,"quarantine_reason"?: string | null,"raw_bytes"?: number | null,"received_at"?: string,"reference_date"?: string | null,"reference_date_source"?: string | null,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"stripped_text"?: string | null,"subject"?: string | null
+                    "attachment_count"?: number | null,"auth_dkim"?: string | null,"auth_dmarc"?: string | null,"auth_spf"?: string | null,"clean_text"?: string | null,"created_at"?: string,"expires_at"?: string,"feed_id"?: string,"id"?: string,"language"?: string | null,"message_id_header"?: string | null,"original_sender"?: string | null,"original_subject"?: string | null,"pages_for_ai"?: number | null,"parse_attempts"?: number,"parse_details"?: Json | null,"parsed_at"?: string | null,"quarantine_reason"?: string | null,"raw_bytes"?: number | null,"received_at"?: string,"reference_date"?: string | null,"reference_date_source"?: string | null,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"stripped_text"?: string | null,"subject"?: string | null,"triaged_at"?: string | null
                   }
                   Relationships: [
                     {
@@ -361,6 +361,9 @@ isOneToOne: false
 "cancel_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"choose_attachment":
+{ Args: { "p_attachment_id": string }; Returns: Json
+                           },
 "claim_process_jobs":
 { Args: { "p_limit"?: number,"p_visibility_seconds"?: number }; Returns: {
               "attempts": number,"feed_id": string,"job_id": number,"message_id": string,"received_at": string,"storage_path": string
@@ -369,6 +372,11 @@ isOneToOne: false
 "claim_storage_trash":
 { Args: { "p_limit"?: number }; Returns: {
               "bucket": string,"id": number,"path": string
+            }[]
+                           },
+"claim_triage_jobs":
+{ Args: { "p_limit"?: number,"p_visibility_seconds"?: number }; Returns: {
+              "attachment_rule": Json,"attachments": Json,"feed_id": string,"job_id": number,"message_id": string
             }[]
                            },
 "decide_message":
@@ -383,6 +391,9 @@ isOneToOne: false
 "fail_process_job":
 { Args: { "p_job_id": number,"p_max_attempts"?: number,"p_message_id": string }; Returns: string
                            },
+"fail_triage_job":
+{ Args: { "p_job_id": number,"p_message_id": string }; Returns: string
+                           },
 "feed_calendar":
 { Args: { "p_client_ip"?: string,"p_token": string,"p_ua_family"?: string,"p_user_agent"?: string }; Returns: Json
                            },
@@ -390,6 +401,9 @@ isOneToOne: false
 { Args: { "p_feed_id": string }; Returns: Json
                            },
 "finish_process_job":
+{ Args: { "p_job_id": number }; Returns: boolean
+                           },
+"finish_triage_job":
 { Args: { "p_job_id": number }; Returns: boolean
                            },
 "forget_storage_trash":
@@ -410,6 +424,9 @@ isOneToOne: false
 "login_attempt_allowed":
 { Args: { "p_client_ip"?: string,"p_email": string }; Returns: boolean
                            },
+"never_use_attachment":
+{ Args: { "p_attachment_id": string }; Returns: Json
+                           },
 "public_feed_page":
 { Args: { "p_limit"?: number,"p_slug": string }; Returns: Json
                            },
@@ -422,6 +439,9 @@ isOneToOne: false
 "record_subscribe_click":
 { Args: { "p_platform": string,"p_slug": string }; Returns: boolean
                            },
+"record_triage":
+{ Args: { "p_message_id": string,"p_results": Json }; Returns: number
+                           },
 "request_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -431,8 +451,14 @@ isOneToOne: false
 "rotate_intake_address":
 { Args: { "p_feed_id": string }; Returns: string
                            },
+"set_sender_large_attachments":
+{ Args: { "p_allow": boolean,"p_source_id": string }; Returns: boolean
+                           },
 "state_machines":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"take_quota":
+{ Args: { "p_feed_id": string,"p_kind": string,"p_wanted": number }; Returns: number
                            }
           }
           Enums: {
