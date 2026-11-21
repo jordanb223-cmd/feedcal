@@ -11,6 +11,7 @@ body{margin:0;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,s
 main{max-width:30rem;margin:0 auto;padding:2rem 1rem}
 .card{background:#fff;border-radius:12px;padding:1.5rem;margin:0 0 1rem}
 h1{font-size:1.5rem;line-height:1.3;margin:0 0 1rem}
+h2{font-size:1.25rem;line-height:1.3;margin:0 0 .75rem}
 p{margin:0 0 1rem}
 .muted{color:#4f4f4b}
 label{display:block;font-weight:600;margin:0 0 .25rem}
@@ -24,15 +25,27 @@ form{margin:0 0 1rem}
 .check{display:flex;gap:.5rem;align-items:flex-start;font-weight:400}
 .row{display:flex;flex-wrap:wrap;gap:.5rem}
 .sep{text-align:center;margin:1rem 0}
+a.button{margin:0 0 .5rem}
+a.button.secondary{background:#fff;color:#1f5f3f}
+.wide{display:block;width:100%;text-align:center}
+.events{list-style:none;padding:0;margin:0}
+.events li{padding:.75rem 0;border-top:1px solid #e3e3df}
+.events li:first-child{border-top:0}
+.when{display:block;font-size:.95rem;color:#4f4f4b}
+details summary{cursor:pointer;font-weight:600;padding:.5rem 0}
+textarea,input.copy{width:100%;font:inherit;padding:.75rem;border:2px solid #6b6b66;border-radius:8px}
+.qr svg{width:12rem;height:12rem;display:block;margin:0 auto}
+@media print{body{background:#fff}.no-print{display:none}.card{padding:0}}
 `;
 
-export function layout(title: string, body: Html): Html {
+export function layout(title: string, body: Html, head: Html | string = ""): Html {
   return html`<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title} · Feedcal</title>
+${head}
 <style>${raw(styles)}</style>
 </head>
 <body><main id="main">${body}</main></body>
@@ -105,28 +118,14 @@ export function messagePage(title: string, message: string, link?: { href: strin
   );
 }
 
-export function feedLinkPage(opts: { csrf: string; feedId: string; url: string; notice?: string }): Html {
-  return layout(
-    "Feed link",
-    html`<div class="card">
-  <h1>Your feed link</h1>
-  ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}
-  <p>Anyone with this link can subscribe. Share it only with people who should see the feed.</p>
-  <p><label for="feed-url">Subscription link</label>
-    <input id="feed-url" type="url" readonly value="${opts.url}" style="width:100%;font:inherit;padding:.75rem;border:2px solid #6b6b66;border-radius:8px"></p>
-</div>
-<div class="card">
-  <h2>Make a new link</h2>
-  <p>If the link reached the wrong people, make a new one. The old link stops working right away, and current subscribers will need the new one.</p>
-  <form method="post" action="/feeds/${opts.feedId}/rotate-token">
-    <input type="hidden" name="csrf" value="${opts.csrf}">
-    <button type="submit" class="danger">Make a new link</button>
-  </form>
-</div>`,
-  );
-}
-
-export function accountPage(opts: { csrf: string; email: string | null; displayName: string | null; deletionDate: string | null; notice?: string }): Html {
+export function accountPage(opts: {
+  csrf: string;
+  email: string | null;
+  displayName: string | null;
+  deletionDate: string | null;
+  feeds: { id: string; name: string; visibility: string }[];
+  notice?: string;
+}): Html {
   return layout(
     "Your account",
     html`<div class="card">
@@ -137,6 +136,12 @@ export function accountPage(opts: { csrf: string; email: string | null; displayN
     <form method="post" action="/logout">${csrfField(opts.csrf)}<button type="submit" class="secondary">Sign out</button></form>
     <form method="post" action="/logout-everywhere">${csrfField(opts.csrf)}<button type="submit" class="secondary">Sign out everywhere</button></form>
   </div>
+</div>
+<div class="card">
+  <h2>Your feeds</h2>
+  ${opts.feeds.length === 0
+    ? html`<p class="muted">You don't have any feeds yet.</p>`
+    : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong>${f.name}</strong> <span class="muted">(${f.visibility})</span><span class="when"><a href="/feeds/${f.id}/share">Share and subscribe links</a></span></li>`)}</ul>`}
 </div>
 <div class="card">
   <h2>Delete your account</h2>

@@ -6,6 +6,7 @@ import { probeDatabase, type DbProbe } from "./db.js";
 import { registerAuthRoutes } from "./auth.js";
 import { redactPath, requireSameOrigin } from "./security.js";
 import { registerFeedRoutes } from "./feed.js";
+import { registerSubscribeRoutes } from "./subscribe.js";
 import { createSupabase } from "./supabase.js";
 import type { AppEnv, Supa } from "./types.js";
 
@@ -64,6 +65,7 @@ export function createApp(deps: AppDeps) {
   app.use("*", requireSameOrigin);
   registerAuthRoutes(app);
   registerFeedRoutes(app);
+  registerSubscribeRoutes(app);
 
   app.notFound((c) => c.json({ error: "Not found", request_id: c.get("requestId") }, 404));
 

@@ -1,13 +1,22 @@
 -- Local seed data. Fake people, fake emails (example.test is reserved and never delivers).
 -- Two users: Alice owns three feeds (public, unlisted, private); Bob owns one private feed.
 
+-- Token columns must be '' (not NULL): the auth server can't read NULL there, and sign-in fails.
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
+                        confirmation_token, recovery_token, email_change_token_new, email_change,
+                        email_change_token_current, reauthentication_token, phone_change, phone_change_token,
                         raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
   ('11111111-1111-4111-8111-111111111111', '00000000-0000-0000-0000-000000000000', 'authenticated',
-   'authenticated', 'alice@example.test', '', now(), '{"provider":"email","providers":["email"]}', '{}', now(), now()),
+   'authenticated', 'alice@example.test', '', now(), '', '', '', '', '', '', '', '',
+   '{"provider":"email","providers":["email"]}', '{}', now(), now()),
   ('22222222-2222-4222-8222-222222222222', '00000000-0000-0000-0000-000000000000', 'authenticated',
-   'authenticated', 'bob@example.test', '', now(), '{"provider":"email","providers":["email"]}', '{}', now(), now());
+   'authenticated', 'bob@example.test', '', now(), '', '', '', '', '', '', '', '',
+   '{"provider":"email","providers":["email"]}', '{}', now(), now());
+
+insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+select u.id::text, u.id, jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true), 'email', now(), now(), now()
+from auth.users u where u.id in ('11111111-1111-4111-8111-111111111111', '22222222-2222-4222-8222-222222222222');
 
 insert into public.profiles (id, display_name) values
   ('11111111-1111-4111-8111-111111111111', 'Alice Organizer'),

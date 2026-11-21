@@ -8,3 +8,4 @@ Turns forwarded emails into shareable, subscribable calendar feeds.
 - Decisions: [docs/DECISIONS.md](docs/DECISIONS.md)
 - Owner setup: [docs/SETUP.md](docs/SETUP.md)
 - Contributing: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+- Testing: [docs/TESTING.md](docs/TESTING.md)

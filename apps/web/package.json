@@ -8,10 +8,11 @@
     "dev": "node build.mjs && wrangler pages dev dist --port 8788"
   },
   "dependencies": {
+    "@feedcal/ics": "0.1.0",
     "@feedcal/shared": "0.1.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.2",
     "hono": "^4.10.0",
-    "@feedcal/ics": "0.1.0"
+    "uqr": "^0.1.3"
   }
 }

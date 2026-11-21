@@ -3,9 +3,9 @@ import { z } from "zod";
 import { buildCalendar, type CalendarEvent } from "@feedcal/ics";
 import { FeedCalendarData, FeedToken } from "@feedcal/shared";
 import { currentUser, MESSAGES } from "./auth.js";
-import { csrfToken, csrfValid, originOf } from "./security.js";
+import { csrfValid, originOf } from "./security.js";
 import type { AppEnv } from "./types.js";
-import { feedLinkPage, messagePage } from "./views.js";
+import { messagePage } from "./views.js";
 
 const DEFAULT_TIME_ZONE = "America/Los_Angeles";
 const FeedId = z.uuid();
@@ -112,17 +112,6 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     ),
   );
 
-  // The owner's or an editor's view of the feed link [Rev 1].
-  app.get("/feeds/:id/link", async (c) => {
-    const id = FeedId.safeParse(c.req.param("id"));
-    if (!id.success) return c.html(messagePage("Feed not found", "That feed doesn't exist."), 404);
-    const user = await currentUser(c);
-    if (!user) return c.redirect(`/login?next=${encodeURIComponent(`/feeds/${id.data}/link`)}`, 303);
-    const { data: token, error } = await c.get("supabase").rpc("get_feed_token", { p_feed_id: id.data });
-    if (error || typeof token !== "string") return c.html(messagePage("Feed not found", "That feed doesn't exist, or it isn't yours."), 404);
-    return c.html(feedLinkPage({ csrf: csrfToken(c), feedId: id.data, url: feedUrl(c, token) }));
-  });
-
   // Make a new link; the old one stops working at once. Owner only (enforced in the database).
   app.post("/feeds/:id/rotate-token", async (c) => {
     const id = FeedId.safeParse(c.req.param("id"));
@@ -130,14 +119,13 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     const user = await currentUser(c);
     if (!user) return c.redirect("/login", 303);
     const body = await c.req.parseBody();
-    if (!csrfValid(c, body.csrf)) return c.html(messagePage("Please try again", MESSAGES.badForm, { href: `/feeds/${id.data}/link`, text: "Back" }), 403);
+    if (!csrfValid(c, body.csrf)) return c.html(messagePage("Please try again", MESSAGES.badForm, { href: `/feeds/${id.data}/share`, text: "Back" }), 403);
     const { data: token, error } = await c.get("supabase").rpc("rotate_feed_token", { p_feed_id: id.data });
     if (error || typeof token !== "string") {
       return c.html(messagePage("Not allowed", "Only the feed's owner can make a new link."), 403);
     }
     c.get("log").info("feed_token_rotated", { feed_id: id.data });
-    return c.html(
-      feedLinkPage({ csrf: csrfToken(c), feedId: id.data, url: feedUrl(c, token), notice: "New link made. The old link has stopped working; anyone using it needs the new one." }),
-    );
+    // Redirect after POST, so refreshing the page can't rotate the link a second time.
+    return c.redirect(`/feeds/${id.data}/share?rotated=1`, 303);
   });
 }

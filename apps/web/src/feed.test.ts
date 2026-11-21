@@ -100,19 +100,12 @@ describe("GET /f/<token>.ics", () => {
   });
 });
 
-describe("feed link and rotation", () => {
-  it("sends signed-out people to sign in", async () => {
+describe("link rotation", () => {
+  it("the old link page redirects to the share kit", async () => {
     const { request } = setup(() => ({ data: null, error: null }));
     const res = await request(`/feeds/${FEED_ID}/link`);
-    expect(res.status).toBe(303);
-    expect(res.headers.get("location")).toBe(`/login?next=${encodeURIComponent(`/feeds/${FEED_ID}/link`)}`);
-  });
-
-  it("shows a member the full subscription link", async () => {
-    const { request } = setup((fn) => (fn === "get_feed_token" ? { data: TOKEN, error: null } : { data: null, error: null }), { sub: "u1" });
-    const res = await request(`/feeds/${FEED_ID}/link`);
-    expect(res.status).toBe(200);
-    expect(await res.text()).toContain(`${BASE}/f/${TOKEN}.ics`);
+    expect(res.status).toBe(301);
+    expect(res.headers.get("location")).toBe(`/feeds/${FEED_ID}/share`);
   });
 
   it("rotation needs the CSRF token", async () => {
@@ -122,18 +115,15 @@ describe("feed link and rotation", () => {
     expect(rpc).not.toHaveBeenCalledWith("rotate_feed_token", expect.anything());
   });
 
-  it("rotation shows the new link; a non-owner is refused", async () => {
-    const NEW = "N".repeat(43);
-    const owner = setup((fn) => (fn === "get_feed_token" ? { data: TOKEN, error: null } : { data: NEW, error: null }), { sub: "u1" });
-    const page = await owner.request(`/feeds/${FEED_ID}/link`);
-    const cookie = /feedcal_csrf=([^;]+)/.exec(page.headers.get("set-cookie") ?? "")?.[1] ?? "";
-    const csrf = /name="csrf" value="([^"]+)"/.exec(await page.text())?.[1] ?? "";
-    const post = (s: typeof owner) =>
-      s.request(`/feeds/${FEED_ID}/rotate-token`, { method: "POST", body: new URLSearchParams({ csrf }), headers: { origin: BASE, cookie: `feedcal_csrf=${cookie}`, "content-type": "application/x-www-form-urlencoded" } });
+  it("rotation redirects to the share kit (so a refresh can't rotate twice); a non-owner is refused", async () => {
+    const csrf = "c".repeat(43);
+    const post = (s: ReturnType<typeof setup>) =>
+      s.request(`/feeds/${FEED_ID}/rotate-token`, { method: "POST", body: new URLSearchParams({ csrf }), headers: { origin: BASE, cookie: `feedcal_csrf=${csrf}`, "content-type": "application/x-www-form-urlencoded" } });
+    const owner = setup(() => ({ data: "N".repeat(43), error: null }), { sub: "u1" });
     const ok = await post(owner);
-    expect(ok.status).toBe(200);
-    expect(await ok.text()).toContain(`${BASE}/f/${NEW}.ics`);
-
+    expect(ok.status).toBe(303);
+    expect(ok.headers.get("location")).toBe(`/feeds/${FEED_ID}/share?rotated=1`);
+    expect(owner.rpc).toHaveBeenCalledWith("rotate_feed_token", { p_feed_id: FEED_ID });
     const editor = setup(() => ({ data: null, error: { code: "42501", message: "x" } }), { sub: "u2" });
     expect((await post(editor)).status).toBe(403);
   });
