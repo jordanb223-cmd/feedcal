@@ -1,6 +1,6 @@
 # Owner setup (things only you can do)
 
-Phase 1 is scaffolded and its local checks pass. These steps unlock the rest of its "passes when." Nothing here has been done yet.
+Steps only the owner can do. Done items are checked.
 
 ## 1. Local database — done 2026-11-20
 - [x] Container runtime: **Colima** (free, open-source) instead of Docker Desktop, installed with `brew install colima docker gitleaks`. Its VM has 4 CPUs, 8 GB memory and a 60 GB disk.
@@ -14,10 +14,11 @@ colima start
 ```
 Then `npm run db:start` in the repo. To have Colima start at login instead, run `brew services start colima`. That adds a login item, so it's your choice.
 
-## 2. GitHub
-- [ ] Create a **private** repo and push `main`.
-- [ ] Set up branch and environment protection as in `docs/CONTRIBUTING.md`.
-- [ ] If the repo belongs to an organization, gitleaks-action needs a free license key (`GITLEAKS_LICENSE` secret) (`UNVERIFIED` — check gitleaks-action README).
+## 2. GitHub — done 2026-11-20
+- [x] Public repo `jordanb223-cmd/feedcal` (D19 explains why public). Commits use GitHub's no-reply address, not a personal email: this checkout has `git config user.email 242484726+jordanb223-cmd@users.noreply.github.com`.
+- [x] Branch protection on `main` and the `staging` / `production` environments, as in `docs/CONTRIBUTING.md`.
+- [x] Secret scanning and push protection turned on (free for public repos).
+- [ ] The old private repo was renamed `feedcal-old-private`. It still holds the pre-cleanup history (your personal email on the commits). Delete it when you're ready: GitHub → that repo → Settings → Delete this repository.
 
 ## 3. Supabase
 - [ ] Create two projects: `feedcal-staging`, `feedcal-production` (Pro plan for production).

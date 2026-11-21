@@ -9,7 +9,7 @@ Postgres with RLS lets the database itself enforce who can see a feed. Auth, Sto
 Supabase can't receive email; Cloudflare Email Routing can hand mail to a Worker. Pages serves calendar files with custom headers and caching. GitHub Pages isn't used: Pages sites are public and GitHub limits commercial use (`UNVERIFIED` — check current GitHub Pages docs).
 
 ## D3 — GitHub for code, CI and deploys (2026-11-20)
-Private repo, Actions for checks and deploys, Dependabot, gitleaks.
+Repo on GitHub (public since D19), Actions for checks and deploys, Dependabot, gitleaks (D20).
 
 ## D4 — Forwarding before the Gmail API (2026-11-20)
 A forwarding address per feed needs no access to anyone's mailbox, so no Google restricted-scope review. The Gmail connection (Phase 17) needs `gmail.readonly`, a restricted scope (`UNVERIFIED` — confirm review steps and timing in Google's current docs before Phase 17).
@@ -55,3 +55,9 @@ Every POST must carry an `Origin` (or, failing that, `Referer`) equal to the sit
 
 ## D18 — Account deletion: SQL purge plus an Edge Function (2026-11-20)
 `request_account_deletion()` stamps `profiles.deleted_at`. After 14 days, `due_account_deletions()` lists the account. `purge_account_data()` hands each owned feed to its longest-standing editor, deletes feeds with no editor (their Vault secrets go too), and wipes the name and revision actor. The `delete-accounts` Edge Function then deletes the auth user. The function only accepts the service-role key. **Scheduling it is not set up yet** (see SETUP.md).
+
+## D19 — Public repository (2026-11-20)
+GitHub's docs say that on GitHub Free, private repositories get no environments, no environment secrets, no branch protection and no rulesets. All of these work for public repositories. The deploy design (D3, CONTRIBUTING.md) needs them. The owner chose public over paying for GitHub Pro. Secrets stay in GitHub encrypted secrets, which aren't visible to the public. Before publishing, the commit history was rewritten so that commits carry GitHub's no-reply address and the plan carries no full name. The clean history went to a new repo, so the old commits aren't reachable by hash on a public repo. Docs: https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments and https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches
+
+## D20 — Secret scan runs the gitleaks CLI over full history (2026-11-20)
+`gitleaks-action@v2` scans only the pushed range (`<first>^..<last>`). That failed on the repo's first push, because the root commit has no parent. CI now downloads gitleaks 8.30.1, checks its SHA-256 against the release's checksums file, and scans the whole history on every run. That also covers rewritten or force-pushed history.
