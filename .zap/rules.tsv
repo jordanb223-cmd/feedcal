@@ -1,1 +1,6 @@
 10055	WARN	(CSP) style-src-attr unsafe-inline is allowed on purpose: inline style attributes cannot run code; scripts are self only. See D37.
+10015	IGNORE	(Re-examine Cache-control) Deliberate: pages default to "private, no-store"; only /directory (public, 5 min) and robots.txt (1 day) are cacheable and hold nothing personal. Checked 2026-11-21.
+10049	IGNORE	(Non-Storable Content) Deliberate: "private, no-store" by default, so pages that can show a signed-in header are never cached. Checked 2026-11-21.
+10112	IGNORE	(Session Management Response Identified) Informational: the CSRF and session cookies are expected; their flags (HttpOnly, Secure) pass rules 10010/10011. Checked 2026-11-21.
+90004	IGNORE	(Cross-Origin-Embedder-Policy) Not needed: COEP only matters for cross-origin isolation (SharedArrayBuffer and similar), which Feedcal doesn't use. Checked 2026-11-21.
+10031	WARN	(User Controllable HTML Element Attribute) Kept as a warning so new reflections get looked at. /directory reflects q (escaped: a quote comes back as &quot;) and marks the chosen category/miles option; script-src 'self' blocks inline handlers. Tested by hand 2026-11-21.
