@@ -38,6 +38,30 @@ document.addEventListener("click", async (ev) => {
 });
 </script>`);
 
+/** schema.org Events for search engines (public feeds only). "<" is escaped so it can't end the script. */
+export function jsonLd(name: string, url: string, events: PublicFeedPage["events"]): string {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    url,
+    itemListElement: events.slice(0, 50).map((e, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Event",
+        name: e.title,
+        startDate: e.all_day ? e.starts_at.slice(0, 10) : e.starts_at,
+        ...(e.ends_at ? { endDate: e.all_day ? e.ends_at.slice(0, 10) : e.ends_at } : {}),
+        eventStatus: e.status === "cancelled" ? "https://schema.org/EventCancelled" : "https://schema.org/EventScheduled",
+        ...(e.location ? { location: { "@type": "Place", name: e.location } } : {}),
+        ...(e.description ? { description: e.description.slice(0, 500) } : {}),
+      },
+    })),
+  };
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 export function subscribePage(opts: { page: PublicFeedPage; device: Device; links: SubscribeLinks; pageUrl: string }): Html {
   const { feed, events } = opts.page;
   const next = events.slice(0, 5);
@@ -51,12 +75,14 @@ export function subscribePage(opts: { page: PublicFeedPage; device: Device; link
 <meta property="og:description" content="${description}">
 <meta property="og:url" content="${opts.pageUrl}">
 <meta name="twitter:card" content="summary">
-${feed.visibility === "unlisted" ? html`<meta name="robots" content="noindex">` : ""}`;
+${feed.visibility === "unlisted" ? html`<meta name="robots" content="noindex">` : ""}
+${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonLd(feed.name, opts.pageUrl, events)}</script>`) : ""}`;
 
   return layout(
     feed.name,
     html`<div class="card">
   <h1 dir="auto">${feed.name}</h1>
+  ${feed.may_be_out_of_date ? html`<p class="error">This calendar hasn't been updated in over 90 days, so it may be out of date.</p>` : ""}
   ${feed.organizer_name ? html`<p class="muted">Kept up to date by <span dir="auto">${feed.organizer_name}</span>${feed.area ? html` · <span dir="auto">${feed.area}</span>` : feed.zip_code ? html` · ${feed.zip_code}` : ""}</p>` : ""}
   ${feed.description ? html`<p dir="auto">${feed.description}</p>` : ""}
   <p><a class="button wide" href="${go(primary.target)}">${primary.label}</a></p>
