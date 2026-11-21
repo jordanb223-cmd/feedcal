@@ -17,10 +17,18 @@ Phase 16 (D37), 2026-11-21, against the **OWASP Top 10:2025** (list checked at o
 | **A09 Security Logging and Alerting Failures** | Pass | Structured JSON logs with request ids. Tokens and emails are kept out of them (`redactPath`, log tests). Admin actions are audited (pgTAP 016). Origin and signature rejections are logged. Alerts, emailed to admins every 5 minutes, cover abuse spikes (rate-limited floods), failing email, stuck queues and overdue deletions. The drill is tested (pgTAP 019, integration `admin.test.ts`; D38). Outages open a GitHub issue (Uptime workflow). | Log search beyond the platform's default retention and an error tracker that groups errors wait on the owner (D38) |
 | **A10 Mishandling of Exceptional Conditions** | Pass | One generic error page and JSON shape. Limit checks fail closed (`auth.test.ts`). The webhook returns 503 so BMC retries. One bad attachment doesn't stop the others (`triage.test.ts`). A slow PDF parse is stopped. | — |
 
-**Result: 10 of 10 pass.** A03 passed after the same-day follow-up that pinned every action by commit. A09 passed with Phase 18's alerts (D38). Hosted-only checks are still open: the advisor on hosted projects, and ZAP against staging.
+**Result: 10 of 10 pass.** A03 passed after the same-day follow-up that pinned every action by commit. A09 passed with Phase 18's alerts (D38). Hosted-only checks still open: the advisor on hosted projects. ZAP against staging first ran 2026-11-21 (see below).
 
 ## ZAP baseline (Prompt F, item 48)
-`.github/workflows/zap.yml` runs OWASP ZAP's passive baseline scan against staging every Monday, or by hand. It skips until staging answers `/health`. **Not run yet:** staging isn't deployed (it needs the owner's two GitHub secrets). Accepted rules are in `.zap/rules.tsv`, with reasons. The CSP rule id there (10055) is UNVERIFIED until the first run.
+`.github/workflows/zap.yml` runs OWASP ZAP's passive baseline scan against staging every Monday, or by hand. It skips until staging answers `/health`. Accepted rules are in `.zap/rules.tsv`, with reasons.
+
+**First run, 2026-11-21** (run 44959502832, by hand, against staging at v0.2.3): **0 failures, 63 passed, 5 warnings.** Rule 10055 (CSP) didn't fire. Each warning was checked by hand the same day:
+- **10031, potential XSS on `/directory`:** a false alarm. `q` is reflected escaped (`ZAP" onfocus="alert(1)` comes back as `value="ZAP&quot; onfocus=&quot;alert(1)"`); the category and miles menus only mark one of their fixed options; and `script-src 'self'` blocks inline handlers anyway. Kept as WARN so new reflections get a look.
+- **10015 and 10049, cache directives:** deliberate. Pages default to `private, no-store`; `/directory` (public, 5 minutes) and `robots.txt` (1 day) hold nothing personal. Now IGNORE.
+- **10112, session cookies seen:** informational; cookie flags pass (10010, 10011). Now IGNORE.
+- **90004, no COEP header:** only needed for cross-origin isolation, which Feedcal doesn't use. Now IGNORE.
+
+Not covered: the baseline scan is passive and unauthenticated, so pages behind sign-in weren't scanned.
 
 ## OWASP ASVS level 1 (Prompt F, item 41)
 Not done item by item. The table above touches the same areas, but only at a summary level. A full item-by-item ASVS 5.0 level 1 pass is still to do before public launch.
