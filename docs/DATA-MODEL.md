@@ -1,6 +1,6 @@
 # Data model
 
-Status: Phase 3. The source of truth is `supabase/migrations/`. This page explains it; if they ever disagree, the migrations win, and this page should be fixed.
+Status: Phase 4. The source of truth is `supabase/migrations/`. This page explains it; if they ever disagree, the migrations win, and this page should be fixed.
 
 ## Diagram
 
@@ -26,7 +26,7 @@ erDiagram
   feeds }o--|| vault_secrets : "feed_token_secret_id"
 ```
 
-Not linked to anything: `jobs_dedupe` and `zip_codes`. `feeds.feed_token_secret_id` points into `vault.secrets`, with no foreign key; a trigger keeps them in step.
+Not linked to anything: `jobs_dedupe`, `zip_codes`, and `private.fetch_salts` (one random salt per day for fetch hashing; kept 2 days; no API access). `feeds.feed_token_secret_id` points into `vault.secrets`, with no foreign key; a trigger keeps them in step.
 
 ## Who can do what
 
@@ -103,6 +103,7 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 | `public_feed_page(p_slug, p_limit = 50)` [Rev 3] | anon, signed-in | Returns JSON `{feed, events}` when the slug matches **exactly** and the feed is public or unlisted; otherwise `null`. Events: published, not cancelled, not yet ended, oldest first, 1–200 (default 50). `subscribers_at_least` counts distinct clients in `feed_fetch_daily` over the last 7 days [Rev 4]. Never returns the token, intake address, owner id or evidence fields. |
 | `get_feed_token(p_feed_id)` [Rev 1] | signed-in members | Returns the current token from Vault. Anyone else gets error `42501`. |
 | `rotate_feed_token(p_feed_id)` [Rev 1] | signed-in owner | Makes a new token, overwrites the hash and the Vault copy, and returns the new token. The old link stops matching. |
+| `feed_calendar(p_token, p_client_ip, p_user_agent, p_ua_family)` | anon, signed-in | Phase 4. Looks the feed up by `sha256(token)`; returns `null` for an unknown or malformed token. Returns the feed's public fields and its published events, plus events cancelled in the last 30 days (so calendars remove them). Each event's `source` is the sender's domain only. Records one `feed_fetch_daily` row per client per day, as `sha256(daily salt ‖ IP ‖ user agent)`; the raw IP and user agent are never stored. |
 | `health_check()` | anon, signed-in | Returns `true` (Phase 1). |
 | `request_account_deletion()` / `cancel_account_deletion()` | signed-in user, for themselves | Sets or clears `profiles.deleted_at`. Returns the deletion date (14 days out). |
 | `due_account_deletions()` | service role | Lists accounts whose 14 days have passed. |

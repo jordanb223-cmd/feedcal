@@ -4,7 +4,8 @@ import { createLogger, Environment, requestIdFrom, type HealthResponse } from "@
 import type { Bindings } from "./env.js";
 import { probeDatabase, type DbProbe } from "./db.js";
 import { registerAuthRoutes } from "./auth.js";
-import { requireSameOrigin } from "./security.js";
+import { redactPath, requireSameOrigin } from "./security.js";
+import { registerFeedRoutes } from "./feed.js";
 import { createSupabase } from "./supabase.js";
 import type { AppEnv, Supa } from "./types.js";
 
@@ -35,7 +36,7 @@ export function createApp(deps: AppDeps) {
     c.header("content-security-policy", "frame-ancestors 'none'");
     // Pages that read or set the session must never be cached by Cloudflare or a proxy.
     if (!c.res.headers.has("cache-control")) c.header("cache-control", "private, no-store");
-    log.info("request", { method: c.req.method, path: new URL(c.req.url).pathname, status: c.res.status, ms: Date.now() - started });
+    log.info("request", { method: c.req.method, path: redactPath(new URL(c.req.url).pathname), status: c.res.status, ms: Date.now() - started });
   });
 
   app.get("/health", async (c) => {
@@ -62,6 +63,7 @@ export function createApp(deps: AppDeps) {
   });
   app.use("*", requireSameOrigin);
   registerAuthRoutes(app);
+  registerFeedRoutes(app);
 
   app.notFound((c) => c.json({ error: "Not found", request_id: c.get("requestId") }, 404));
 

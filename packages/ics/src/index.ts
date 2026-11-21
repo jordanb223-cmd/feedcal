@@ -1,2 +1,5 @@
-// Calendar (RFC 5545) generator. Built in Phase 4.
-export const ICS_PACKAGE_PHASE = 4 as const;
+// Calendar (RFC 5545) generator.
+export { buildCalendar } from "./calendar.js";
+export type { BuildOptions, BuildResult, CalendarEvent, CalendarFeed, EventStatus } from "./calendar.js";
+export { escapeText, foldLine } from "./text.js";
+export { vtimezone } from "./vtimezone.js";

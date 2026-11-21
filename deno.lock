@@ -20,6 +20,7 @@
       "dependencies": [
         "npm:@cloudflare/workers-types@^5.20261121.1",
         "npm:@eslint/js@^10.0.1",
+        "npm:@types/node@^22.20.5",
         "npm:esbuild@~0.28.2",
         "npm:eslint@^10.15.0",
         "npm:globals@^17.14.0",
@@ -41,10 +42,18 @@
       "apps/web": {
         "packageJson": {
           "dependencies": [
+            "npm:@feedcal/ics@0.1.0",
             "npm:@feedcal/shared@0.1.0",
             "npm:@supabase/ssr@~0.12.7",
             "npm:@supabase/supabase-js@^2.119.2",
             "npm:hono@^4.10.0"
+          ]
+        }
+      },
+      "packages/ics": {
+        "packageJson": {
+          "dependencies": [
+            "npm:ical.js@^2.2.1"
           ]
         }
       },
