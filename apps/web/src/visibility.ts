@@ -30,7 +30,7 @@ export function visibilityChoice(current: string | undefined, area: AreaChoice =
 </fieldset>
 <div class="area">
   <p><label for="zip_code">Area (ZIP code), for Public calendars</label>
-    <input class="copy" id="zip_code" name="zip_code" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" value="${value}" placeholder="95818"></p>
+    <input class="copy" id="zip_code" name="zip_code" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" value="${value}" placeholder="5 digits"></p>
   <p class="muted" style="font-size:.875rem">${hint}</p>
   <p class="muted" style="font-size:.875rem"><strong>Public means anyone can find it and see every event, and its area is shown.</strong> Don't include children's names, home addresses or phone numbers.</p>
 </div>
