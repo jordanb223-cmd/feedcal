@@ -9,4 +9,6 @@ export interface Bindings {
   SUPABASE_ANON_KEY?: string;
   /** "on" once the Google OAuth client is configured for this environment. */
   GOOGLE_SIGN_IN?: string;
+  /** Domain that receives forwarded email (e.g. in.feedcal.app). Unset until Email Routing exists. */
+  INTAKE_DOMAIN?: string;
 }

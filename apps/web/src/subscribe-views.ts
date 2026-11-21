@@ -27,7 +27,7 @@ const PRIMARY: Record<Device, { target: string; label: string }> = {
   other: { target: "google", label: "Add to Google Calendar" },
 };
 
-const copyScript = raw(`<script>
+export const copyScript = raw(`<script>
 document.addEventListener("click", async (ev) => {
   const btn = ev.target.closest("[data-copy]");
   if (!btn) return;

@@ -12,6 +12,10 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 - A share kit: the page link, a QR code, a ready-to-paste message and a printable flyer.
 - "Make a new link", for when a calendar link was shared too widely.
 - Clear status labels for events, emails and reports.
+- Each calendar has its own email address. Forward school or team emails to it (setup steps for Gmail, Outlook and Apple Mail are on the page).
+- Gmail's forwarding confirmation code appears on the calendar's email page, so you can finish setup without hunting for it.
+- The first email from a new sender waits for your OK. Emails that fail the sender's security checks are held for you too.
+- Forwarding the same email twice is harmless; Feedcal keeps one copy and deletes copies after 30 days.
 
 ### Fixed
 - Edits to an event now reach calendars that already subscribed. Before, some calendar apps could ignore an edit.

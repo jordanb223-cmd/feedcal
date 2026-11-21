@@ -157,14 +157,14 @@ isOneToOne: false
                   ]
                 },"feeds": {
                   Row: {
-                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id": string,"intake_address": string | null,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"visibility": string,"zip_code": string | null
+                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id": string,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"visibility": string,"zip_code": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id"?: string,"intake_address"?: string | null,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"visibility"?: string,"zip_code"?: string | null
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id"?: string,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"visibility"?: string,"zip_code"?: string | null
                   }
                   Update: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"id"?: string,"intake_address"?: string | null,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"visibility"?: string,"zip_code"?: string | null
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"id"?: string,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"visibility"?: string,"zip_code"?: string | null
                   }
                   Relationships: [
                     {
@@ -172,6 +172,26 @@ isOneToOne: false
       columns: ["owner_id"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"forwarding_confirmations": {
+                  Row: {
+                    "code": string,"confirm_url": string | null,"expires_at": string,"feed_id": string,"id": string,"provider": string,"received_at": string,"requested_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"confirm_url"?: string | null,"expires_at": string,"feed_id": string,"id"?: string,"provider": string,"received_at"?: string,"requested_by"?: string | null
+                  }
+                  Update: {
+                    "code"?: string,"confirm_url"?: string | null,"expires_at"?: string,"feed_id"?: string,"id"?: string,"provider"?: string,"received_at"?: string,"requested_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "forwarding_confirmations_feed_id_fkey"
+      columns: ["feed_id"]
+isOneToOne: false
+      referencedRelation: "feeds"
       referencedColumns: ["id"]
     }
                   ]
@@ -191,14 +211,14 @@ isOneToOne: false
                   ]
                 },"messages": {
                   Row: {
-                    "created_at": string,"expires_at": string,"feed_id": string,"id": string,"message_id_header": string | null,"received_at": string,"sender": string | null,"sha256": string | null,"source_id": string | null,"status": string,"storage_path": string | null,"subject": string | null
+                    "attachment_count": number | null,"auth_dkim": string | null,"auth_dmarc": string | null,"auth_spf": string | null,"created_at": string,"expires_at": string,"feed_id": string,"id": string,"message_id_header": string | null,"quarantine_reason": string | null,"raw_bytes": number | null,"received_at": string,"sender": string | null,"sha256": string | null,"source_id": string | null,"status": string,"storage_path": string | null,"subject": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"expires_at"?: string,"feed_id": string,"id"?: string,"message_id_header"?: string | null,"received_at"?: string,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"subject"?: string | null
+                    "attachment_count"?: number | null,"auth_dkim"?: string | null,"auth_dmarc"?: string | null,"auth_spf"?: string | null,"created_at"?: string,"expires_at"?: string,"feed_id": string,"id"?: string,"message_id_header"?: string | null,"quarantine_reason"?: string | null,"raw_bytes"?: number | null,"received_at"?: string,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"subject"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"expires_at"?: string,"feed_id"?: string,"id"?: string,"message_id_header"?: string | null,"received_at"?: string,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"subject"?: string | null
+                    "attachment_count"?: number | null,"auth_dkim"?: string | null,"auth_dmarc"?: string | null,"auth_spf"?: string | null,"created_at"?: string,"expires_at"?: string,"feed_id"?: string,"id"?: string,"message_id_header"?: string | null,"quarantine_reason"?: string | null,"raw_bytes"?: number | null,"received_at"?: string,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"subject"?: string | null
                   }
                   Relationships: [
                     {
@@ -257,14 +277,14 @@ isOneToOne: false
                   ]
                 },"sources": {
                   Row: {
-                    "attachment_rule": Json | null,"created_at": string,"feed_id": string,"id": string,"sender_domain": string | null,"sender_email": string | null,"trusted": boolean
+                    "attachment_rule": Json | null,"blocked": boolean,"created_at": string,"feed_id": string,"id": string,"sender_domain": string | null,"sender_email": string | null,"trusted": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "attachment_rule"?: Json | null,"created_at"?: string,"feed_id": string,"id"?: string,"sender_domain"?: string | null,"sender_email"?: string | null,"trusted"?: boolean
+                    "attachment_rule"?: Json | null,"blocked"?: boolean,"created_at"?: string,"feed_id": string,"id"?: string,"sender_domain"?: string | null,"sender_email"?: string | null,"trusted"?: boolean
                   }
                   Update: {
-                    "attachment_rule"?: Json | null,"created_at"?: string,"feed_id"?: string,"id"?: string,"sender_domain"?: string | null,"sender_email"?: string | null,"trusted"?: boolean
+                    "attachment_rule"?: Json | null,"blocked"?: boolean,"created_at"?: string,"feed_id"?: string,"id"?: string,"sender_domain"?: string | null,"sender_email"?: string | null,"trusted"?: boolean
                   }
                   Relationships: [
                     {
@@ -341,6 +361,17 @@ isOneToOne: false
 "cancel_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"claim_storage_trash":
+{ Args: { "p_limit"?: number }; Returns: {
+              "bucket": string,"id": number,"path": string
+            }[]
+                           },
+"decide_message":
+{ Args: { "p_message_id": string,"p_release": boolean }; Returns: boolean
+                           },
+"decide_sender":
+{ Args: { "p_source_id": string,"p_trust": boolean }; Returns: number
+                           },
 "due_account_deletions":
 { Args: Record<PropertyKey, never>; Returns: string[]
                            },
@@ -350,11 +381,20 @@ isOneToOne: false
 "feed_subscribe_stats":
 { Args: { "p_feed_id": string }; Returns: Json
                            },
+"forget_storage_trash":
+{ Args: { "p_ids": (number)[] }; Returns: number
+                           },
 "get_feed_token":
 { Args: { "p_feed_id": string }; Returns: string
                            },
 "health_check":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"ingest_commit":
+{ Args: { "p_attachment_count": number,"p_body_sha256": string,"p_dkim"?: string,"p_dmarc"?: string,"p_gmail_confirmation"?: Json,"p_message_id_header": string,"p_path": string,"p_raw_bytes": number,"p_sender": string,"p_spf"?: string,"p_subject": string,"p_ticket": string }; Returns: Json
+                           },
+"ingest_start":
+{ Args: { "p_bytes": number,"p_local_part": string }; Returns: Json
                            },
 "login_attempt_allowed":
 { Args: { "p_client_ip"?: string,"p_email": string }; Returns: boolean
@@ -372,6 +412,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "rotate_feed_token":
+{ Args: { "p_feed_id": string }; Returns: string
+                           },
+"rotate_intake_address":
 { Args: { "p_feed_id": string }; Returns: string
                            },
 "state_machines":

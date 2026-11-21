@@ -6,13 +6,22 @@
 |---|---|
 | `npm test` | Unit tests: web routes, sign-in, CSRF and origin checks, calendar output (golden files, ical.js validation), subscribe and share pages |
 | `npm run test:functions` | Edge Function logic (Deno) |
-| `npm run db:test` | pgTAP: RLS isolation, tokens, accounts, feeds, subscribe counts, seed sanity |
+| `npm run db:test` | pgTAP: RLS isolation, tokens, accounts, feeds, subscribe counts, seed sanity, sign-in limits, email intake |
+| `npm run test:integration` | Against the local stack: a stranger can't reach another user's share kit; email intake end to end (Worker code → Edge Functions → Storage → SQL → queue) |
 | CI `Secret scan` | gitleaks over the full git history |
 
 Regenerate calendar golden files only after reading the diff:
 ```bash
 UPDATE_GOLDEN=1 npx vitest run packages/ics
 ```
+
+## Phase 6 hand test: a real Gmail forward (needs SETUP §7)
+1. Create a test feed, open **Email forwarding** from the account page, and copy the address.
+2. In a real Gmail account, add it as a forwarding address. **Pass:** within a minute the confirmation code shows on the email page. Type it into Gmail.
+3. Make a filter that forwards one sender's mail, then have that sender email you. **Pass:** "Use emails from … ?" appears; tap Yes.
+4. Forward the same email again by hand. **Pass:** no second copy (the waiting count doesn't change; the Worker log says `duplicate`).
+5. Send a 21 MB attachment. **Pass:** the sender gets the "larger than 20 MB" bounce.
+6. Record the Authentication-Results line Cloudflare added (Worker log shows `dmarc=`), and whether Gmail-forwarded mail passed DMARC.
 
 ## Phase 5 usability script: three people subscribe without help
 

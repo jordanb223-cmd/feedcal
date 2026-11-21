@@ -38,7 +38,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
-      - run: npx supabase start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector,supavisor
+      # A throwaway signing secret for the local ingest functions (integration tests only).
+      - run: printf 'INGEST_HMAC_SECRET=%s\n' "$(openssl rand -hex 32)" > supabase/functions/.env
+      - run: npx supabase start -x studio,imgproxy,inbucket,logflare,vector,supavisor
       - run: npx supabase db reset
       - run: npx supabase test db
       - name: Integration tests against the local stack (real sessions and RLS)

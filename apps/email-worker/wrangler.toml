@@ -1,11 +1,17 @@
-# Email Worker. Holds only the ingest HMAC secret (Phase 6), never the
-# Supabase service-role key.
+# Email Worker (Phase 6, D26). Holds only the ingest HMAC secret, never the Supabase
+# service-role key. Set it per environment:  wrangler secret put INGEST_HMAC_SECRET --env staging
+# Not deployed yet: Email Routing needs the domain (docs/SETUP.md §7).
 name = "feedcal-email-worker"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
 
+[vars]
+SUPABASE_URL = "http://127.0.0.1:54321"
+
 [env.staging]
 name = "feedcal-email-worker-staging"
+vars = { SUPABASE_URL = "https://rqfpfgogylcjvuqrhgeb.supabase.co" }
 
 [env.production]
 name = "feedcal-email-worker-production"
+vars = { SUPABASE_URL = "https://psqytjoxeejxgnaqrisn.supabase.co" }
