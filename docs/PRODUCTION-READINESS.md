@@ -61,7 +61,7 @@ Assessed 2026-11-20, against the code on `main` (after Phase 5 and the state-mac
 | 24 | Time zones stored right | `timestamptz` plus an IANA zone per event; VTIMEZONEs generated and tested, including the daylight-saving bug found in review (D22). Reminders don't exist yet: Phase 12 digests must use each owner's zone. | ✅ Done (Phase 12 note in Prompt E) |
 | 25 | Apostrophes in names | Tested (`O'Brien` is escaped on pages). PostgREST sends parameters, never concatenated SQL. | ✅ Done |
 | 26 | Emoji, accents, right-to-left text | Emoji and accents pass through; calendar line folding never splits a character (tested). Right-to-left text has no `dir="auto"`, so Arabic or Hebrew event titles may render mixed up. | ➕ Act (small; Prompt A) |
-| 27 | Money as integers | The only money is `supporters.amount numeric(12,2)`: Postgres `numeric` is exact decimal, not floating point. No billing. | ✅ Done (enough) |
+| 27 | Money as integers | The only money is `supporters.total_cents bigint`: whole cents, never floating point (D36). No billing. | ✅ Done (enough) |
 | 28 | Currency, rounding, tax per country | Buy Me a Coffee handles all money. | ❌ N/A |
 | 29 | A model that survives "one small change" | Feed-scoped tables, `jsonb` for the learned attachment rules, state machines in data (D24). | ✅ Done (as far as can be judged now) |
 | 30 | Idempotency keys | `jobs_dedupe` table; messages are unique per `(feed, Message-ID)`. Their first real use is Phase 6. | 🗓 Planned (Phase 6; Prompt E) |
@@ -95,7 +95,7 @@ Assessed 2026-11-20, against the code on `main` (after Phase 5 and the state-mac
 | 53 | HIPAA | Not a covered entity and handles no patient records. School emails may mention a child's health in passing, so the privacy policy should ask organizers not to forward medical details. | ❌ N/A (privacy-policy note in Prompt F) |
 | 54 | A BAA with every vendor | Same as 53. Separately, email content goes to the AI provider in Phase 9 and must be disclosed (item 115). | ❌ N/A |
 | 55 | Audit trails of who *viewed* a record | No regulated records. | ⏸ Later. Trigger: a support view (item 12) logs its own views (Prompt G) |
-| 56 | PCI scope; card numbers out of the database | Buy Me a Coffee takes the cards; we store only supporter id, amount and currency. Keep it that way. | ❌ N/A (rule stays) |
+| 56 | PCI scope; card numbers out of the database | Buy Me a Coffee takes the cards; we store only an email hash, the name given to BMC, totals in cents and currency (D36). Keep it that way. | ❌ N/A (rule stays) |
 | 57 | GDPR deletion reaches every table, backup and log | Account purge covers our tables (tested), and logs hold no personal data by design. Not covered yet: raw emails in Storage (Phase 6), and backups (item 19) keep data until they age out. | ➕ Act (Phase 6 + retention note; Prompts B and E) |
 | 58 | EU-only data residency | No such contracts. | ❌ N/A |
 | 59 | Quarterly access reviews | One person. | ⏸ Later. Trigger: a second person gets access |

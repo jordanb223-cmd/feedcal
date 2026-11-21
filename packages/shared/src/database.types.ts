@@ -401,14 +401,14 @@ isOneToOne: true
                   ]
                 },"profiles": {
                   Row: {
-                    "created_at": string,"deleted_at": string | null,"display_name": string | null,"id": string,"suspended_at": string | null
+                    "created_at": string,"deleted_at": string | null,"display_name": string | null,"id": string,"supporter_since": string | null,"suspended_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"deleted_at"?: string | null,"display_name"?: string | null,"id": string,"suspended_at"?: string | null
+                    "created_at"?: string,"deleted_at"?: string | null,"display_name"?: string | null,"id": string,"supporter_since"?: string | null,"suspended_at"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"deleted_at"?: string | null,"display_name"?: string | null,"id"?: string,"suspended_at"?: string | null
+                    "created_at"?: string,"deleted_at"?: string | null,"display_name"?: string | null,"id"?: string,"supporter_since"?: string | null,"suspended_at"?: string | null
                   }
                   Relationships: [
                     
@@ -481,20 +481,20 @@ isOneToOne: false
                   ]
                 },"supporters": {
                   Row: {
-                    "amount": number,"bmc_supporter_id": string,"created_at": string,"currency": string,"id": string,"user_id": string | null
+                    "currency": string | null,"display_name": string | null,"donations": number,"first_at": string,"id": string,"last_at": string,"list_publicly": boolean,"member": boolean,"supporter_hash": string,"total_cents": number,"user_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount": number,"bmc_supporter_id": string,"created_at"?: string,"currency": string,"id"?: string,"user_id"?: string | null
+                    "currency"?: string | null,"display_name"?: string | null,"donations"?: number,"first_at"?: string,"id"?: string,"last_at"?: string,"list_publicly"?: boolean,"member"?: boolean,"supporter_hash": string,"total_cents"?: number,"user_id"?: string | null
                   }
                   Update: {
-                    "amount"?: number,"bmc_supporter_id"?: string,"created_at"?: string,"currency"?: string,"id"?: string,"user_id"?: string | null
+                    "currency"?: string | null,"display_name"?: string | null,"donations"?: number,"first_at"?: string,"id"?: string,"last_at"?: string,"list_publicly"?: boolean,"member"?: boolean,"supporter_hash"?: string,"total_cents"?: number,"user_id"?: string | null
                   }
                   Relationships: [
                     {
       foreignKeyName: "supporters_user_id_fkey"
       columns: ["user_id"]
-isOneToOne: false
+isOneToOne: true
       referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
@@ -682,17 +682,28 @@ isOneToOne: false
 "ingest_start":
 { Args: { "p_bytes": number,"p_local_part": string }; Returns: Json
                            },
+"link_supporter":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
 "login_attempt_allowed":
 { Args: { "p_client_ip"?: string,"p_email": string }; Returns: boolean
                            },
 "mark_outbox":
 { Args: { "p_error"?: string,"p_id": string,"p_provider_id"?: string,"p_sent": boolean }; Returns: undefined
                            },
+"my_supporter_status":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "never_use_attachment":
 { Args: { "p_attachment_id": string }; Returns: Json
                            },
 "public_feed_page":
 { Args: { "p_limit"?: number,"p_slug": string }; Returns: Json
+                           },
+"public_supporters":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "display_name": string,"since": string
+            }[]
                            },
 "publish_draft":
 { Args: { "p_event_id": string }; Returns: boolean
@@ -702,6 +713,9 @@ isOneToOne: false
                            },
 "reconcile_pending":
 { Args: { "p_limit"?: number }; Returns: number
+                           },
+"record_bmc_event":
+{ Args: { "p_accept_test"?: boolean,"p_amount_cents": number,"p_currency": string,"p_email": string,"p_event_id": number,"p_live": boolean,"p_name": string,"p_type": string }; Returns: string
                            },
 "record_extraction":
 { Args: { "p_message_id": string,"p_result": Json }; Returns: number
@@ -747,6 +761,9 @@ isOneToOne: false
                            },
 "set_sender_large_attachments":
 { Args: { "p_allow": boolean,"p_source_id": string }; Returns: boolean
+                           },
+"set_supporter_listing":
+{ Args: { "p_list": boolean }; Returns: boolean
                            },
 "state_machines":
 { Args: Record<PropertyKey, never>; Returns: Json

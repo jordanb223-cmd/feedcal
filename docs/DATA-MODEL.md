@@ -104,7 +104,7 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 
 **jobs_dedupe.** Idempotency keys for jobs and webhooks (rule 8).
 
-**supporters.** Buy Me a Coffee supporters (Phase 15).
+**supporters.** Buy Me a Coffee supporters (Phase 15, D36). Keyed by `supporter_hash`, the SHA-256 of the lower-cased email; the email itself isn't stored. Also holds the name given to BMC, the donation count, `total_cents` (integer) and currency, and whether they're a member. `user_id` is set only when the person links their account; `list_publicly` is their choice. No direct access for anon or signed-in users. `profiles.supporter_since` is the badge. Each webhook delivery is in `private.bmc_events`, keyed by BMC's `event_id`, so it counts once.
 
 **zip_codes.** Zip code to point, loaded in Phase 13.
 
@@ -131,6 +131,9 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `submit_feed_report(p_slug, p_kind, p_details, p_client_ip)` | anon, signed-in | Phase 14 (D35). "Report this calendar": spam, wrong info, inappropriate, impersonation, privacy; rate-limited, hashed. |
 | `admin_queue` / `admin_hide_feed` / `admin_unhide_feed` / `admin_suspend_user` / `admin_unsuspend_user` / `admin_set_verified` / `admin_dismiss` | admins with a second factor (aal2) | Phase 14. Every action writes `admin_audit`. |
 | `verify_feed_by_domain(p_feed_id)` | signed-in owner | Phase 14. Verified badge when the owner's organisation domain is a trusted sender. |
+| `record_bmc_event(...)` | service role (the `bmc-webhook` function) | Phase 15 (D36). One Buy Me a Coffee event, once per `event_id`; test events ignored unless asked. |
+| `my_supporter_status()` / `link_supporter()` / `set_supporter_listing(p_list)` | signed-in | Phase 15. Opt-in link by email hash, badge, thank-you email, listing choice. |
+| `public_supporters()` | anon, signed-in | Phase 15. Only linked supporters who chose to be listed, by the name they gave. |
 | `directory_search(p_query, p_zip, p_miles, p_category, p_limit)` | anon, signed-in (SECURITY INVOKER) | Phase 13 (D34). Public feeds only, ranked by text match, distance, followers, freshness and verification. |
 | `add_imported_feed` / `claim_imports` / `record_import` | service role | Phase 13. Operator-added public calendars, re-fetched daily; vanished events are cancelled, never deleted. |
 | `submit_report(p_event_uid, p_kind, p_details, p_client_ip)` | anon, signed-in | Phase 12 (D33). A subscriber's "Report a problem"; 10 an hour per network (hashed); queues an instant email to the feed's people. |

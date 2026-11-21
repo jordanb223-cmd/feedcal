@@ -11,4 +11,6 @@ export interface Bindings {
   GOOGLE_SIGN_IN?: string;
   /** Domain that receives forwarded email (e.g. in.feedcal.app). Unset until Email Routing exists. */
   INTAKE_DOMAIN?: string;
+  /** Buy Me a Coffee page name (D36). Unset: no donation link is shown. */
+  BMC_USERNAME?: string;
 }

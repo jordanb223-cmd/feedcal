@@ -51,7 +51,7 @@ ${head}
 <style>${raw(styles)}</style>
 </head>
 <body><main id="main">${body}
-<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a></footer></main></body>
+<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/about/costs">Support Feedcal</a></footer></main></body>
 </html>`;
 }
 
@@ -174,6 +174,10 @@ export function accountPage(opts: {
     <p><label class="check"><input type="checkbox" name="milestones" value="1" ${n.milestones ? "checked" : ""}> A thank-you when a feed reaches 10, 50 or 100 followers</label></p>
     <button type="submit" class="secondary">Save email choices</button>
   </form>
+</div>
+<div class="card">
+  <h2>Supporting Feedcal</h2>
+  <p><a href="/account/support">Link your Buy Me a Coffee support</a> or choose whether you're listed as a supporter.</p>
 </div>
 <div class="card">
   <h2>Delete your account</h2>
