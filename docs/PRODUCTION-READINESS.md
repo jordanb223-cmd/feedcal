@@ -246,6 +246,8 @@ Each prompt lists its item numbers and ends with how you know it's done. Paste t
 
 ### Prompt A — Quick wins before Phase 6 (items 2, 5, 10, 13, 26, 31, 50, 51, 123, 124, 125, 144)
 
+**Status (2026-11-21): done**, see D25. Two items changed shape: session timeouts aren't on the free plan (item 5, recorded instead of set), and international addresses stay refused because Supabase Auth rejects them (item 2). The reporting channel is GitHub private reporting, not an email address (item 50).
+
 ```
 Small hardening pass for Feedcal. One pull request per numbered group is fine.
 

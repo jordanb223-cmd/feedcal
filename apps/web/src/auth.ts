@@ -9,6 +9,9 @@ export const MESSAGES = {
   badForm: "Your session timed out. Please try again.",
   badEmail: "Please enter a valid email address.",
   tooMany: "Too many sign-in emails were sent. Please wait a few minutes and try again.",
+  ourLimit: "You've asked for several sign-in links in the last hour. Please use the newest email we sent, or wait an hour and try again.",
+  intlEmail: "Feedcal can't send to addresses with accented or non-Latin letters yet. Please use another address.",
+  unavailable: "We couldn't send a sign-in link just now. Please try again in a minute.",
   signInFailed: "We couldn't sign you in. Please try again.",
   googleOff: "Google sign-in isn't available yet. Please use the email link.",
 } as const;
@@ -63,9 +66,28 @@ export function registerAuthRoutes(app: Hono<AppEnv>): void {
   app.post("/login", async (c) => {
     const body = await form(c);
     if (!csrfValid(c, body.csrf)) return c.html(loginPage({ csrf: csrfToken(c), googleEnabled: googleEnabled(c), error: MESSAGES.badForm }), 403);
+    // Keep what was typed, so a typo doesn't mean retyping the whole address.
+    const typed = typeof body.email === "string" ? body.email.slice(0, 320) : "";
+    const again = (error: string, status: 400 | 429 | 503) =>
+      c.html(loginPage({ csrf: csrfToken(c), googleEnabled: googleEnabled(c), error, email: typed }), status);
     const parsed = LoginForm.safeParse(body);
     if (!parsed.success) {
-      return c.html(loginPage({ csrf: csrfToken(c), googleEnabled: googleEnabled(c), error: MESSAGES.badEmail }), 400);
+      // Supabase Auth rejects internationalized addresses (RFC 6531) as "invalid format" (D25).
+      return again([...typed].some((ch) => ch.charCodeAt(0) > 127) ? MESSAGES.intlEmail : MESSAGES.badEmail, 400);
+    }
+    // Our own limit, checked before asking Auth to send anything (D25).
+    const ip = c.req.header("cf-connecting-ip");
+    const { data: allowed, error: limitError } = await c.get("supabase").rpc("login_attempt_allowed", {
+      p_email: parsed.data.email,
+      ...(ip ? { p_client_ip: ip } : {}),
+    });
+    if (limitError) {
+      c.get("log").error("login_limit_check_failed", { code: limitError.code ?? "unknown" });
+      return again(MESSAGES.unavailable, 503); // fail closed: never send unlimited email
+    }
+    if (allowed !== true) {
+      c.get("log").warn("login_limited");
+      return again(MESSAGES.ourLimit, 429);
     }
     const { error } = await c.get("supabase").auth.signInWithOtp({
       email: parsed.data.email,
@@ -74,7 +96,7 @@ export function registerAuthRoutes(app: Hono<AppEnv>): void {
     if (error) {
       const rateLimited = error.status === 429 || error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit";
       c.get("log").warn("login_link_failed", { code: error.code ?? "unknown", status: error.status ?? null });
-      if (rateLimited) return c.html(loginPage({ csrf: csrfToken(c), googleEnabled: googleEnabled(c), error: MESSAGES.tooMany }), 429);
+      if (rateLimited) return again(MESSAGES.tooMany, 429);
       // Any other failure gets the same page as success, so the form never reveals which addresses exist.
     } else {
       c.get("log").info("login_link_sent");

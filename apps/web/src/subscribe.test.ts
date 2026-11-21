@@ -63,12 +63,27 @@ describe("GET /c/<slug>", () => {
     const res = await request("/c/sutterville-kindergarten", { headers: { "user-agent": IPHONE } });
     expect(res.status).toBe(200);
     const body = await res.text();
-    expect(body).toContain("<h1>Sutterville Kindergarten</h1>");
-    expect(body).toContain(`Kept up to date by ${esc("Alice O'Brien")} · 95818`);
+    expect(body).toContain('<h1 dir="auto">Sutterville Kindergarten</h1>');
+    expect(body).toContain(`Kept up to date by <span dir="auto">${esc("Alice O'Brien")}</span> · 95818`);
     expect(body).toContain("At least 43 calendars follow this.");
     expect(body).toContain("How we count");
-    expect((body.match(/<li><strong>Event/g) ?? []).length).toBe(5);
+    expect((body.match(/<li><strong dir="auto">Event/g) ?? []).length).toBe(5);
     expect(body).toContain("Room 12");
+  });
+
+  it.each([
+    ["Arabic", "حفل الشتاء"],
+    ["Hebrew", "מסיבת חורף"],
+    ["emoji", "🎄 Winter concert 🎶"],
+  ])("renders a %s title as written, marked dir=auto", async (_name, title) => {
+    const p = page();
+    p.feed.name = title;
+    p.events = p.events.map((e, i) => (i === 0 ? { ...e, title } : e));
+    const { request } = setup(() => ({ data: p, error: null }));
+    const body = await (await request("/c/sutterville-kindergarten")).text();
+    expect(body).toContain(`<h1 dir="auto">${title}</h1>`);
+    expect(body).toContain(`<strong dir="auto">${title}</strong>`);
+    expect(body).toContain(`<meta property="og:title" content="${title}">`);
   });
 
   it("puts the right button first for the device, and always lists the others", async () => {

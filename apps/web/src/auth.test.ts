@@ -13,7 +13,7 @@ const env: Bindings = { ENVIRONMENT: "local", SUPABASE_URL: "http://db.test", SU
 
 type AuthError = { code?: string; status?: number; message: string } | null;
 
-function fakeSupabase(opts: { user?: { sub: string; email: string } | null; otpError?: AuthError; verifyError?: AuthError } = {}) {
+function fakeSupabase(opts: { user?: { sub: string; email: string } | null; otpError?: AuthError; verifyError?: AuthError; loginAllowed?: boolean | "error" } = {}) {
   const auth = {
     getUser: vi.fn(async () =>
       opts.user
@@ -26,7 +26,11 @@ function fakeSupabase(opts: { user?: { sub: string; email: string } | null; otpE
     signInWithOAuth: vi.fn(async () => ({ data: { url: "http://db.test/auth/v1/authorize?provider=google" }, error: null })),
     signOut: vi.fn(async () => ({ error: null })),
   };
-  const rpc = vi.fn<(fn: string) => Promise<{ data: unknown; error: unknown }>>(async () => ({ data: null, error: null }));
+  const rpc = vi.fn<(fn: string, args?: unknown) => Promise<{ data: unknown; error: unknown }>>(async (fn) => {
+    if (fn !== "login_attempt_allowed") return { data: null, error: null };
+    if (opts.loginAllowed === "error") return { data: null, error: { code: "PGRST000" } };
+    return { data: opts.loginAllowed ?? true, error: null };
+  });
   const from = vi.fn(() => ({
     select: () => ({
       eq: () => ({ maybeSingle: async () => ({ data: { display_name: null, deleted_at: null } }) }),
@@ -140,6 +144,66 @@ describe("magic link sign-in", () => {
     const res = await request(...post("/login", { email: "not-an-email", csrf: token }, { cookie, origin: BASE }));
     expect(res.status).toBe(400);
     expect(await res.text()).toContain(esc(MESSAGES.badEmail));
+  });
+
+  it("keeps the typed email when it's invalid, so a typo isn't retyped", async () => {
+    const { request } = setup();
+    const { cookie, token } = await csrfFrom(request);
+    const res = await request(...post("/login", { email: "jane.doe@example", csrf: token }, { cookie, origin: BASE }));
+    expect(res.status).toBe(400);
+    expect(await res.text()).toContain('value="jane.doe@example"');
+  });
+
+  it("escapes the kept email", async () => {
+    const { request } = setup();
+    const { cookie, token } = await csrfFrom(request);
+    const res = await request(...post("/login", { email: '"><script>x</script>', csrf: token }, { cookie, origin: BASE }));
+    const body = await res.text();
+    expect(body).not.toContain("<script>x");
+    expect(body).toContain("&quot;&gt;&lt;script&gt;");
+  });
+
+  it("accepts an address with +", async () => {
+    const { request, auth } = setup();
+    const { cookie, token } = await csrfFrom(request);
+    await request(...post("/login", { email: "parent+school@example.test", csrf: token }, { cookie, origin: BASE }));
+    expect(auth.signInWithOtp).toHaveBeenCalledWith(expect.objectContaining({ email: "parent+school@example.test" }));
+  });
+
+  it("explains that international addresses aren't supported yet", async () => {
+    const { request, auth } = setup();
+    const { cookie, token } = await csrfFrom(request);
+    const res = await request(...post("/login", { email: "pelé@example.test", csrf: token }, { cookie, origin: BASE }));
+    expect(res.status).toBe(400);
+    expect(await res.text()).toContain(esc(MESSAGES.intlEmail));
+    expect(auth.signInWithOtp).not.toHaveBeenCalled();
+  });
+
+  it("checks our own limit with the address and IP before sending", async () => {
+    const { request, auth, rpc } = setup();
+    const { cookie, token } = await csrfFrom(request);
+    await request(...post("/login", { email: "A@Example.test", csrf: token }, { cookie, origin: BASE, "cf-connecting-ip": "198.51.100.4" }));
+    expect(rpc).toHaveBeenCalledWith("login_attempt_allowed", { p_email: "a@example.test", p_client_ip: "198.51.100.4" });
+    expect(auth.signInWithOtp).toHaveBeenCalled();
+  });
+
+  it("over our limit: no email, a plain message, the address kept", async () => {
+    const { request, auth } = setup({ loginAllowed: false });
+    const { cookie, token } = await csrfFrom(request);
+    const res = await request(...post("/login", { email: "a@example.test", csrf: token }, { cookie, origin: BASE }));
+    expect(res.status).toBe(429);
+    const body = await res.text();
+    expect(body).toContain(esc(MESSAGES.ourLimit));
+    expect(body).toContain('value="a@example.test"');
+    expect(auth.signInWithOtp).not.toHaveBeenCalled();
+  });
+
+  it("fails closed if the limit can't be checked", async () => {
+    const { request, auth } = setup({ loginAllowed: "error" });
+    const { cookie, token } = await csrfFrom(request);
+    const res = await request(...post("/login", { email: "a@example.test", csrf: token }, { cookie, origin: BASE }));
+    expect(res.status).toBe(503);
+    expect(auth.signInWithOtp).not.toHaveBeenCalled();
   });
 
   it("explains rate limits", async () => {

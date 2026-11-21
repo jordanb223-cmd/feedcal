@@ -28,6 +28,10 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+      - name: Fail if CHANGELOG.md has no entry for this tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          grep -qF "## [${version}]" CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## [${version}]' section. Add one, then tag again."; exit 1; }
       - uses: actions/setup-node@v4
         with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
