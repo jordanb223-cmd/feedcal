@@ -29,7 +29,9 @@ reset role;
 set local role anon;
 select is(public.feed_calendar(current_setting('test.token'))->'feed'->>'name', 'Private cal',
   'anon gets a private feed with its exact token');
-select is(public.feed_calendar('x' || substr(current_setting('test.token'), 2)), null, 'a wrong token returns nothing');
+-- Change the first character to one it certainly isn't (a bare 'x' collided 1 run in 64).
+select is(public.feed_calendar(case when left(current_setting('test.token'), 1) = 'x' then 'y' else 'x' end
+                               || substr(current_setting('test.token'), 2)), null, 'a wrong token returns nothing');
 select is(public.feed_calendar('short'), null, 'a malformed token returns nothing');
 select is(public.feed_calendar(null), null, 'no token returns nothing');
 select is(

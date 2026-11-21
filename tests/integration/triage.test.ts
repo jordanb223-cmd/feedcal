@@ -126,6 +126,13 @@ describe.skipIf(!enabled)("attachment triage, end to end on the local stack", { 
     ]);
   });
 
+  it("Phase 9: triaged emails reach extraction, and wait there without an API key", async () => {
+    await call("extract-events");
+    const { data } = await db.from("messages").select("status, extraction").eq("message_id_header", `<w48-${run}@it.example.test>`).single();
+    expect(data?.status).toBe("parsed");
+    expect(data?.extraction).toMatchObject({ state: "waiting", reason: "no_api_key" });
+  });
+
   it("a photo waits for vision when no API key is configured (free tier)", async () => {
     const jpeg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xc0, 0, 17, 8, 0x06, 0x40, 0x04, 0xb0, 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1]), Buffer.alloc(40_000, 7), Buffer.from(run), Buffer.from([0xff, 0xd9])]);
     await deliver(email(`photo-${run}`, [{ name: "flyer.jpg", type: "image/jpeg", data: jpeg }]));
