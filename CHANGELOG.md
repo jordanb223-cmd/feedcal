@@ -28,6 +28,10 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 - Follower counts now count Google and Outlook once each, as they fetch for many people at once.
 - A public directory: search by words, ZIP code and distance (5, 10 or 25 miles) and kind of group. Only public calendars appear; "anyone with the link" calendars never do. Quiet calendars are labelled and sink.
 - Public calendar pages now carry schema.org event data for search engines, and say when a calendar may be out of date.
+- "Report this calendar" on every public page, and a team review queue. New accounts can share by link straight away; public listing opens after 7 days, needs a confirmed email and one published event, and spammy text waits for a quick review.
+- A verified badge for organizers who use their organisation's email.
+- Events that mention a phone number, email address or home address are held for the organizer to check before publishing, to keep children's details private.
+- Community rules, terms and a takedown process (drafts).
 - Forwarding the same email twice is harmless; Feedcal keeps one copy and deletes copies after 30 days.
 
 ### Fixed

@@ -50,7 +50,8 @@ export function layout(title: string, body: Html, head: Html | string = ""): Htm
 ${head}
 <style>${raw(styles)}</style>
 </head>
-<body><main id="main">${body}</main></body>
+<body><main id="main">${body}
+<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a></footer></main></body>
 </html>`;
 }
 

@@ -114,5 +114,10 @@ Locally, emails go to Mailpit (http://127.0.0.1:54324): `supabase/functions/.env
 - [ ] **ZIP codes.** The directory's "near me" needs ZIP centroids. Download and unzip the Census ZCTA gazetteer (public domain, about 1 MB): https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2024_Gazetteer/2024_Gaz_zcta_national.zip, then `npm run zcta:load -- 2024_Gaz_zcta_national.txt` (local), or with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` set in your own terminal for a hosted project. It has no city names; pages show the ZIP instead.
 - [ ] **Imported Sacramento calendars.** The importer is built (daily, labelled with the source). Choosing which real public calendars to list is yours: add each with `select public.add_imported_feed('<name>', '<https .ics url>', '<source name>', '<category>', '<zip>', '<your user id>');` in the SQL editor. Only list calendars their owners publish for public use.
 
+## 11. Moderation (Phase 14)
+- [ ] Make yourself an admin: in the SQL editor, `insert into public.admins (user_id) select id from auth.users where email = '<your email>';`.
+- [ ] Check that TOTP MFA is on for each hosted project (Authentication → Multi-Factor; Supabase's docs say it's on by default). Then open `/admin`: it asks you to set up an authenticator app before showing the queue.
+- [ ] Have a lawyer review `/terms`, `/rules` and `/takedown` (drafts) before public launch.
+
 ## When it's all done
 Merge a pull request into `main`: CI passes, staging deploys, and `https://feedcal-web-staging.pages.dev/health` returns `"status":"ok"`. For production, push a tag like `v0.1.0` and approve the `production` deployment in GitHub.

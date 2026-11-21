@@ -8,6 +8,7 @@ import { registerEmailRoutes } from "./email.js";
 import { registerReviewRoutes } from "./review.js";
 import { registerNotifyRoutes } from "./notify.js";
 import { anonSupabase, registerDirectoryRoutes } from "./directory.js";
+import { registerAdminRoutes, registerPolicyRoutes } from "./admin.js";
 import { originOf, redactPath, requireSameOrigin } from "./security.js";
 import { registerFeedRoutes } from "./feed.js";
 import { registerSubscribeRoutes } from "./subscribe.js";
@@ -95,7 +96,7 @@ export function createApp(deps: AppDeps) {
     const path = new URL(c.req.url).pathname;
     // Public, cacheable pages never touch the session (no Set-Cookie on a shared-cache response).
     const sessionless = path === "/health" || path.startsWith("/.well-known/") || path === "/robots.txt" || path === "/sitemap.xml"
-      || path === "/directory" || path.startsWith("/near/");
+      || path === "/directory" || path.startsWith("/near/") || path === "/rules" || path === "/terms" || path === "/takedown";
     if (!sessionless) {
       c.set("supabase", makeSupabase(c));
       c.set("user", undefined);
@@ -110,6 +111,8 @@ export function createApp(deps: AppDeps) {
   registerReviewRoutes(app);
   registerNotifyRoutes(app);
   registerDirectoryRoutes(app, deps.anonSupabase ?? anonSupabase);
+  registerAdminRoutes(app);
+  registerPolicyRoutes(app);
 
   app.notFound((c) => {
     const requestId = c.get("requestId");
