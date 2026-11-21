@@ -7,5 +7,6 @@ export const feedNav = (feedId: string, here: string) => html`<p class="row no-p
   <a href="/feeds/${feedId}/events/new">Add event</a>
   ${here === "share" ? html`<strong>Share</strong>` : html`<a href="/feeds/${feedId}/share">Share</a>`}
   ${here === "email" ? html`<strong>Email</strong>` : html`<a href="/feeds/${feedId}/email">Email</a>`}
+  ${here === "gmail" ? html`<strong>Gmail</strong>` : html`<a href="/feeds/${feedId}/gmail">Gmail</a>`}
   ${here === "settings" ? html`<strong>Settings</strong>` : html`<a href="/feeds/${feedId}/settings">Settings</a>`}
 </p>`;

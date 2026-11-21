@@ -456,3 +456,7 @@ verify_jwt = false
 # Phase 15: Buy Me a Coffee signs its webhooks (HMAC); there is no Supabase JWT (D36).
 [functions.bmc-webhook]
 verify_jwt = false
+
+# Phase 17: Google redirects here after "Connect Gmail"; no Supabase JWT (D39).
+[functions.gmail-oauth]
+verify_jwt = false

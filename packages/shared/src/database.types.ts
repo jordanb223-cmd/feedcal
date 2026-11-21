@@ -685,6 +685,47 @@ isOneToOne: false
 "get_feed_token":
 { Args: { "p_feed_id": string }; Returns: string
                            },
+"gmail_check_done":
+{ Args: { "p_checked_at": string,"p_error"?: string,"p_feed_id": string,"p_reconnect"?: boolean }; Returns: undefined
+                           },
+"gmail_choose_example":
+{ Args: { "p_feed_id": string,"p_gmail_id": string,"p_interval_days": number }; Returns: boolean
+                           },
+"gmail_claim_checks":
+{ Args: { "p_limit"?: number }; Returns: {
+              "example_gmail_id": string,"feed_id": string,"intake_local_part": string,"last_checked_at": string,"refresh_token": string,"sender_email": string
+            }[]
+                           },
+"gmail_disconnect":
+{ Args: { "p_feed_id": string }; Returns: Json
+                           },
+"gmail_oauth_complete":
+{ Args: { "p_google_email": string,"p_refresh_token": string,"p_state": string }; Returns: string
+                           },
+"gmail_oauth_verifier":
+{ Args: { "p_state": string }; Returns: Json
+                           },
+"gmail_record":
+{ Args: { "p_feed_id": string,"p_gmail_id": string,"p_message_id": string,"p_outcome": string }; Returns: undefined
+                           },
+"gmail_save_candidates":
+{ Args: { "p_candidates": Json,"p_feed_id": string }; Returns: undefined
+                           },
+"gmail_seen":
+{ Args: { "p_feed_id": string,"p_gmail_ids": (string)[] }; Returns: (string)[]
+                           },
+"gmail_set_interval":
+{ Args: { "p_feed_id": string,"p_interval_days": number }; Returns: boolean
+                           },
+"gmail_start":
+{ Args: { "p_feed_id": string }; Returns: Json
+                           },
+"gmail_status":
+{ Args: { "p_feed_id": string }; Returns: Json
+                           },
+"gmail_token":
+{ Args: { "p_feed_id": string }; Returns: string
+                           },
 "health_check":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },

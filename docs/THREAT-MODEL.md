@@ -43,6 +43,12 @@ STRIDE: **S**poofing, **T**ampering, **R**epudiation, **I**nformation disclosure
 | T14 | **Abusing public endpoints** (D) | Limits: sign-in emails, report forms, feed misses, directory search (60 a minute), subscribe taps (30 a minute). Webhooks reject bad signatures before any work. | The Supabase API itself is reachable with the public anon key. Its platform limits are UNVERIFIED. | Cloudflare in front of the web app; `abuse_spike` alerts on floods (D38) | Project owner | Done (app, alert); Open (platform) |
 | T15 | **Supply chain** (T) | Exact dependency pins, `npm audit` in CI, Dependabot, gitleaks. Every GitHub Action pinned by commit SHA (unit test). | A compromised upstream release that Dependabot proposes and we merge | Every action is pinned by commit SHA; `tests/unit/actions-pinned.test.ts` keeps it that way | Project owner | Done |
 
+## Added with Phase 17 (D39)
+
+| # | Risk (STRIDE) | What stops it today (evidence) | Residual risk | Fix / next step | Owner | Status |
+|---|---|---|---|---|---|---|
+| T16 | **Gmail token misuse or over-reading** (I, E) | Read-only scope. Each check searches only `from:<confirmed sender> after:<last check>`, and the sender must come from the owner's own search and pass a strict address check (Deno, pgTAP 020). Tokens are in Vault, never in the web app. OAuth uses a one-time hashed state and PKCE. Disconnect deletes the token, asks Google to revoke it, and deletes all copies (pgTAP 020). | A stolen Vault key plus database could read the connected senders' mail until revoked | Keep Supabase behind 2FA; rotate the Gmail client secret on any suspicion (`docs/runbooks/google-revokes-access.md`) | Project owner | Done |
+
 ## Not in scope
 
 The calendar apps themselves (Google, Apple, Microsoft). How those companies cache feeds isn't something Feedcal controls.

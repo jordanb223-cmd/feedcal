@@ -126,6 +126,8 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 
 **ai_spend_daily, ops_settings, alerts (Phase 18, D38).** Estimated AI spend per day, from triggers on `messages.extraction` and `attachments.triage`. The monthly AI budget and throttle point (one row). Alerts: kind, detail, whether it was a drill, opened, last seen and resolved (one open alert per kind). All private, with no user data.
 
+**gmail_connections, gmail_oauth_states, gmail_messages (Phase 17, D39).** One Gmail connection per feed, the owner's: the Google address, the Vault id of the refresh token, the latest example-search results (at most 10, discarded on confirm), the confirmed sender, the schedule (3 or 7 days), the last and next check, and the status (choose_example, active, needs_reconnect). OAuth states keep only the state's hash, for 10 minutes, with the PKCE verifier. `gmail_messages` maps each Gmail message to the Feedcal message it became. All private; deleted on disconnect, or with the feed or account.
+
 **rate_hits.** Phase 16 rate limiter: bucket, salted hash of the client address, time. Cleared hourly.
 
 **zip_codes.** Zip code to point, loaded in Phase 13.
@@ -159,6 +161,8 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `feed_calendar_guarded(p_token, p_client_ip, p_user_agent, p_ua_family)` | anon, signed-in | Phase 16 (D37). What the web app calls: `feed_calendar`, plus the miss limit (raises `P0429`). |
 | `rate_check(p_bucket, p_client_ip)` | anon, signed-in | Phase 16. `search` (60/min) or `click` (30/min); counts the hit. |
 | `export_my_data()` | signed-in | Phase 16. Everything about the caller as JSON, without token hashes or Vault ids. |
+| `gmail_start` / `gmail_status` / `gmail_choose_example` / `gmail_set_interval` / `gmail_disconnect` | the feed's owner | Phase 17 (D39). Connect, see status, confirm the example and schedule, change the schedule, disconnect (deletes the token and copies). |
+| `gmail_oauth_verifier` / `gmail_oauth_complete` / `gmail_token` / `gmail_save_candidates` / `gmail_claim_checks` / `gmail_seen` / `gmail_record` / `gmail_check_done` | service role (Edge Functions) | Phase 17. OAuth callback, example search, scheduled checks. |
 | `admin_ops()` / `admin_alert_drill()` | admins with a second factor | Phase 18 (D38). Spend, budget and alerts; the drill fires every alert once (audited). |
 | `directory_search(p_query, p_zip, p_miles, p_category, p_limit)` | anon, signed-in (SECURITY INVOKER) | Phase 13 (D34). Public feeds only, ranked by text match, distance, followers, freshness and verification. |
 | `add_imported_feed` / `claim_imports` / `record_import` | service role | Phase 13. Operator-added public calendars, re-fetched daily; vanished events are cancelled, never deleted. |
