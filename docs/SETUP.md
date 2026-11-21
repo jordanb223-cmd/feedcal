@@ -119,7 +119,7 @@ Locally, emails go to Mailpit (http://127.0.0.1:54324): `supabase/functions/.env
 - [ ] Have a lawyer review `/terms`, `/rules` and `/takedown` (drafts) before public launch.
 
 ## 12. Buy Me a Coffee donations (Phase 15), optional
-- [ ] Create a Buy Me a Coffee page (free; BMC takes a fee on donations). Put its page name in the Pages project's environment variables as `BMC_USERNAME`. Without it, no donation link is shown.
+- [x] Create a Buy Me a Coffee page (free; BMC takes a fee on donations). Done 2026-11-21: `buymeacoffee.com/jordanb223`. Its page name is the repository variable `BMC_USERNAME`, which each deploy passes to its Pages project. Without it, no donation link is shown.
 - [ ] In BMC's dashboard, add a webhook pointing to `https://<project-ref>.supabase.co/functions/v1/bmc-webhook`. Choose the donation, membership and recurring-donation events.
 - [ ] Copy its signing secret into the Supabase project: `npx supabase secrets set BMC_WEBHOOK_SECRET=<secret> --project-ref <ref>`. Never commit it.
 - [ ] On **staging only**, also set `BMC_ACCEPT_TEST_EVENTS=true`, then send a test event from BMC's dashboard. Check that `private.bmc_events` has one row with outcome `applied`, then check the function's logs. If the outcome is `no_supporter`, BMC's field names differ from the guesses in `supabase/functions/_shared/bmc.ts` (D36). Send the log line (it holds no personal data) and that file gets fixed.

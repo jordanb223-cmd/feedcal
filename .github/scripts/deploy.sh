@@ -46,6 +46,11 @@ echo "::add-mask::$ANON_KEY"
 printf '%s' "$ENVIRONMENT" | npx wrangler pages secret put ENVIRONMENT --project-name "$PAGES_PROJECT"
 printf '%s' "https://$SUPABASE_PROJECT_REF.supabase.co" | npx wrangler pages secret put SUPABASE_URL --project-name "$PAGES_PROJECT"
 printf '%s' "$ANON_KEY" | npx wrangler pages secret put SUPABASE_ANON_KEY --project-name "$PAGES_PROJECT"
+# The Buy Me a Coffee page name (D36), from the repository variable BMC_USERNAME. Public, not a
+# secret; unset means no donation link is shown.
+if [ -n "${BMC_USERNAME:-}" ]; then
+  printf '%s' "$BMC_USERNAME" | npx wrangler pages secret put BMC_USERNAME --project-name "$PAGES_PROJECT"
+fi
 echo "::endgroup::"
 
 echo "::group::Scheduler settings (where pg_cron finds the Edge Functions)"
