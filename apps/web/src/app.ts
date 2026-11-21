@@ -5,6 +5,7 @@ import type { Bindings } from "./env.js";
 import { probeDatabase, type DbProbe } from "./db.js";
 import { registerAuthRoutes } from "./auth.js";
 import { registerEmailRoutes } from "./email.js";
+import { registerReviewRoutes } from "./review.js";
 import { originOf, redactPath, requireSameOrigin } from "./security.js";
 import { registerFeedRoutes } from "./feed.js";
 import { registerSubscribeRoutes } from "./subscribe.js";
@@ -99,6 +100,7 @@ export function createApp(deps: AppDeps) {
   registerFeedRoutes(app);
   registerSubscribeRoutes(app);
   registerEmailRoutes(app);
+  registerReviewRoutes(app);
 
   app.notFound((c) => {
     const requestId = c.get("requestId");

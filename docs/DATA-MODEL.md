@@ -128,6 +128,9 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `decide_sender(p_source_id, p_trust)` / `decide_message(p_message_id, p_release)` | signed-in members | Phase 6. Approve or decline a waiting sender (or one message). Approving queues its waiting mail. |
 | `rotate_intake_address(p_feed_id)` | signed-in owner | Phase 6. New forwarding address; the old one stops at once. |
 | `claim_storage_trash` / `forget_storage_trash` | service role | Phase 6. Used by the `storage-trash` Edge Function. |
+| `approve_candidate` / `reject_candidate` / `approve_all_sure` / `publish_draft` / `discard_draft` / `save_event` / `cancel_event` / `clear_attachment_rule` | signed-in members | Phase 11 (D32). Review actions; each writes a revision with actor `user:<id>`. Rejections keep a reason for the evaluation set. |
+| `add_editor(p_feed_id, p_email)` / `request_feed_deletion(p_feed_id)` | signed-in owner | Phase 11. Add an editor by the email they signed in with; delete a feed (hidden at once, purged after 10 seconds). |
+| `undo(p_undo_id)` | the user who acted | Phase 11. Reverses a reject, discard, cancel or feed deletion within 10 seconds (`undo_log`). |
 | `reconcile_pending(p_limit)` | service role (pg_cron) | Phase 10 (D31). Turns pending candidates into events: new, update, cancel, EXDATE, duplicate or conflict. Never deletes; applies only trusted, confident, unflagged candidates. |
 | `claim_extract_jobs` / `record_extraction` / `record_extraction_waiting` / `requeue_waiting_extractions` / `finish_extract_job` / `fail_extract_job` | service role | Phase 9 (D30). Recording replaces a message's pending candidates; without an API key messages wait and can be re-queued. |
 | `claim_triage_jobs` / `finish_triage_job` / `fail_triage_job` / `record_triage` / `take_quota` | service role | Phase 8 (D29). Triage queue access; recording replaces an attachment's pages; daily caps per owner (300 text pages, 20 vision pages). |
