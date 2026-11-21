@@ -76,6 +76,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
       allDay: e.all_day,
       timeZone: e.timezone,
       rrule: e.rrule,
+      exdates: e.exdates,
       status: e.status,
       sequence: e.sequence,
       createdAt: e.created_at,

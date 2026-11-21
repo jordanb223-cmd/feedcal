@@ -19,6 +19,7 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 - Feedcal picks the pages worth reading from attached PDFs (at most 5 per email), and skips receipts, files it has already read, and very large files.
 - Under "Recent emails" you can see what Feedcal read from each attachment and tap "This one has the schedule" or "Never use files like this". It remembers your choice for that sender's next emails.
 - Feedcal can find the events in an email and its attachments, once an AI key is set. Every event must quote the sentence it came from, times are never guessed, and emails that try to give the AI instructions are held for you to check.
+- When a school or coach sends a change (a new time, a new date, a cancellation), the event updates in everyone's calendar instead of appearing twice. A cancelled single practice disappears from a weekly series. Feedcal never deletes an event on its own.
 - Forwarding the same email twice is harmless; Feedcal keeps one copy and deletes copies after 30 days.
 
 ### Fixed

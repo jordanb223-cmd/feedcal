@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 9 (AI event extraction). Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 10 (matching updates to events). Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
@@ -12,7 +12,7 @@ Status: Phase 9 (AI event extraction). Hosted email waits on a domain; AI calls 
                                                         │
                        Storage (inbound-raw, private) + pgmq queue "process_message"
                                                         ▼
-   process-messages (7) → triage-attachments (8) → extract-events (9), every minute → [reconcile: planned]
+   process-messages (7) → triage-attachments (8) → extract-events (9) → reconcile_pending() SQL (10), every minute
                                                         │
                                                         ▼
                                 Supabase Postgres (RLS on every table)
