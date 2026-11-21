@@ -26,6 +26,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 - Subscribers can report a problem with any event from their calendar (the link is in each event), without an account; the organizer hears about it right away.
 - A weekly summary for organizers: followers this week versus last, subscribe taps, events added, items to review, reports. A reminder when a feed goes quiet, and a thank-you card at 10, 50 and 100 followers. Every email has one-click unsubscribe; choices are on the account page.
 - Follower counts now count Google and Outlook once each, as they fetch for many people at once.
+- A public directory: search by words, ZIP code and distance (5, 10 or 25 miles) and kind of group. Only public calendars appear; "anyone with the link" calendars never do. Quiet calendars are labelled and sink.
+- Public calendar pages now carry schema.org event data for search engines, and say when a calendar may be out of date.
 - Forwarding the same email twice is harmless; Feedcal keeps one copy and deletes copies after 30 days.
 
 ### Fixed

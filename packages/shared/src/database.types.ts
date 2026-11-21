@@ -129,14 +129,14 @@ isOneToOne: false
                   ]
                 },"events": {
                   Row: {
-                    "all_day": boolean,"confidence": number | null,"created_at": string,"description": string | null,"ends_at": string | null,"evidence_quote": string | null,"exdates": (string)[],"feed_id": string,"id": string,"location": string | null,"published": boolean,"rrule": string | null,"sequence": number,"source_message_id": string | null,"source_thread": string | null,"starts_at": string,"status": string,"timezone": string,"title": string,"uid": string | null,"updated_at": string
+                    "all_day": boolean,"confidence": number | null,"created_at": string,"description": string | null,"ends_at": string | null,"evidence_quote": string | null,"exdates": (string)[],"external_uid": string | null,"feed_id": string,"id": string,"location": string | null,"published": boolean,"rrule": string | null,"sequence": number,"source_message_id": string | null,"source_thread": string | null,"starts_at": string,"status": string,"timezone": string,"title": string,"uid": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "all_day"?: boolean,"confidence"?: number | null,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"evidence_quote"?: string | null,"exdates"?: (string)[],"feed_id": string,"id"?: string,"location"?: string | null,"published"?: boolean,"rrule"?: string | null,"sequence"?: number,"source_message_id"?: string | null,"source_thread"?: string | null,"starts_at": string,"status"?: string,"timezone"?: string,"title": string,"uid"?: never,"updated_at"?: string
+                    "all_day"?: boolean,"confidence"?: number | null,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"evidence_quote"?: string | null,"exdates"?: (string)[],"external_uid"?: string | null,"feed_id": string,"id"?: string,"location"?: string | null,"published"?: boolean,"rrule"?: string | null,"sequence"?: number,"source_message_id"?: string | null,"source_thread"?: string | null,"starts_at": string,"status"?: string,"timezone"?: string,"title": string,"uid"?: never,"updated_at"?: string
                   }
                   Update: {
-                    "all_day"?: boolean,"confidence"?: number | null,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"evidence_quote"?: string | null,"exdates"?: (string)[],"feed_id"?: string,"id"?: string,"location"?: string | null,"published"?: boolean,"rrule"?: string | null,"sequence"?: number,"source_message_id"?: string | null,"source_thread"?: string | null,"starts_at"?: string,"status"?: string,"timezone"?: string,"title"?: string,"uid"?: never,"updated_at"?: string
+                    "all_day"?: boolean,"confidence"?: number | null,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"evidence_quote"?: string | null,"exdates"?: (string)[],"external_uid"?: string | null,"feed_id"?: string,"id"?: string,"location"?: string | null,"published"?: boolean,"rrule"?: string | null,"sequence"?: number,"source_message_id"?: string | null,"source_thread"?: string | null,"starts_at"?: string,"status"?: string,"timezone"?: string,"title"?: string,"uid"?: never,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -221,14 +221,14 @@ isOneToOne: false
                   ]
                 },"feeds": {
                   Row: {
-                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"delete_requested_at": string | null,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id": string,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"stale_nudged_at": string | null,"timezone": string,"visibility": string,"zip_code": string | null
+                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"delete_requested_at": string | null,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id": string,"import_url": string | null,"imported_at": string | null,"imported_source_name": string | null,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"stale_nudged_at": string | null,"timezone": string,"verified": boolean,"visibility": string,"zip_code": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id"?: string,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"stale_nudged_at"?: string | null,"timezone"?: string,"visibility"?: string,"zip_code"?: string | null
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id"?: string,"import_url"?: string | null,"imported_at"?: string | null,"imported_source_name"?: string | null,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"stale_nudged_at"?: string | null,"timezone"?: string,"verified"?: boolean,"visibility"?: string,"zip_code"?: string | null
                   }
                   Update: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"id"?: string,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"stale_nudged_at"?: string | null,"timezone"?: string,"visibility"?: string,"zip_code"?: string | null
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"id"?: string,"import_url"?: string | null,"imported_at"?: string | null,"imported_source_name"?: string | null,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"stale_nudged_at"?: string | null,"timezone"?: string,"verified"?: boolean,"visibility"?: string,"zip_code"?: string | null
                   }
                   Relationships: [
                     {
@@ -447,14 +447,14 @@ isOneToOne: false
                   ]
                 },"zip_codes": {
                   Row: {
-                    "city": string,"location": unknown,"state": string,"zip": string
+                    "city": string | null,"location": unknown,"state": string | null,"zip": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "city": string,"location": unknown,"state": string,"zip": string
+                    "city"?: string | null,"location": unknown,"state"?: string | null,"zip": string
                   }
                   Update: {
-                    "city"?: string,"location"?: unknown,"state"?: string,"zip"?: string
+                    "city"?: string | null,"location"?: unknown,"state"?: string | null,"zip"?: string
                   }
                   Relationships: [
                     
@@ -470,6 +470,9 @@ isOneToOne: false
                            },
 "add_editor":
 { Args: { "p_email": string,"p_feed_id": string }; Returns: string
+                           },
+"add_imported_feed":
+{ Args: { "p_category": string,"p_name": string,"p_owner": string,"p_source_name": string,"p_url": string,"p_zip": string }; Returns: string
                            },
 "approve_all_sure":
 { Args: { "p_feed_id": string }; Returns: number
@@ -489,6 +492,11 @@ isOneToOne: false
 "claim_extract_jobs":
 { Args: { "p_limit"?: number,"p_visibility_seconds"?: number }; Returns: {
               "context": Json,"feed_id": string,"job_id": number,"message_id": string
+            }[]
+                           },
+"claim_imports":
+{ Args: { "p_limit"?: number }; Returns: {
+              "feed_id": string,"timezone": string,"url": string
             }[]
                            },
 "claim_outbox":
@@ -519,6 +527,11 @@ isOneToOne: false
                            },
 "decide_sender":
 { Args: { "p_source_id": string,"p_trust": boolean }; Returns: number
+                           },
+"directory_search":
+{ Args: { "p_category"?: string,"p_limit"?: number,"p_miles"?: number,"p_query"?: string,"p_zip"?: string }; Returns: {
+              "category": string,"city": string,"description": string,"distance_miles": number,"imported_source_name": string,"last_updated_at": string,"may_be_out_of_date": boolean,"name": string,"score": number,"slug": string,"state": string,"subscribers": number,"verified": boolean,"zip_code": string
+            }[]
                            },
 "discard_draft":
 { Args: { "p_event_id": string }; Returns: string
@@ -591,6 +604,9 @@ isOneToOne: false
                            },
 "record_extraction_waiting":
 { Args: { "p_message_id": string,"p_reason": string }; Returns: undefined
+                           },
+"record_import":
+{ Args: { "p_events": Json,"p_feed_id": string }; Returns: number
                            },
 "record_parsed_message":
 { Args: { "p_attachments": Json,"p_message_id": string,"p_parsed": Json }; Returns: string

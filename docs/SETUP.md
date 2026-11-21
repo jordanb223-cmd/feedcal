@@ -110,5 +110,9 @@ Without a key, emails are parsed and triaged, then wait at extraction ("waiting"
 Locally, emails go to Mailpit (http://127.0.0.1:54324): `supabase/functions/.env` holds `MAILPIT_URL=http://supabase_inbucket_feedcal:8025` and `SITE_URL`. Hosted, until a provider is set, notifications stay queued (nothing is lost; they send once one is configured).
 - [ ] With the domain verified at Resend (free tier), set Supabase secrets: `RESEND_API_KEY`, `EMAIL_FROM` (e.g. `Feedcal <notifications@in.<domain>>`), `SITE_URL` (the site's address).
 
+## 10. Directory data (Phase 13), your call
+- [ ] **ZIP codes.** The directory's "near me" needs ZIP centroids. Download and unzip the Census ZCTA gazetteer (public domain, about 1 MB): https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2024_Gazetteer/2024_Gaz_zcta_national.zip, then `npm run zcta:load -- 2024_Gaz_zcta_national.txt` (local), or with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` set in your own terminal for a hosted project. It has no city names; pages show the ZIP instead.
+- [ ] **Imported Sacramento calendars.** The importer is built (daily, labelled with the source). Choosing which real public calendars to list is yours: add each with `select public.add_imported_feed('<name>', '<https .ics url>', '<source name>', '<category>', '<zip>', '<your user id>');` in the SQL editor. Only list calendars their owners publish for public use.
+
 ## When it's all done
 Merge a pull request into `main`: CI passes, staging deploys, and `https://feedcal-web-staging.pages.dev/health` returns `"status":"ok"`. For production, push a tag like `v0.1.0` and approve the `production` deployment in GitHub.

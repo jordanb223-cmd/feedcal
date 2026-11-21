@@ -7,6 +7,7 @@ import { registerAuthRoutes } from "./auth.js";
 import { registerEmailRoutes } from "./email.js";
 import { registerReviewRoutes } from "./review.js";
 import { registerNotifyRoutes } from "./notify.js";
+import { anonSupabase, registerDirectoryRoutes } from "./directory.js";
 import { originOf, redactPath, requireSameOrigin } from "./security.js";
 import { registerFeedRoutes } from "./feed.js";
 import { registerSubscribeRoutes } from "./subscribe.js";
@@ -35,6 +36,8 @@ export interface AppDeps {
   logSink?: (line: string) => void;
   /** Tests inject a fake; production builds a per-request server client. */
   supabase?: (c: Context<AppEnv>) => Supa;
+  /** Public directory queries: the anon key with no session (tests inject a fake). */
+  anonSupabase?: (c: Context<AppEnv>) => Supa;
 }
 
 export function createApp(deps: AppDeps) {
@@ -90,7 +93,10 @@ export function createApp(deps: AppDeps) {
 
   app.use("*", async (c, next) => {
     const path = new URL(c.req.url).pathname;
-    if (path !== "/health" && !path.startsWith("/.well-known/")) {
+    // Public, cacheable pages never touch the session (no Set-Cookie on a shared-cache response).
+    const sessionless = path === "/health" || path.startsWith("/.well-known/") || path === "/robots.txt" || path === "/sitemap.xml"
+      || path === "/directory" || path.startsWith("/near/");
+    if (!sessionless) {
       c.set("supabase", makeSupabase(c));
       c.set("user", undefined);
     }
@@ -103,6 +109,7 @@ export function createApp(deps: AppDeps) {
   registerEmailRoutes(app);
   registerReviewRoutes(app);
   registerNotifyRoutes(app);
+  registerDirectoryRoutes(app, deps.anonSupabase ?? anonSupabase);
 
   app.notFound((c) => {
     const requestId = c.get("requestId");

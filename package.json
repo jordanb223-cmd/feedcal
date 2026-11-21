@@ -22,6 +22,7 @@
     "dev:web": "npm run dev -w @feedcal/web",
     "test:functions": "deno test --no-prompt --allow-read=supabase/functions supabase/functions && deno check supabase/functions/*/index.ts",
     "db:states": "node scripts/gen-state-machines.mjs",
+    "zcta:load": "node scripts/load-zcta.mjs",
     "test:integration": "FEEDCAL_INTEGRATION=1 vitest run --no-file-parallelism tests/integration"
   },
   "devDependencies": {
