@@ -12,7 +12,7 @@ Deno.serve(async () => {
   const clientSecret = Deno.env.get("GMAIL_CLIENT_SECRET");
   if (!clientId || !clientSecret) return json({ checked: 0, configured: false });
   const db = admin();
-  const { data, error } = await db.rpc("gmail_claim_checks", { p_limit: 20 });
+  const { data, error } = await db.rpc("gmail_claim_checks", { p_limit: 3 });
   if (error) return json({ error: "Try again later." }, 503);
   let checked = 0;
   for (const c of (data ?? []) as { feed_id: string; intake_local_part: string; refresh_token: string | null; sender_email: string; example_gmail_id: string | null; last_checked_at: string | null }[]) {
@@ -25,7 +25,7 @@ Deno.serve(async () => {
         ingest: (raw) => ingestRaw(db, c.intake_local_part, raw),
         record: async (id, outcome, messageId) => { await db.rpc("gmail_record", { p_feed_id: c.feed_id, p_gmail_id: id, p_message_id: messageId, p_outcome: outcome }); },
       });
-      await db.rpc("gmail_check_done", { p_feed_id: c.feed_id, p_checked_at: r.checkedAt.toISOString() });
+      await db.rpc("gmail_check_done", { p_feed_id: c.feed_id, p_checked_at: r.checkedAt.toISOString(), p_more: r.more });
       log("gmail-poll", requestId, "gmail_checked", { feed_id: c.feed_id, ingested: r.ingested, more: r.more });
       checked++;
     } catch (e) {

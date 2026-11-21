@@ -7,6 +7,12 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-21
+
+### Fixed
+- Gmail: changing how often to check no longer delays reading your example email by a week.
+- Gmail: a sender with many recent emails no longer stops the check; Feedcal reads a few at a time and carries on minutes later.
+
 ## [0.2.0] - 2026-11-21
 
 ### Added

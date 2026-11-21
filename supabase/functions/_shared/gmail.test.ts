@@ -70,3 +70,18 @@ Deno.test("Google refusing the token means 'reconnect', not a crash", async () =
   const { f } = fakeGoogle({ tokenError: "invalid_grant" });
   await assertRejects(() => accessToken(f, "c", "s", "rt"), ReconnectError);
 });
+
+Deno.test("a big backlog is read a few at a time, and the run says there's more", async () => {
+  const after = new Date("2026-11-14T16:00:00Z");
+  const q = senderQuery("office@school.example", after);
+  const ids = ["a", "b", "c", "d", "e"];
+  const { f } = fakeGoogle({ list: { [q]: ids }, raw: Object.fromEntries(ids.map((i) => [i, `Subject: ${i}\r\n\r\nbody`])) });
+  const recorded: string[] = [];
+  const r = await runCheck({ refreshToken: "rt", sender: "office@school.example", exampleId: null, lastCheckedAt: after }, {
+    fetch: f, clientId: "c", clientSecret: "s", now: () => new Date("2026-11-21T19:00:00Z"),
+    seen: async () => [], ingest: async () => ({ outcome: "queued", messageId: null }), record: async (id) => { recorded.push(id); },
+  });
+  assertEquals(recorded.length, 3, "three per run");
+  assert(r.more, "and it reports more waiting");
+  assertEquals(r.checkedAt.toISOString(), after.toISOString(), "the starting point stays, so none are skipped");
+});

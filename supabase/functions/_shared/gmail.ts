@@ -1,10 +1,15 @@
+import { decodeBase64 } from "jsr:@std/encoding@1/base64";
+
 // Phase 17 (D39): the Gmail API calls, pure apart from the injected fetch, so every rule is tested
 // with a fake Google. Read-only scope. Two kinds of search only:
 //   - the owner's own example search (their words, last 30 days, at most 10 results, metadata only)
 //   - scheduled checks: "from:<the confirmed sender> after:<last check>", nothing else.
 export const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
 const API = "https://gmail.googleapis.com/gmail/v1/users/me";
-export const MAX_PER_CHECK = 20;
+// Emails read per run. The first live check (2026-11-21) hit Supabase's per-run compute limit
+// (WORKER_RESOURCE_LIMIT) trying 20 at once; a few per run, continuing 5 minutes later, fits.
+export const MAX_PER_CHECK = 3;
+const MAX_LISTED = 100;
 export const EXAMPLE_RESULTS = 10;
 
 export type Fetch = typeof fetch;
@@ -109,8 +114,7 @@ export async function rawMessage(f: Fetch, token: string, id: string): Promise<U
   if (r.status === 404) return null; // deleted since
   if (r.status !== 200 || !r.body.raw) throw new Error(`message_${r.status}`);
   const b64 = r.body.raw.replace(/-/g, "+").replace(/_/g, "/");
-  const bin = atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4));
-  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  return decodeBase64(b64 + "=".repeat((4 - (b64.length % 4)) % 4));
 }
 
 export interface CheckDeps {
@@ -128,7 +132,7 @@ export interface CheckDeps {
 export async function runCheck(c: { refreshToken: string; sender: string; exampleId: string | null; lastCheckedAt: Date }, d: CheckDeps) {
   const startedAt = d.now();
   const token = await accessToken(d.fetch, d.clientId, d.clientSecret, c.refreshToken);
-  const found = await listIds(d.fetch, token, senderQuery(c.sender, c.lastCheckedAt), MAX_PER_CHECK + 1);
+  const found = await listIds(d.fetch, token, senderQuery(c.sender, c.lastCheckedAt), MAX_LISTED);
   const ids = [...new Set([...(c.exampleId ? [c.exampleId] : []), ...found])];
   const already = new Set(await d.seen(ids));
   const todo = ids.filter((id) => !already.has(id)).slice(0, MAX_PER_CHECK);
@@ -140,7 +144,8 @@ export async function runCheck(c: { refreshToken: string; sender: string; exampl
     await d.record(id, r.outcome, r.messageId);
     ingested++;
   }
-  // More waiting than one check takes: keep the old starting point (seen ones are skipped next time).
+  // More waiting than one run takes: keep the old starting point (seen ones are skipped) and carry
+  // on in 5 minutes rather than waiting for the next scheduled check.
   const more = ids.filter((id) => !already.has(id)).length > MAX_PER_CHECK;
   return { checkedAt: more ? c.lastCheckedAt : startedAt, ingested, more };
 }
