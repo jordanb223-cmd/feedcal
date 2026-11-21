@@ -33,9 +33,12 @@ if ! npx wrangler pages project list --json | jq -e --arg p "$PAGES_PROJECT" 'an
   npx wrangler pages project create "$PAGES_PROJECT" --production-branch main
 fi
 # The public (anon/publishable) key is safe in browsers; RLS protects the data.
-# The JSON field names are UNVERIFIED until the first run; the jq accepts both known shapes.
+# The first hosted run (2026-11-21) showed the JSON isn't a flat list of keys ("Cannot index
+# array with string name"). So search every object at any depth for the anon or publishable
+# key, and take whichever value field it has. Only the key's value is printed, never the object.
 ANON_KEY="$(npx supabase projects api-keys --output-format json \
-  | jq -r 'first(.[] | select(.name == "anon" or .type == "publishable") | .api_key) // empty')"
+  | jq -r 'first(.. | objects | select(.name == "anon" or .type == "publishable" or .id == "anon")
+           | (.api_key // .key // .value // empty) | select(type == "string" and length > 20)) // empty')"
 if [ -z "$ANON_KEY" ]; then echo "Could not read the project's public API key." >&2; exit 1; fi
 echo "::add-mask::$ANON_KEY"
 # Each Pages project deploys "main" as its production environment, so per-environment
