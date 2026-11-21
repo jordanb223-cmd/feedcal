@@ -66,6 +66,14 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
   </ul>
   <p><strong>Please don't forward emails with medical, legal or other sensitive details.</strong> Feedcal reads everything you forward, and an AI service reads it too, so it can find events.</p>
   <p>We don't sell data, show ads, or use tracking cookies. Our only cookies keep you signed in and protect forms. They're deleted when you close your browser.</p>
+  <h2>If you connect Gmail</h2>
+  <ul>
+    <li>Feedcal only reads emails <strong>from the one sender you picked</strong>, plus the example you chose. It never sends, changes or deletes anything in your Gmail (read-only access).</li>
+    <li>Those emails are handled like forwarded ones: kept 30 days, read by the AI service to find events, then deleted.</li>
+    <li>Disconnecting Gmail removes Feedcal's access at once and deletes every email it read from Gmail. You can also remove access in your Google Account settings.</li>
+    <li>Feedcal doesn't use Gmail data for ads, sell it, or use it to train AI models. People at Feedcal don't read it unless you ask us to, it's needed for security, or the law requires it.</li>
+    <li>Feedcal's use of information received from Google APIs complies with the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</li>
+  </ul>
   <h2>How long we keep it</h2>
   <ul>
     <li>Forwarded emails and their attachments: 30 days.</li>

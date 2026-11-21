@@ -11,6 +11,7 @@ export const APP_CSS = `
 .choice label:has(input:checked){border-color:#1d1d1b;background:#f0f0ec}
 .choice input{margin-top:.25rem}
 @media (max-width:28rem){.choice{grid-template-columns:1fr}}
+form:has(.choice input[value=public]:not(:checked)) .area{display:none}
 .site{display:flex;flex-wrap:wrap;gap:.25rem 1rem;align-items:center;margin:0 0 1rem;font-size:.9375rem}
 .site .brand{font-weight:700;margin-right:auto;text-decoration:none;color:inherit}
 *{box-sizing:border-box}

@@ -133,6 +133,7 @@ ${opts.confirmation
       <form method="post" action="/feeds/${opts.feedId}/senders/${s.sourceId}">${csrf}<input type="hidden" name="decision" value="yes"><button type="submit">Yes, use them</button></form>
       <form method="post" action="/feeds/${opts.feedId}/senders/${s.sourceId}">${csrf}<input type="hidden" name="decision" value="no"><button type="submit" class="secondary">No, ignore this sender</button></form>
     </div>
+    <p class="muted" style="font-size:.875rem">${SENDER_NOTE}</p>
   </div>`,
   )}
   ${opts.suspicious.map(
@@ -219,3 +220,6 @@ ${opts.isOwner
 <p><a href="/account">Back to your account</a></p>`,
   );
 }
+
+// D44/D41: what approving a sender means, said before the owner clicks.
+export const SENDER_NOTE = "If you say yes, events from this sender go on the calendar without asking you when the email clearly states the date. Anything unclear waits here for your OK.";
