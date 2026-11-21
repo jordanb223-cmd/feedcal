@@ -10,6 +10,7 @@ import { registerNotifyRoutes } from "./notify.js";
 import { registerSupportRoutes } from "./support.js";
 import { registerAssetRoutes } from "./assets.js";
 import { registerPrivacyRoutes } from "./privacy.js";
+import { registerGmailRoutes } from "./gmail.js";
 import { anonSupabase, registerDirectoryRoutes } from "./directory.js";
 import { registerAdminRoutes, registerPolicyRoutes } from "./admin.js";
 import { originOf, redactPath, requireSameOrigin, securityHeaders } from "./security.js";
@@ -117,6 +118,7 @@ export function createApp(deps: AppDeps) {
   registerAdminRoutes(app);
   registerAssetRoutes(app);
   registerPrivacyRoutes(app);
+  registerGmailRoutes(app);
   registerPolicyRoutes(app);
   registerSupportRoutes(app, deps.anonSupabase ?? anonSupabase);
 

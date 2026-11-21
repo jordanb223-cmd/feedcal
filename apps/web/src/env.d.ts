@@ -15,4 +15,6 @@ export interface Bindings {
   BMC_USERNAME?: string;
   /** HSTS max-age in seconds (D37). Default one day; a year once the domain is settled. */
   HSTS_MAX_AGE?: string;
+  /** Google OAuth client id for the Gmail connection (public; D39). Unset: no "Connect Gmail". */
+  GMAIL_CLIENT_ID?: string;
 }

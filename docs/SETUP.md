@@ -140,5 +140,15 @@ Locally, emails go to Mailpit (http://127.0.0.1:54324): `supabase/functions/.env
 - [ ] **Error tracking and log search** (Prompt H items 80, 81): pick a tracker with a free tier that runs in Cloudflare Workers. Personal data must be scrubbed before sending. Not set up.
 - [ ] **Beta.** Invite 10 organizers. Track wrong events per feed for 2 weeks (target: fewer than 1 in 20).
 
+## 15. Gmail connection (Phase 17), free, test mode
+Use a **separate** Google Cloud project from sign-in, so sign-in is never affected (D39).
+- [ ] console.cloud.google.com: create a project named `Feedcal Gmail`. No billing needed.
+- [ ] **APIs & Services → Library → Gmail API → Enable.**
+- [ ] **OAuth consent screen** (Google Auth Platform): app name `Feedcal`, audience **External**, publishing status **Testing**. Add the scope `https://www.googleapis.com/auth/gmail.readonly`. Under **Test users**, add your Gmail (and each beta organizer's, up to 100).
+- [ ] **Clients → Create OAuth client → Web application**, with the authorized redirect URI `https://<project-ref>.supabase.co/functions/v1/gmail-oauth`. Copy the client id and secret.
+- [ ] Supabase → Edge Functions → Secrets: `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`.
+- [ ] GitHub → Settings → Environments → production → variables: `GMAIL_CLIENT_ID` (public). The next deploy shows "Connect Gmail" on each feed's Gmail page.
+- [ ] Remember: in test mode the connection lasts 7 days; Feedcal emails a reminder.
+
 ## When it's all done
 Merge a pull request into `main`: CI passes, staging deploys, and `https://feedcal-web-staging.pages.dev/health` returns `"status":"ok"`. For production, push a tag like `v0.1.0` and approve the `production` deployment in GitHub.

@@ -53,6 +53,10 @@ printf '%s' "$ANON_KEY" | npx wrangler pages secret put SUPABASE_ANON_KEY --proj
 if [ "${GOOGLE_SIGN_IN:-}" = "on" ]; then
   printf 'on' | npx wrangler pages secret put GOOGLE_SIGN_IN --project-name "$PAGES_PROJECT"
 fi
+# The Gmail connection's OAuth client id (D39): public, like the BMC page name. Set per environment.
+if [ -n "${GMAIL_CLIENT_ID:-}" ]; then
+  printf '%s' "$GMAIL_CLIENT_ID" | npx wrangler pages secret put GMAIL_CLIENT_ID --project-name "$PAGES_PROJECT"
+fi
 if [ -n "${BMC_USERNAME:-}" ]; then
   printf '%s' "$BMC_USERNAME" | npx wrangler pages secret put BMC_USERNAME --project-name "$PAGES_PROJECT"
 fi

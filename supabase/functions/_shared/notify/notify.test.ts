@@ -54,3 +54,12 @@ Deno.test("ops alert email (D38): says what and where to look, marks drills, has
   assert(drill.subject.startsWith("[Drill]") && drill.text.startsWith("This is a drill."));
   assert(NO_UNSUBSCRIBE.has("ops_alert") && !NO_UNSUBSCRIBE.has("report"));
 });
+
+Deno.test("gmail reconnect email (D39): names the feed, links to reconnect, no unsubscribe", () => {
+  const soon = render("gmail_reconnect", { feed_id: "f1", feed_name: "Room F", expired: false }, "https://feedcal.test", "x");
+  assert(soon.subject === "Reconnect Gmail for Room F by tomorrow");
+  assert(soon.text.includes("https://feedcal.test/feeds/f1/gmail"));
+  const gone = render("gmail_reconnect", { feed_id: "f1", feed_name: "Room F", expired: true }, "https://feedcal.test", "x");
+  assert(gone.subject === "Reconnect Gmail for Room F" && gone.text.includes("won't reach the calendar"));
+  assert(NO_UNSUBSCRIBE.has("gmail_reconnect"));
+});

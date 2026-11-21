@@ -25,6 +25,7 @@ jobs:
       DEPLOY_SHA: ${{ github.sha }}
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       BMC_USERNAME: ${{ vars.BMC_USERNAME }}
+      GMAIL_CLIENT_ID: ${{ vars.GMAIL_CLIENT_ID }}
       # Per environment (Settings → Environments → production → variables): "on" once Google is set up.
       GOOGLE_SIGN_IN: ${{ vars.GOOGLE_SIGN_IN }}
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

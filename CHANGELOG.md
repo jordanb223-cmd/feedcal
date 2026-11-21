@@ -7,6 +7,9 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Added
+- Connect Gmail instead of forwarding: show Feedcal one example email, confirm, and it checks only that sender, every 3 or 7 days. Read-only, and disconnecting deletes everything it read.
+
 ## [0.1.3] - 2026-11-21
 
 ### Added

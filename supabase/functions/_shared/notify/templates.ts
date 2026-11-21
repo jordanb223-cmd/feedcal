@@ -1,9 +1,9 @@
 // Notification emails, as plain text and simple HTML. Plain English; every email says why it
 // was sent and has a one-click unsubscribe for that kind.
-export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks" | "ops_alert";
+export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks" | "ops_alert" | "gmail_reconnect";
 
 /** Operations alerts (D38) go to admins and have no unsubscribe: an ignored alert is the failure. */
-export const NO_UNSUBSCRIBE: ReadonlySet<Kind> = new Set<Kind>(["ops_alert"]);
+export const NO_UNSUBSCRIBE: ReadonlySet<Kind> = new Set<Kind>(["ops_alert", "gmail_reconnect"]);
 const ALERT_TEXT: Record<string, { title: string; check: string }> = {
   queue_backlog: { title: "Emails are waiting in a queue", check: "Open docs/runbooks/queue-backlog.md. Check the Edge Function logs for the named queue." },
   ai_spend_daily: { title: "AI spend is over today's budget", check: "Open docs/runbooks/bad-extraction-wave.md. Look for one feed sending many emails." },
@@ -33,6 +33,19 @@ function wrap(site: string, unsubscribe: string, why: string, bodyText: string, 
 }
 
 export function render(kind: Kind, p: Record<string, unknown>, site: string, unsubscribe: string): Rendered {
+  if (kind === "gmail_reconnect") {
+    // Unverified Google apps get 7-day connections (D39); this is the one email that keeps checks running.
+    const name = String(p.feed_name ?? "your calendar");
+    const link = `${site}/feeds/${String(p.feed_id ?? "")}/gmail`;
+    const expired = p.expired === true;
+    const subject = expired ? `Reconnect Gmail for ${name}` : `Reconnect Gmail for ${name} by tomorrow`;
+    const lead = expired
+      ? `Feedcal can't check Gmail for ${name} any more: Google ended the connection. Until you reconnect, new emails won't reach the calendar.`
+      : `Google ends Feedcal's Gmail connection for ${name} tomorrow (it lasts 7 days while Feedcal is in Google's test mode).`;
+    const body = `${lead}\n\nReconnecting takes one click and keeps your sender and schedule: ${link}`;
+    const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;color:#1d1d1b"><p>${esc(lead)}</p><p>Reconnecting takes one click and keeps your sender and schedule.</p><p><a href="${esc(link)}">Reconnect Gmail</a></p><hr style="border:0;border-top:1px solid #e3e3df;margin:2rem 0 1rem"><p style="color:#4f4f4b;font-size:14px">You get this because you connected Gmail to a Feedcal calendar. Disconnecting stops these emails.</p></body></html>`;
+    return { subject, text: `${body}\n\n—\nYou get this because you connected Gmail to a Feedcal calendar.`, html };
+  }
   if (kind === "ops_alert") {
     const a = ALERT_TEXT[String(p.kind)] ?? { title: `Alert: ${String(p.kind)}`, check: "See docs/RUNBOOKS.md." };
     const drill = p.drill === true;
