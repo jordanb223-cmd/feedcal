@@ -57,10 +57,13 @@ export function emailSetupPage(opts: {
 </div>
 ${opts.confirmation
   ? html`<div class="card">
-  <h2>Gmail confirmation code</h2>
-  <p>Gmail sent a code to confirm forwarding${opts.confirmation.requestedBy ? html` from <strong>${opts.confirmation.requestedBy}</strong>` : ""}. Enter it in Gmail's forwarding settings:</p>
-  <p style="font-size:2rem;font-weight:700;letter-spacing:.1em">${opts.confirmation.code}</p>
-  ${opts.confirmation.url ? html`<p class="muted">Or open Google's confirmation link: <a href="${opts.confirmation.url}" rel="noreferrer noopener" target="_blank">confirm on google.com</a>. Feedcal never clicks it for you.</p>` : ""}
+  <h2>Confirm Gmail forwarding</h2>
+  <p>Gmail asked to confirm forwarding${opts.confirmation.requestedBy ? html` from <strong>${opts.confirmation.requestedBy}</strong>` : ""}. Only continue if that's you or someone you trust.</p>
+  ${opts.confirmation.url
+    ? html`<p><a class="button" href="${opts.confirmation.url}" rel="noreferrer noopener" target="_blank">Confirm on google.com</a></p>
+  <p class="muted">Then go back to Gmail's settings page and refresh it. Feedcal never clicks this link for you.</p>`
+    : ""}
+  <p class="muted">Confirmation code, if Gmail asks for one: <strong style="font-size:1.25rem;letter-spacing:.1em">${opts.confirmation.code}</strong></p>
 </div>`
   : ""}
 <div class="card">
@@ -91,10 +94,10 @@ ${opts.confirmation
   <p class="muted">Menu names change from time to time; if a step doesn't match, look for "Forwarding" or "Rules" in your mail settings.</p>
   <details><summary>Gmail: forward automatically</summary>
     <ol>
-      <li>In Gmail on a computer, open Settings (gear) → See all settings → Forwarding and POP/IMAP.</li>
-      <li>Choose Add a forwarding address and paste this calendar's address.</li>
-      <li>Gmail sends a confirmation code here. It appears on this page within a minute; type it into Gmail.</li>
-      <li>Create a filter (search options → "From:" the school's address → Create filter), tick "Forward it to" and pick this address.</li>
+      <li>In Gmail on a computer, open Settings (gear) → See all settings → the Forwarding and POP/IMAP (or Forwarding) tab.</li>
+      <li>Click Add a forwarding address, paste this calendar's address, then Next → Proceed → OK.</li>
+      <li>Gmail sends a confirmation here. Within a minute a "Confirm on google.com" button appears on this page. Click it, then refresh Gmail's settings page.</li>
+      <li><strong>Leave "Forward a copy of incoming mail" off.</strong> Instead, in Gmail's search box open Show search options, put the school's address in From, click Create filter, tick Forward it, choose this calendar's address, and click Create filter.</li>
     </ol>
     <p class="muted">Only emails matching the filter are forwarded. Your other mail stays private.</p>
   </details>
@@ -103,17 +106,24 @@ ${opts.confirmation
   </details>
   <details><summary>Outlook: forward automatically</summary>
     <ol>
-      <li>In Outlook on the web, open Settings → Mail → Rules → Add new rule.</li>
-      <li>Condition: From → the school's address. Action: Forward to → this calendar's address.</li>
+      <li>In Outlook.com, Outlook on the web or the new Outlook, open Settings → Mail → Rules → Add rule.</li>
+      <li>Condition: From → the school's address. Action: Forward to → this calendar's address. Save.</li>
     </ol>
-    <p class="muted">Some work and school accounts block forwarding to outside addresses. If so, forward emails by hand.</p>
+    <p class="muted">Outlook sends these as forwarded by you, so Feedcal will ask once whether to use emails from your own address. Some work and school accounts block forwarding to outside addresses; if so, forward emails by hand.</p>
   </details>
-  <details><summary>Apple Mail: forward automatically</summary>
+  <details><summary>iCloud Mail: forward automatically</summary>
     <ol>
-      <li>On a Mac, open Mail → Settings → Rules → Add Rule.</li>
+      <li>On iCloud.com, open Mail, select the Settings button at the top of the mailbox list, then Settings → Rules → Add.</li>
+      <li>Name the rule, set it to match messages from the school's address, choose the forward action with this calendar's address, then Add.</li>
+    </ol>
+    <p class="muted">iCloud rules run on Apple's servers, so they work even when your devices are off.</p>
+  </details>
+  <details><summary>Apple Mail on a Mac: forward automatically</summary>
+    <ol>
+      <li>Open Mail → Settings → Rules → Add Rule.</li>
       <li>If From contains the school's address, Forward Message to this calendar's address.</li>
     </ol>
-    <p class="muted">Mac rules only run while Mail is open on that Mac.</p>
+    <p class="muted">Mac rules only run while Mail is open on that Mac. For iCloud addresses, the iCloud Mail rule above is more reliable.</p>
   </details>
   <p class="muted">The first email from a new sender waits here until you say yes. Emails over 20 MB or with more than 10 attachments are returned to the sender. Copies are deleted after 30 days.</p>
 </div>
