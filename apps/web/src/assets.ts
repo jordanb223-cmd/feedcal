@@ -5,6 +5,12 @@ import type { Context, Hono } from "hono";
 import type { AppEnv } from "./types.js";
 
 export const APP_CSS = `
+.choice{border:0;padding:0;margin:0 0 .5rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.choice legend{font-weight:600;margin-bottom:.5rem}
+.choice label{display:flex;gap:.5rem;align-items:flex-start;border:2px solid #d8d8d3;border-radius:12px;padding:1rem;cursor:pointer;background:#fff}
+.choice label:has(input:checked){border-color:#1d1d1b;background:#f0f0ec}
+.choice input{margin-top:.25rem}
+@media (max-width:28rem){.choice{grid-template-columns:1fr}}
 .site{display:flex;flex-wrap:wrap;gap:.25rem 1rem;align-items:center;margin:0 0 1rem;font-size:.9375rem}
 .site .brand{font-weight:700;margin-right:auto;text-decoration:none;color:inherit}
 *{box-sizing:border-box}

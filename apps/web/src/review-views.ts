@@ -3,6 +3,7 @@
 import { html } from "hono/html";
 import { formatWhen } from "./subscribe-views.js";
 import { feedNav } from "./nav.js";
+import { visibilityChoice } from "./visibility.js";
 import { layout } from "./views.js";
 
 type Html = ReturnType<typeof layout>;
@@ -80,12 +81,7 @@ export function newFeedPage(opts: { csrf: string; error?: string; values?: Recor
   <form method="post" action="/feeds/new">${csrf(opts.csrf)}
     <p><label for="name">Name</label><input class="copy" id="name" name="name" required maxlength="120" value="${v.name ?? ""}" placeholder="Room 12 families" dir="auto"></p>
     <p><label for="category">Kind</label><select class="copy" id="category" name="category">${CATEGORIES.map((c) => html`<option value="${c}" ${v.category === c ? "selected" : ""}>${c}</option>`)}</select></p>
-    <p><label for="visibility">Who can find it</label><select class="copy" id="visibility" name="visibility">
-      <option value="unlisted" ${v.visibility !== "public" && v.visibility !== "private" ? "selected" : ""}>Anyone with the link (recommended)</option>
-      <option value="private" ${v.visibility === "private" ? "selected" : ""}>Only people I send the calendar link to</option>
-      <option value="public" ${v.visibility === "public" ? "selected" : ""}>Listed publicly</option>
-    </select></p>
-    <p class="muted">School and youth feeds start as "anyone with the link", to protect children's details. You can change it later.</p>
+    ${visibilityChoice(v.visibility)}
     <button type="submit">Create feed</button>
   </form>
 </div>`);
@@ -240,9 +236,7 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
     ? html`<form method="post" action="/feeds/${opts.feedId}/settings">${csrf(t)}
     <p><label for="name">Name</label><input class="copy" id="name" name="name" required maxlength="120" value="${s.name}" dir="auto"></p>
     <p><label for="description">Description</label><textarea id="description" name="description" rows="2" maxlength="2000" dir="auto">${s.description}</textarea></p>
-    <p><label for="visibility">Who can find it</label><select class="copy" id="visibility" name="visibility">
-      ${(["unlisted", "private", "public"] as const).map((v) => html`<option value="${v}" ${s.visibility === v ? "selected" : ""}>${v === "unlisted" ? "Anyone with the link" : v === "private" ? "Only people I send the calendar link to" : "Listed publicly"}</option>`)}
-    </select></p>
+    ${visibilityChoice(s.visibility)}
     <p><label for="timezone">Time zone</label><input class="copy" id="timezone" name="timezone" value="${s.timezone}" pattern="[A-Za-z]+(/[A-Za-z0-9_+-]+){0,2}"></p>
     <p><label for="threshold">Publish automatically when Feedcal is at least this sure (from trusted senders)</label>
       <select class="copy" id="threshold" name="threshold">${[0.7, 0.8, 0.85, 0.9, 0.95, 1].map((n) => html`<option value="${n}" ${Math.abs(s.threshold - n) < 0.001 ? "selected" : ""}>${n === 1 ? "Never: I review everything" : `${Math.round(n * 100)}%`}</option>`)}</select></p>
