@@ -66,6 +66,17 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
       audit: { action: string; target_type: string; reason: string | null; created_at: string }[] };
     const t = csrfToken(c);
     const csrf = raw(`<input type="hidden" name="csrf" value="${t}">`);
+    // Phase 18 (D38): spend, budget and alerts.
+    const { data: opsData } = await sb.rpc("admin_ops");
+    const ops = (opsData ?? null) as { spend: { today_usd: number; month_usd: number; monthly_budget_usd: number; throttled: boolean };
+      open_alerts: { kind: string; detail: unknown; opened_at: string; drill: boolean }[] } | null;
+    const usd = (n: number) => `$${Number(n).toFixed(2)}`;
+    const opsCard = ops ? html`<div class="card"><h2>Operations</h2>
+      <p>AI spend today ${usd(ops.spend.today_usd)} · this month ${usd(ops.spend.month_usd)} of ${usd(ops.spend.monthly_budget_usd)}${ops.spend.throttled ? html` · <strong class="error">AI work paused (80% of budget)</strong>` : ""}</p>
+      ${ops.open_alerts.length === 0 ? html`<p class="muted">No open alerts.</p>`
+        : html`<ul class="events">${ops.open_alerts.map((a) => html`<li><strong>${a.kind}</strong><span class="when">since ${new Date(a.opened_at).toUTCString()} · ${JSON.stringify(a.detail)}</span></li>`)}</ul>`}
+      <form method="post" action="/admin/alert-drill">${csrf}<button type="submit" class="secondary">Run the alert drill</button></form>
+      <p class="muted" style="font-size:.875rem">The drill fires every alert once (each admin gets the emails, marked as a drill), then clears them.</p></div>` : "";
     const actions = (feed: { id: string; hidden: boolean; owner_id: string }, item: { kind: "report" | "flag"; id: string }) => html`<div class="row" style="margin-top:.5rem">
       ${feed.hidden ? html`<span class="muted">Feed hidden</span>` : html`<form method="post" action="/admin/feeds/${feed.id}/hide">${csrf}<input type="hidden" name="reason" value="${item.kind}:${item.id}"><button type="submit" class="danger">Hide feed</button></form>`}
       <form method="post" action="/admin/${item.kind}s/${item.id}/dismiss">${csrf}<button type="submit" class="secondary">Dismiss</button></form>
@@ -82,6 +93,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
         <p><strong>Automatic flag:</strong> ${f.reasons.join(", ")}</p>
         ${f.excerpt ? html`<blockquote class="muted" dir="auto">${f.excerpt}</blockquote>` : ""}
         ${actions(f.feed, { kind: "flag", id: f.id })}</div>`)}
+      ${opsCard}
       <div class="card"><h2>Audit log</h2><ul class="events">${queue.audit.map((a) => html`<li>${a.action} (${a.target_type})<span class="when">${new Date(a.created_at).toUTCString()}${a.reason ? ` · ${a.reason}` : ""}</span></li>`)}</ul></div>`));
   });
 
@@ -123,6 +135,16 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
   adminAction("/admin/reports/:id/dismiss", (c, id) => c.get("supabase").rpc("admin_dismiss", { p_kind: "report", p_id: id }));
   adminAction("/admin/flags/:id/dismiss", (c, id) => c.get("supabase").rpc("admin_dismiss", { p_kind: "flag", p_id: id }));
   adminAction("/admin/users/:id/suspend", (c, id, f) => c.get("supabase").rpc("admin_suspend_user", { p_user_id: id, p_reason: (f.reason ?? "").slice(0, 500) }));
+
+  app.post("/admin/alert-drill", async (c) => {
+    const gate = await adminGate(c);
+    if (gate instanceof Response) return gate;
+    if (!csrfValid(c, (await form(c)).csrf)) return c.html(messagePage("Please try again", MESSAGES.badForm, { href: "/admin", text: "Back" }), 403);
+    const { data, error } = await c.get("supabase").rpc("admin_alert_drill");
+    if (error) return c.html(messagePage("Not done", "The drill needs a second factor.", { href: "/admin", text: "Back" }), 403);
+    c.get("log").info("alert_drill", { opened: JSON.stringify((data as { opened?: unknown } | null)?.opened ?? []) });
+    return c.html(messagePage("Drill sent", "Every alert fired once. Check your inbox for the drill emails.", { href: "/admin", text: "Back to the console" }));
+  });
 
   // ---------------------------------------------------------------- "Report this calendar" (public pages)
   const Slug = z.string().regex(/^[a-z0-9]([a-z0-9-]{0,78}[a-z0-9])?$/);

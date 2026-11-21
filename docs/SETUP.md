@@ -132,5 +132,13 @@ Locally, emails go to Mailpit (http://127.0.0.1:54324): `supabase/functions/.env
 - [ ] **Cloudflare rate limiting** (free plan: one rule), once the domain exists: limit `/f/*` per IP as a second layer to the app's own limit (THREAT-MODEL T2).
 - [ ] **Lawyer review** of `/privacy` along with the other policy drafts.
 
+## 14. Operations (Phase 18)
+- [ ] **AI budget.** The default is a placeholder $10 a month. As an admin, in the SQL editor: `update private.ops_settings set monthly_ai_budget_usd = <amount>;`. AI work pauses at 80% of it (D38).
+- [ ] **Alerts** go to everyone in `public.admins` (§11). After the first staging deploy, open `/admin` → Operations → "Run the alert drill" and check that six "[Drill]" emails arrive.
+- [ ] **Uptime.** Add the repository variable `UPTIME_HEALTH_URLS` (Settings → Secrets and variables → Actions → Variables), for example `https://feedcal-web-staging.pages.dev/health https://<production>/health`. Add the secret `UPTIME_FEED_URL`: one feed link from a share page (it contains a token, so it's a secret). To test it, set a wrong URL for two runs: an "Outage" issue opens. Then fix the URL and close the issue.
+- [ ] **Status page and support inbox** (need the domain). A shared address like `help@<domain>` through Cloudflare Email Routing, and a status page. The Uptime issues can be linked from it.
+- [ ] **Error tracking and log search** (Prompt H items 80, 81): pick a tracker with a free tier that runs in Cloudflare Workers. Personal data must be scrubbed before sending. Not set up.
+- [ ] **Beta.** Invite 10 organizers. Track wrong events per feed for 2 weeks (target: fewer than 1 in 20).
+
 ## When it's all done
 Merge a pull request into `main`: CI passes, staging deploys, and `https://feedcal-web-staging.pages.dev/health` returns `"status":"ok"`. For production, push a tag like `v0.1.0` and approve the `production` deployment in GitHub.

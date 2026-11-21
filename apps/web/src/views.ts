@@ -16,6 +16,9 @@ export function layout(title: string, body: Html, head: Html | string = ""): Htm
 <title>${title} · Feedcal</title>
 ${head}
 <link rel="stylesheet" href="${ASSET_PATHS.css}">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1d1d1b">
 <script src="${ASSET_PATHS.js}" defer></script>
 </head>
 <body><main id="main">${body}

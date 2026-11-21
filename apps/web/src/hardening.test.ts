@@ -83,6 +83,22 @@ describe("assets", () => {
 
 });
 
+describe("PWA (D38)", () => {
+  it("serves a manifest and an icon from this origin, with no cookie, and the CSP allows them", async () => {
+    const m = await app()("https://feedcal.test/manifest.webmanifest");
+    expect(m.headers.get("content-type")).toBe("application/manifest+json");
+    expect(m.headers.get("set-cookie")).toBeNull();
+    const manifest = JSON.parse(await m.text()) as { name: string; display: string; icons: { src: string }[] };
+    expect(manifest.name).toBe("Feedcal");
+    expect(manifest.display).toBe("standalone");
+    const icon = await app()(`https://feedcal.test${manifest.icons[0]?.src ?? ""}`);
+    expect(icon.headers.get("content-type")).toBe("image/svg+xml");
+    const page = await app()("https://feedcal.test/login");
+    expect(await page.text()).toContain('<link rel="manifest" href="/manifest.webmanifest">');
+    expect(page.headers.get("content-security-policy")).toContain("manifest-src 'self'");
+  });
+});
+
 describe("cookies", () => {
   it("the CSRF cookie is session-only (no Max-Age or Expires)", async () => {
     const res = await app()("https://feedcal.test/login");

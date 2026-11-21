@@ -99,7 +99,7 @@ export function createApp(deps: AppDeps) {
     // Public, cacheable pages never touch the session (no Set-Cookie on a shared-cache response).
     const sessionless = path === "/health" || path.startsWith("/.well-known/") || path === "/robots.txt" || path === "/sitemap.xml"
       || path === "/directory" || path.startsWith("/near/") || path === "/rules" || path === "/terms" || path === "/takedown"
-      || path === "/about/costs" || path === "/supporters" || path === "/privacy" || path.startsWith("/assets/");
+      || path === "/about/costs" || path === "/supporters" || path === "/privacy" || path.startsWith("/assets/") || path === "/manifest.webmanifest";
     if (!sessionless) {
       c.set("supabase", makeSupabase(c));
       c.set("user", undefined);

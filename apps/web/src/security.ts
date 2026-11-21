@@ -48,6 +48,7 @@ export function securityHeaders(c: Context, supabaseUrl: string | undefined, hst
     "style-src-attr 'unsafe-inline'",
     "img-src 'self' data:",
     "connect-src 'self'",
+    "manifest-src 'self'",
     `form-action 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""} https://accounts.google.com`,
     "frame-ancestors 'none'",
     "base-uri 'none'",

@@ -25,14 +25,14 @@ export type Database = {
           Tables: {
             "admin_audit": {
                   Row: {
-                    "action": string,"admin_id": string | null,"created_at": string,"id": number,"reason": string | null,"target_id": string,"target_type": string
+                    "action": string,"admin_id": string | null,"created_at": string,"id": number,"reason": string | null,"target_id": string | null,"target_type": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "action": string,"admin_id"?: string | null,"created_at"?: string,"id"?: never,"reason"?: string | null,"target_id": string,"target_type": string
+                    "action": string,"admin_id"?: string | null,"created_at"?: string,"id"?: never,"reason"?: string | null,"target_id"?: string | null,"target_type": string
                   }
                   Update: {
-                    "action"?: string,"admin_id"?: string | null,"created_at"?: string,"id"?: never,"reason"?: string | null,"target_id"?: string,"target_type"?: string
+                    "action"?: string,"admin_id"?: string | null,"created_at"?: string,"id"?: never,"reason"?: string | null,"target_id"?: string | null,"target_type"?: string
                   }
                   Relationships: [
                     {
@@ -554,11 +554,17 @@ isOneToOne: false
 "add_imported_feed":
 { Args: { "p_category": string,"p_name": string,"p_owner": string,"p_source_name": string,"p_url": string,"p_zip": string }; Returns: string
                            },
+"admin_alert_drill":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "admin_dismiss":
 { Args: { "p_id": string,"p_kind": string,"p_reason"?: string }; Returns: undefined
                            },
 "admin_hide_feed":
 { Args: { "p_feed_id": string,"p_reason": string }; Returns: undefined
+                           },
+"admin_ops":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "admin_queue":
 { Args: Record<PropertyKey, never>; Returns: Json

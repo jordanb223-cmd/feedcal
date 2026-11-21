@@ -1,0 +1,58 @@
+name: Uptime
+# Phase 18 (D38, Prompt H items 82-83): checks from outside every 15 minutes. Health URLs come from
+# the repository variable UPTIME_HEALTH_URLS (space-separated); one known calendar feed from the
+# secret UPTIME_FEED_URL (it contains a token). A check fails on an error, a non-OK health status,
+# or a feed slower than 500 ms to first byte. Two failed runs in a row open one issue labelled
+# "outage", assigned to the repository owner (GitHub notifies them). Closing it is manual.
+# Does nothing until UPTIME_HEALTH_URLS is set (SETUP §14).
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Health and feed latency
+    runs-on: ubuntu-latest
+    env:
+      HEALTH_URLS: ${{ vars.UPTIME_HEALTH_URLS }}
+      FEED_URL: ${{ secrets.UPTIME_FEED_URL }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Check
+        id: check
+        run: |
+          if [ -z "$HEALTH_URLS" ]; then echo "UPTIME_HEALTH_URLS not set yet (SETUP §14); skipping."; echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          problems=""
+          for u in $HEALTH_URLS; do
+            body="$(curl -fsS --max-time 10 "$u" 2>&1)" || { problems="$problems\n- $u: $body"; continue; }
+            echo "$body" | grep -q '"status":"ok"' || problems="$problems\n- $u: status not ok"
+          done
+          if [ -n "$FEED_URL" ]; then
+            out="$(curl -sS -o /dev/null --max-time 10 -w '%{http_code} %{time_starttransfer}' "$FEED_URL" 2>&1)" || out="000 error"
+            code="${out%% *}"; ttfb="${out##* }"
+            [ "$code" = "200" ] || problems="$problems\n- feed: HTTP $code"
+            awk -v t="$ttfb" 'BEGIN { exit !(t > 0.5) }' && problems="$problems\n- feed: ${ttfb}s to first byte (limit 0.5s)"
+          fi
+          if [ -n "$problems" ]; then printf "Problems:%b\n" "$problems"; printf "%b" "$problems" > problems.txt; exit 1; fi
+          echo "All checks passed."
+      - name: Open an outage issue after two failed runs in a row
+        if: failure() && steps.check.outputs.skip != 'true'
+        run: |
+          prev="$(gh run list --workflow uptime.yml --limit 5 --json databaseId,conclusion,status \
+            --jq "[.[] | select(.status == \"completed\" and .databaseId != ${{ github.run_id }})][0].conclusion")"
+          if [ "$prev" != "failure" ]; then echo "First failure; waiting for the next run before alerting."; exit 0; fi
+          if [ -n "$(gh issue list --label outage --state open --json number --jq '.[0].number')" ]; then echo "An outage issue is already open."; exit 0; fi
+          gh label create outage --color B60205 --description "Site checks failing" 2>/dev/null || true
+          gh issue create --title "Outage: uptime checks failed twice in a row" --label outage --assignee "${{ github.repository_owner }}" \
+            --body "$(printf 'Two uptime runs in a row failed.\n\n%s\n\nRun: %s/%s/actions/runs/%s\n\nFirst 10 minutes: docs/runbooks/outage.md. Close this issue by hand when it is fixed.' "$(cat problems.txt 2>/dev/null)" "${{ github.server_url }}" "${{ github.repository }}" "${{ github.run_id }}")"

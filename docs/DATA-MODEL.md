@@ -124,6 +124,8 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 | Backups | GitHub artifacts, encrypted | 7 days daily, 90 days weekly | Age out |
 | Logs | Cloudflare, Supabase | Their platform defaults (UNVERIFIED) | No emails or tokens are logged |
 
+**ai_spend_daily, ops_settings, alerts (Phase 18, D38).** Estimated AI spend per day, from triggers on `messages.extraction` and `attachments.triage`. The monthly AI budget and throttle point (one row). Alerts: kind, detail, whether it was a drill, opened, last seen and resolved (one open alert per kind). All private, with no user data.
+
 **rate_hits.** Phase 16 rate limiter: bucket, salted hash of the client address, time. Cleared hourly.
 
 **zip_codes.** Zip code to point, loaded in Phase 13.
@@ -157,6 +159,7 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `feed_calendar_guarded(p_token, p_client_ip, p_user_agent, p_ua_family)` | anon, signed-in | Phase 16 (D37). What the web app calls: `feed_calendar`, plus the miss limit (raises `P0429`). |
 | `rate_check(p_bucket, p_client_ip)` | anon, signed-in | Phase 16. `search` (60/min) or `click` (30/min); counts the hit. |
 | `export_my_data()` | signed-in | Phase 16. Everything about the caller as JSON, without token hashes or Vault ids. |
+| `admin_ops()` / `admin_alert_drill()` | admins with a second factor | Phase 18 (D38). Spend, budget and alerts; the drill fires every alert once (audited). |
 | `directory_search(p_query, p_zip, p_miles, p_category, p_limit)` | anon, signed-in (SECURITY INVOKER) | Phase 13 (D34). Public feeds only, ranked by text match, distance, followers, freshness and verification. |
 | `add_imported_feed` / `claim_imports` / `record_import` | service role | Phase 13. Operator-added public calendars, re-fetched daily; vanished events are cancelled, never deleted. |
 | `submit_report(p_event_uid, p_kind, p_details, p_client_ip)` | anon, signed-in | Phase 12 (D33). A subscriber's "Report a problem"; 10 an hour per network (hashed); queues an instant email to the feed's people. |

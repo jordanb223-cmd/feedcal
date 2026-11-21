@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { render } from "./templates.ts";
+import { NO_UNSUBSCRIBE, render } from "./templates.ts";
 import { mailpit, resend } from "./sender.ts";
 
 const SITE = "https://feedcal.example";
@@ -43,4 +43,14 @@ Deno.test("senders call the right APIs", async () => {
   assertEquals(await mailpit("http://mail:8025/", fake).send(msg), { ok: true, id: "m1" });
   assertEquals(calls[1]?.url, "http://mail:8025/api/v1/send");
   assertEquals((calls[1]?.body as { From: { Email: string } }).From.Email, "hello@feedcal.test");
+});
+
+Deno.test("ops alert email (D38): says what and where to look, marks drills, has no unsubscribe", () => {
+  const real = render("ops_alert", { kind: "queue_backlog", detail: { queue: "extract_message", oldest_minutes: 22 }, drill: false }, "https://feedcal.test", "https://feedcal.test/unsubscribe?x");
+  assert(real.subject.startsWith("Feedcal alert: Emails are waiting"));
+  assert(real.text.includes("extract_message") && real.text.includes("queue-backlog.md"));
+  assert(!real.text.includes("unsubscribe") && !real.html.includes("unsubscribe"), "no unsubscribe link");
+  const drill = render("ops_alert", { kind: "abuse_spike", detail: {}, drill: true }, "https://feedcal.test", "x");
+  assert(drill.subject.startsWith("[Drill]") && drill.text.startsWith("This is a drill."));
+  assert(NO_UNSUBSCRIBE.has("ops_alert") && !NO_UNSUBSCRIBE.has("report"));
 });

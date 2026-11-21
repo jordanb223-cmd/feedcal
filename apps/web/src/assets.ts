@@ -74,6 +74,22 @@ function shortHash(s: string): string {
   return (h >>> 0).toString(16).padStart(8, "0");
 }
 
+// Phase 18 (D38): "PWA first". A manifest and an icon so the site can be added to a phone's home
+// screen. No service worker: calendars come from the calendar app, so there's nothing to cache.
+export const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#1d1d1b"/><rect x="12" y="16" width="40" height="36" rx="5" fill="#fff"/><rect x="12" y="16" width="40" height="10" rx="5" fill="#e8533f"/><rect x="20" y="10" width="5" height="12" rx="2" fill="#1d1d1b"/><rect x="39" y="10" width="5" height="12" rx="2" fill="#1d1d1b"/><path d="M22 39l7 7 13-14" fill="none" stroke="#1d1d1b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+export const MANIFEST = JSON.stringify({
+  name: "Feedcal",
+  short_name: "Feedcal",
+  description: "Turn school and team emails into a calendar families can subscribe to.",
+  start_url: "/",
+  scope: "/",
+  display: "standalone",
+  background_color: "#f6f6f4",
+  theme_color: "#1d1d1b",
+  icons: [{ src: "/assets/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
+});
+
 export const ASSET_PATHS = { css: `/assets/app.${shortHash(APP_CSS)}.css`, js: `/assets/app.${shortHash(APP_JS)}.js` } as const;
 
 export function registerAssetRoutes(app: Hono<AppEnv>): void {
@@ -84,4 +100,14 @@ export function registerAssetRoutes(app: Hono<AppEnv>): void {
   };
   app.get(ASSET_PATHS.css, serve(APP_CSS, "text/css; charset=utf-8"));
   app.get(ASSET_PATHS.js, serve(APP_JS, "text/javascript; charset=utf-8"));
+  app.get("/assets/icon.svg", (c) => {
+    c.header("content-type", "image/svg+xml");
+    c.header("cache-control", "public, max-age=86400");
+    return c.body(ICON_SVG);
+  });
+  app.get("/manifest.webmanifest", (c) => {
+    c.header("content-type", "application/manifest+json");
+    c.header("cache-control", "public, max-age=86400");
+    return c.body(MANIFEST);
+  });
 }
