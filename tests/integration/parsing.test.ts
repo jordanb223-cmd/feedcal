@@ -70,8 +70,8 @@ describe.skipIf(!enabled)("email parsing, end to end on the local stack", { time
   it("a forwarded email with an attached original is parsed, and its PDF stored privately", async () => {
     const f = fixture("12-forward-as-attachment", tag);
     expect(await deliver(f.raw)).toBeNull();
-    const counts = await runConsumer();
-    expect(counts.parsed).toBeGreaterThanOrEqual(1);
+    // The stored result is the evidence; the call's own counts can include other tests' emails.
+    await runConsumer();
 
     const { data: m } = await db.from("messages")
       .select("id, status, original_sender, original_subject, clean_text, reference_date, reference_date_source, parse_details")

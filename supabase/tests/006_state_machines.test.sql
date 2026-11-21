@@ -32,8 +32,9 @@ select lives_ok($$ update public.messages set subject = 'changed' where id = 'f3
 select lives_ok($$ update public.attachments set status = 'skipped' where id = 'f4000000-0000-4000-8000-000000000001' $$, 'pending -> skipped');
 select lives_ok($$ update public.attachments set status = 'pending' where id = 'f4000000-0000-4000-8000-000000000001' $$, 'skipped -> pending (owner says this one has the schedule)');
 select lives_ok($$ update public.attachments set status = 'text_layer' where id = 'f4000000-0000-4000-8000-000000000001' $$, 'pending -> text_layer');
-select throws_ok($$ update public.attachments set status = 'skipped' where id = 'f4000000-0000-4000-8000-000000000001' $$, '23514', null,
-  'text_layer -> skipped is refused');
+-- (text_layer -> skipped became legal in Phase 8: "never use files like this".)
+select throws_ok($$ update public.attachments set status = 'failed' where id = 'f4000000-0000-4000-8000-000000000001' $$, '23514', null,
+  'text_layer -> failed is refused');
 
 -- Events, and the SEQUENCE bump
 select is((select sequence from public.events where id = 'f5000000-0000-4000-8000-000000000001'), 0, 'a new event starts at SEQUENCE 0');

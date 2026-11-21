@@ -17,12 +17,65 @@ export interface SuspiciousMessage {
   receivedAt: string;
 }
 
+export interface RecentAttachment {
+  id: string;
+  filename: string | null;
+  mime: string | null;
+  status: string;
+  chosen: boolean;
+  reason: string | null;
+  keptPages: number[];
+  pages: number | null;
+  thumbnailUrl: string | null;
+}
+export interface RecentEmail {
+  id: string;
+  sourceId: string | null;
+  subject: string | null;
+  sender: string | null;
+  receivedAt: string;
+  status: string;
+  pagesForAi: number | null;
+  attachments: RecentAttachment[];
+}
+
+const pageList = (pages: number[]) => {
+  const n = pages.map((p) => p + 1);
+  return n.length === 1 ? `page ${n[0]}` : `pages ${n.slice(0, -1).join(", ")} and ${n.at(-1)}`;
+};
+
+/** What happened to a file, in plain words. Unknown reasons fall back to the status. */
+export function attachmentOutcome(a: RecentAttachment): string {
+  switch (a.reason) {
+    case "text_layer": return a.keptPages.length ? `Reading ${pageList(a.keptPages)}${a.pages ? ` of ${a.pages}` : ""}` : "Read";
+    case "transcribed": return "Read from the image";
+    case "needs_vision_not_configured": return "Waiting: reading images and scans isn't switched on yet";
+    case "daily_vision_limit": case "daily_page_limit": return "Waiting: today's reading limit was reached";
+    case "no_schedule_found": return "No dates found in it";
+    case "rule_other": return "Skipped: you picked a different file from this sender";
+    case "rule_never": case "owner_never": return "Skipped: you said never to use files like this";
+    case "too_large": return "Skipped: over 15 MB";
+    case "too_many_pages": return `Skipped: over 40 pages${a.pages ? ` (${a.pages})` : ""}`;
+    case "unlikely_filename": return "Skipped: looks like a receipt or form";
+    case "seen_before": return "Skipped: already read in an earlier email";
+    case "unsupported_type": return "Skipped: Feedcal can't read this kind of file yet";
+    case "page_budget_used": return "Skipped: this email already has 5 pages to read";
+    case "too_large_for_vision": return "Skipped: image too large to read";
+    case "vision_refused": case "vision_failed": case "unreadable": return "Couldn't read this file";
+    case "no_text_on_page": return "No text found on it";
+    default: return a.status === "pending" ? "Waiting to be read" : a.status;
+  }
+}
+
 export const EMAIL_NOTICES = {
   approved: "Done. Emails from that sender will now be read for events.",
   declined: "Done. Emails from that sender will be ignored.",
   released: "Done. That email will be read for events.",
   ignored: "Done. That email was ignored.",
   rotated: "Your calendar has a new email address. The old one no longer works, so update any forwarding rules.",
+  chosen: "Got it. Feedcal will read that file, and will pick files like it from this sender from now on.",
+  never: "Got it. Feedcal will skip files like that from this sender.",
+  large: "Got it. Big attachments from this sender will be read.",
 } as const;
 export type EmailNotice = keyof typeof EMAIL_NOTICES;
 
@@ -40,6 +93,7 @@ export function emailSetupPage(opts: {
   confirmation: { code: string; url: string | null; requestedBy: string | null } | null;
   senders: WaitingSender[];
   suspicious: SuspiciousMessage[];
+  recent?: RecentEmail[];
   notice?: EmailNotice;
 }): Html {
   const csrf = html`<input type="hidden" name="csrf" value="${opts.csrf}">`;
@@ -88,6 +142,31 @@ ${opts.confirmation
     </div>
   </div>`,
   )}
+</div>
+<div class="card">
+  <h2>Recent emails</h2>
+  ${!opts.recent?.length
+    ? html`<p class="muted">No emails yet. Once you forward one, you'll see here what Feedcal read from it.</p>`
+    : opts.recent.map(
+      (m) => html`<div style="margin:0 0 1.25rem">
+    <p><strong dir="auto">${m.subject ?? "(no subject)"}</strong><span class="when">${m.sender ?? "unknown sender"} · ${when(m.receivedAt)}</span></p>
+    ${m.attachments.length === 0
+      ? html`<p class="muted">No attachments; the email text is read.</p>`
+      : html`<ul class="events">${m.attachments.map(
+        (a) => html`<li>
+      ${a.thumbnailUrl ? html`<img src="${a.thumbnailUrl}" alt="" width="64" height="64" style="object-fit:cover;border-radius:6px;float:right;margin-left:.5rem">` : ""}
+      <strong dir="auto">${a.filename ?? "(unnamed file)"}</strong>${a.chosen ? html` <span class="muted">(your pick)</span>` : ""}
+      <span class="when">${attachmentOutcome(a)}</span>
+      <div class="row" style="margin-top:.5rem">
+        ${a.chosen ? "" : html`<form method="post" action="/feeds/${opts.feedId}/attachments/${a.id}/choose">${csrf}<button type="submit" class="secondary">This one has the schedule</button></form>`}
+        ${a.reason === "owner_never" || a.reason === "rule_never" ? "" : html`<form method="post" action="/feeds/${opts.feedId}/attachments/${a.id}/never">${csrf}<button type="submit" class="secondary">Never use files like this</button></form>`}
+        ${(a.reason === "too_large" || a.reason === "too_many_pages") && m.sourceId
+          ? html`<form method="post" action="/feeds/${opts.feedId}/senders/${m.sourceId}/large">${csrf}<button type="submit" class="secondary">Read big files from this sender</button></form>`
+          : ""}
+      </div></li>`,
+      )}</ul>`}
+  </div>`,
+    )}
 </div>
 <div class="card">
   <h2>How to forward</h2>

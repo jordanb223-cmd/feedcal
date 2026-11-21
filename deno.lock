@@ -18,6 +18,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@anthropic-ai/sdk@1.6.0",
         "npm:@cloudflare/workers-types@^5.20261121.1",
         "npm:@eslint/js@^10.0.1",
         "npm:@types/node@^22.20.5",
@@ -25,10 +26,12 @@
         "npm:eslint@^10.15.0",
         "npm:globals@^17.14.0",
         "npm:linkedom@0.18.14",
+        "npm:pdf-lib@1.17.1",
         "npm:postal-mime@4.2.0",
         "npm:supabase@^3.2.0",
         "npm:typescript-eslint@^8.73.0",
         "npm:typescript@^6.0.3",
+        "npm:unpdf@2.1.0",
         "npm:vitest@^5.1.1",
         "npm:wrangler@^4.166.0"
       ]

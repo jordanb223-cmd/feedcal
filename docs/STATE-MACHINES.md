@@ -49,7 +49,11 @@ stateDiagram-v2
   pending --> text_layer: The PDF has a usable text layer
   pending --> transcribed: A vision model transcribed it (images, scans)
   skipped --> pending: The owner said "this one has the schedule"
+  text_layer --> pending: Re-read after the owner picked a file
+  text_layer --> skipped: The owner said "never use files like this"
   text_layer --> transcribed: The text layer was empty or garbled, transcribed instead
+  transcribed --> pending: Re-read after the owner picked a file
+  transcribed --> skipped: The owner said "never use files like this"
 ```
 
 | From | To | When |
@@ -60,7 +64,11 @@ stateDiagram-v2
 | `pending` | `text_layer` | The PDF has a usable text layer |
 | `pending` | `transcribed` | A vision model transcribed it (images, scans) |
 | `skipped` | `pending` | The owner said "this one has the schedule" |
+| `text_layer` | `pending` | Re-read after the owner picked a file |
+| `text_layer` | `skipped` | The owner said "never use files like this" |
 | `text_layer` | `transcribed` | The text layer was empty or garbled; transcribed instead |
+| `transcribed` | `pending` | Re-read after the owner picked a file |
+| `transcribed` | `skipped` | The owner said "never use files like this" |
 
 ### `event_status` — `events.status`
 

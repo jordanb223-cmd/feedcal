@@ -12,28 +12,35 @@ const OWNER = "11111111-1111-4111-8111-111111111111";
 const env: Bindings = { ENVIRONMENT: "local", SUPABASE_URL: "http://db.test", SUPABASE_ANON_KEY: "anon", INTAKE_DOMAIN: "in.feedcal.test" };
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** A query builder fake: every chain method returns itself; awaiting gives the table's rows. */
-function table(rows: unknown[]) {
+/** A query builder fake: chain methods record their arguments; awaiting gives rows picked by `pick`. */
+type Call = [string, unknown[]];
+function table(pick: (calls: Call[]) => unknown[]) {
+  const calls: Call[] = [];
   const q: Record<string, unknown> = {};
-  for (const m of ["select", "eq", "not", "gt", "order", "limit"]) q[m] = () => q;
-  q.maybeSingle = async () => ({ data: rows[0] ?? null, error: null });
-  q.then = (resolve: (v: unknown) => unknown) => resolve({ data: rows, error: null });
+  for (const m of ["select", "eq", "not", "gt", "order", "limit", "is", "neq", "in"]) q[m] = (...args: unknown[]) => (calls.push([m, args]), q);
+  q.maybeSingle = async () => ({ data: pick(calls)[0] ?? null, error: null });
+  q.then = (resolve: (v: unknown) => unknown) => resolve({ data: pick(calls), error: null });
   return q;
 }
+const isRecentQuery = (calls: Call[]) => calls.some(([m]) => m === "is");
 
-function setup(opts: { user?: string | null; feed?: unknown; messages?: unknown[]; confirmations?: unknown[]; rpcError?: boolean; env?: Partial<Bindings> } = {}) {
+function setup(opts: { user?: string | null; feed?: unknown; messages?: unknown[]; recent?: unknown[]; attachments?: unknown[]; confirmations?: unknown[]; rpcError?: boolean; env?: Partial<Bindings> } = {}) {
   const user = opts.user === undefined ? OWNER : opts.user;
   const auth = { getUser: vi.fn(async () => (user ? { data: { user: { id: user, email: "o@example.test" } }, error: null } : { data: { user: null }, error: { message: "x" } })) };
-  const tables: Record<string, unknown[]> = {
-    feeds: opts.feed === undefined ? [{ id: FEED, name: "Sutterville Kindergarten", owner_id: OWNER, intake_address: "feed-aliceschoolfeed23456" }] : opts.feed ? [opts.feed] : [],
-    messages: opts.messages ?? [],
-    forwarding_confirmations: opts.confirmations ?? [],
-  };
-  const from = vi.fn((name: string) => table(tables[name] ?? []));
+  const feeds = opts.feed === undefined ? [{ id: FEED, name: "Sutterville Kindergarten", owner_id: OWNER, intake_address: "feed-aliceschoolfeed23456" }] : opts.feed ? [opts.feed] : [];
+  const from = vi.fn((name: string) => table((calls) => {
+    if (name === "feeds") return feeds;
+    if (name === "messages") return isRecentQuery(calls) ? opts.recent ?? [] : opts.messages ?? [];
+    if (name === "attachments") return opts.attachments ?? [];
+    if (name === "forwarding_confirmations") return opts.confirmations ?? [];
+    return [];
+  }));
   const rpc = vi.fn(async () => ({ data: true, error: opts.rpcError ? { code: "P0002" } : null }));
-  const app = createApp({ version: "1", commit: "c", supabase: () => ({ auth, from, rpc }) as unknown as Supa, logSink: () => {} });
+  const createSignedUrls = vi.fn(async (paths: string[]) => ({ data: paths.map((path) => ({ path, signedUrl: `http://db.test/sign/${path}?token=t` })), error: null }));
+  const storage = { from: vi.fn(() => ({ createSignedUrls })) };
+  const app = createApp({ version: "1", commit: "c", supabase: () => ({ auth, from, rpc, storage }) as unknown as Supa, logSink: () => {} });
   const request = (path: string, init: RequestInit = {}) => app.request(`${BASE}${path}`, init, { ...env, ...opts.env });
-  return { request, rpc };
+  return { request, rpc, createSignedUrls };
 }
 
 async function csrf(request: (p: string, i?: RequestInit) => Response | Promise<Response>) {
@@ -100,6 +107,53 @@ describe("GET /feeds/<id>/email", () => {
     const body = await (await request(`/feeds/${FEED}/email?done=%3Cscript%3Ealert(1)%3C%2Fscript%3E`)).text();
     expect(body).not.toContain("alert(1)");
     expect(body).not.toContain('role="status"');
+  });
+});
+
+const recentEmail = { id: "m9", source_id: SOURCE, original_subject: "November newsletter", subject: "Fwd: November newsletter", original_sender: "office@school.example.test", sender: "parent@home.example.test", received_at: "2026-11-21T10:00:00Z", status: "parsed", pages_for_ai: 2 };
+const ATT = "eeeeeeee-0000-4000-8000-000000000009";
+
+describe("recent emails (Phase 8)", () => {
+  it("says what was read from each file, with feedback buttons and a photo thumbnail", async () => {
+    const { request, createSignedUrls } = setup({
+      recent: [recentEmail],
+      attachments: [
+        { id: ATT, message_id: "m9", filename: "newsletter.pdf", mime: "application/pdf", status: "text_layer", chosen: false, pages: 40, triage: { reason: "text_layer", keptPages: [16, 17] }, storage_path: "f/m9/a" },
+        { id: "a2", message_id: "m9", filename: "flyer.jpg", mime: "image/jpeg", status: "pending", chosen: false, pages: 1, triage: { reason: "needs_vision_not_configured" }, storage_path: "f/m9/b" },
+        { id: "a3", message_id: "m9", filename: "yearbook.pdf", mime: "application/pdf", status: "skipped", chosen: false, pages: 120, triage: { reason: "too_many_pages" }, storage_path: "f/m9/c" },
+      ],
+    });
+    const body = await (await request(`/feeds/${FEED}/email`)).text();
+    expect(body).toContain("November newsletter");
+    expect(body).toContain("Reading pages 17 and 18 of 40");
+    expect(body).toContain("Waiting: reading images and scans isn&#39;t switched on yet"); // escaped text from data
+    expect(body).toContain("Skipped: over 40 pages (120)");
+    expect(body).toContain(`action="/feeds/${FEED}/attachments/${ATT}/choose"`);
+    expect(body).toContain(`action="/feeds/${FEED}/senders/${SOURCE}/large"`);
+    expect(body).toContain('src="http://db.test/sign/f/m9/b?token=t"');
+    expect(createSignedUrls).toHaveBeenCalledWith(["f/m9/b"], 600);
+  });
+
+  it("has an empty state", async () => {
+    expect(await (await setup().request(`/feeds/${FEED}/email`)).text()).toContain("No emails yet.");
+  });
+
+  it("'this one has the schedule' calls choose_attachment and redirects", async () => {
+    const { request, rpc } = setup();
+    const { headers, token } = await csrf(request);
+    const res = await request(`/feeds/${FEED}/attachments/${ATT}/choose`, { method: "POST", headers, body: new URLSearchParams({ csrf: token }) });
+    expect(res.headers.get("location")).toBe(`/feeds/${FEED}/email?done=chosen`);
+    expect(rpc).toHaveBeenCalledWith("choose_attachment", { p_attachment_id: ATT });
+  });
+
+  it("'never use files like this' and 'read big files' need CSRF and call the database", async () => {
+    const { request, rpc } = setup();
+    const { headers, token } = await csrf(request);
+    expect((await request(`/feeds/${FEED}/attachments/${ATT}/never`, { method: "POST", headers, body: new URLSearchParams({}) })).status).toBe(403);
+    await request(`/feeds/${FEED}/attachments/${ATT}/never`, { method: "POST", headers, body: new URLSearchParams({ csrf: token }) });
+    await request(`/feeds/${FEED}/senders/${SOURCE}/large`, { method: "POST", headers, body: new URLSearchParams({ csrf: token }) });
+    expect(rpc).toHaveBeenCalledWith("never_use_attachment", { p_attachment_id: ATT });
+    expect(rpc).toHaveBeenCalledWith("set_sender_large_attachments", { p_source_id: SOURCE, p_allow: true });
   });
 });
 

@@ -16,6 +16,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 - Gmail's forwarding confirmation appears on the calendar's email page as a button, so you can finish setup without hunting for the email.
 - The first email from a new sender waits for your OK. Emails that fail the sender's security checks are held for you too.
 - Feedcal now reads forwarded emails: it finds the original sender and date inside Gmail, Outlook and Apple Mail forwards, ignores quoted replies and signatures, keeps tables readable, and sets aside logos and social-media icons.
+- Feedcal picks the pages worth reading from attached PDFs (at most 5 per email), and skips receipts, files it has already read, and very large files.
+- Under "Recent emails" you can see what Feedcal read from each attachment and tap "This one has the schedule" or "Never use files like this". It remembers your choice for that sender's next emails.
 - Forwarding the same email twice is harmless; Feedcal keeps one copy and deletes copies after 30 days.
 
 ### Fixed
