@@ -1,0 +1,89 @@
+// Deterministic checks on what the model returned. Each failure has a reason the review screen
+// can show. Nothing here calls the model.
+import type { ExtractedEvent } from "./schema.ts";
+import type { ExtractInput } from "./prompt.ts";
+
+/** Whitespace, curly quotes, dashes and case normalised, so a faithful quote always matches. */
+export function normalise(text: string): string {
+  return text
+    .normalize("NFKC")
+    .replace(/[‘’‚‛′]/g, "'")
+    .replace(/[“”„‟″]/g, '"')
+    .replace(/[‐-―−]/g, "-")
+    .replace(/…/g, "...")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+export interface SourceText { text: string; fromTranscription: boolean }
+
+export function sourceFor(e: ExtractedEvent, input: ExtractInput): SourceText | null {
+  if (e.source_ref.kind === "body") return { text: input.body, fromTranscription: false };
+  const page = input.pages.find((p) => p.attachment_id === e.source_ref.attachment_id && p.page_index === e.source_ref.page_index);
+  return page ? { text: page.text, fromTranscription: page.source === "transcription" } : null;
+}
+
+export function quoteFound(quote: string, source: string): boolean {
+  const q = normalise(quote);
+  return q.length >= 3 && normalise(source).includes(q);
+}
+
+const TIME_IN_TEXT = /\b\d{1,2}(:\d{2})?\s?(a\.?m\.?|p\.?m\.?)|\b\d{1,2}:\d{2}\b|\b\d{1,2}h\d{0,2}\b|\bnoon\b|\bmidnight\b/i;
+export const hasTime = (quote: string) => TIME_IN_TEXT.test(quote);
+
+/** Phrases that try to steer an AI. Their presence means nothing from this email auto-publishes. */
+const INJECTION = /\b(ignore|disregard|forget)\b[^.\n]{0,40}\b(instructions|rules|prompt|above|previous)\b|\b(system prompt|you are (now )?(an?|the) (ai|assistant|model))\b|\bas an ai\b|\b(add|create|insert) (this|the following|an?) events?\b[^.\n]{0,40}\b(calendar|feed)\b/i;
+export function looksLikeInjection(input: ExtractInput): boolean {
+  return INJECTION.test(input.body) || input.pages.some((p) => INJECTION.test(p.text)) || INJECTION.test(input.subject ?? "");
+}
+
+export function isTimeZone(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Local wall time in `tz` → UTC ISO. Two passes settle DST edges. */
+export function zonedToUtc(local: string, tz: string): string {
+  const [d, t = "00:00"] = local.split("T");
+  const [y, mo, da] = d!.split("-").map(Number);
+  const [h, mi] = t.split(":").map(Number);
+  const wall = Date.UTC(y!, mo! - 1, da!, h!, mi!);
+  const offsetAt = (ms: number) => {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(ms));
+    const get = (k: string) => Number(parts.find((p) => p.type === k)?.value);
+    return Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute")) - ms;
+  };
+  let guess = wall - offsetAt(wall);
+  guess = wall - offsetAt(guess);
+  return new Date(guess).toISOString();
+}
+
+export type RejectReason = "quote_not_found" | "unknown_source" | "bad_timezone" | "time_not_in_quote" | "end_before_start" | "date_out_of_range" | "bad_recurrence";
+
+/** Hard failures reject the event; soft ones keep it but send it to review. */
+export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: RejectReason; review?: string[]; fromTranscription: boolean } {
+  const source = sourceFor(e, input);
+  if (!source) return { reject: "unknown_source", fromTranscription: false };
+  if (!quoteFound(e.evidence_quote, source.text)) return { reject: "quote_not_found", fromTranscription: source.fromTranscription };
+  if (!isTimeZone(e.timezone)) return { reject: "bad_timezone", fromTranscription: source.fromTranscription };
+  if (e.all_day !== !e.start.includes("T")) return { reject: "end_before_start", fromTranscription: source.fromTranscription };
+  if (!e.all_day && !hasTime(e.evidence_quote)) return { reject: "time_not_in_quote", fromTranscription: source.fromTranscription };
+  if (e.end && e.end < e.start) return { reject: "end_before_start", fromTranscription: source.fromTranscription };
+  if (e.recurrence && !/^(FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY))(;(BYDAY|BYMONTHDAY|INTERVAL|COUNT|UNTIL)=[A-Z0-9,+-]+)*$/.test(e.recurrence)) {
+    return { reject: "bad_recurrence", fromTranscription: source.fromTranscription };
+  }
+  const start = Date.parse(zonedToUtc(e.start, e.timezone));
+  const ref = Date.parse(input.referenceDate);
+  const day = 86_400_000;
+  if (start < ref - 31 * day || start > ref + 550 * day) return { reject: "date_out_of_range", fromTranscription: source.fromTranscription };
+  const review: string[] = [];
+  if (e.confidence < 0.7) review.push("low_confidence");
+  if (source.fromTranscription) review.push("from_transcription");
+  if (e.status !== "new") review.push(e.status);
+  return { review, fromTranscription: source.fromTranscription };
+}

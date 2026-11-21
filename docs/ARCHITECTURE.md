@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 8 (attachment triage). Hosted email still waits on a domain; vision reading waits on an API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 9 (AI event extraction). Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
@@ -12,7 +12,7 @@ Status: Phase 8 (attachment triage). Hosted email still waits on a domain; visio
                                                         │
                        Storage (inbound-raw, private) + pgmq queue "process_message"
                                                         ▼
-   process-messages (7) → triage-attachments (8), every minute → [extract → reconcile: planned]
+   process-messages (7) → triage-attachments (8) → extract-events (9), every minute → [reconcile: planned]
                                                         │
                                                         ▼
                                 Supabase Postgres (RLS on every table)

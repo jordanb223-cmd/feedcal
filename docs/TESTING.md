@@ -5,6 +5,7 @@
 | Command | What it covers |
 |---|---|
 | `npm test` | Unit tests: web routes, sign-in, CSRF and origin checks, calendar output (golden files, ical.js validation), subscribe and share pages |
+| Extraction evaluation (in `npm run test:functions`) | 50 labelled fixtures in `supabase/functions/_shared/extract/eval/`, replayed with recorded model replies. Fails if precision, unflagged precision, recall, date or time accuracy drop more than 3 points from `baseline.json`, or if any event lacks its quote or an injected email could publish. Live run: `EVAL_LIVE=1 ANTHROPIC_API_KEY=… deno test -A supabase/functions/_shared/extract/eval/` (costs money). |
 | `npm run test:functions` | Edge Function logic (Deno), including the 26 Phase 7 parsing fixtures in `supabase/functions/_shared/parse/fixtures` (rebuild them with the command at the top of `build.ts`) |
 | `npm run db:test` | pgTAP: RLS isolation, tokens, accounts, feeds, subscribe counts, seed sanity, sign-in limits, email intake |
 | `npm run test:integration` | Against the local stack: a stranger can't reach another user's share kit; email intake end to end (Worker code → Edge Functions → Storage → SQL → queue); parsing end to end (queue → `process-messages` → stored text and attachments); triage end to end (pages kept, the owner's "this one" as a real user, the next email routed by the learned rule) |

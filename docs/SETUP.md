@@ -99,5 +99,12 @@ Everything is built and tested locally. Hosted email needs a domain on Cloudflar
 
 Locally: `supabase/functions/.env` (gitignored) holds a local-only `INGEST_HMAC_SECRET`; make one with `printf 'INGEST_HMAC_SECRET=%s\n' "$(openssl rand -hex 32)" > supabase/functions/.env`, then restart Supabase. Add `INTAKE_DOMAIN=in.feedcal.test` to `apps/web/.dev.vars` to see a full address on the email page.
 
+## 8. AI extraction (Phase 9), optional and paid
+Without a key, emails are parsed and triaged, then wait at extraction ("waiting", reason `no_api_key`). To switch it on:
+- [ ] Create an Anthropic API key with a monthly spend limit at console.anthropic.com (you paste it; it never goes in the repo).
+- [ ] `npx supabase secrets set --project-ref <ref> ANTHROPIC_API_KEY=<key>` (this also turns on vision reading of photos and scans, Phase 8).
+- [ ] Send waiting emails back through: run `select public.requeue_waiting_extractions();` in the Supabase SQL editor.
+- [ ] Optional: measure the real models on the evaluation set (see docs/TESTING.md).
+
 ## When it's all done
 Merge a pull request into `main`: CI passes, staging deploys, and `https://feedcal-web-staging.pages.dev/health` returns `"status":"ok"`. For production, push a tag like `v0.1.0` and approve the `production` deployment in GitHub.
