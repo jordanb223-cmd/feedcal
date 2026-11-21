@@ -31,3 +31,15 @@ From BUILD-PLAN revision 1. Lookup uses SHA-256 of the token; the owner can view
 
 ## D10 — Health probe via an anon-callable RPC (2026-11-20)
 `public.health_check()` returns `true` and reads no tables, so exposing it to `anon` reveals nothing. The web app never holds the service-role key.
+
+## D11 — Column-level grants on top of RLS (2026-11-20)
+RLS decides which rows a role can see; it can't hide columns. Supabase's default table grants are revoked, and each role is granted only the columns it needs. Token columns are granted to nobody but the service role; the SECURITY DEFINER token functions read them. Anon reads public-safe columns of public feeds and their published events. Signed-in non-members read public pages through `public_feed_page()`, not the tables, so evidence quotes stay with the feed's members. Cost: app code must list columns instead of using `select *`.
+
+## D12 — Policy helpers in a `private` schema (2026-11-20)
+`private.is_feed_member()`, `private.feed_role()` and similar are SECURITY DEFINER with `search_path = ''`. They let policies on `feeds` and `feed_editors` check membership without recursing through each other's RLS. The schema isn't exposed by the API.
+
+## D13 — Feed token minted by a trigger (2026-11-20)
+Every feed gets a token on insert, in the same transaction as its Vault secret, so a failed insert leaves no orphan secret. Deleting a feed deletes its secret. Vault functions used: `vault.create_secret(new_secret, new_name, new_description, new_key_id)` and `vault.update_secret(secret_id, new_secret, ...)`, reading through `vault.decrypted_secrets`. These signatures were read from the local stack (`supabase_vault` 0.3.2). Hosted behaviour is `UNVERIFIED`; check it on the first staging deploy. Docs: https://supabase.com/docs/guides/database/vault
+
+## D14 — public_feed_page returns upcoming events only (2026-11-20)
+A subscribe page shows the next few events; returning a feed's whole history to anon is unnecessary exposure. It returns at most 200 events, with a default of 50. See the recurring-event gap in DATA-MODEL.md.

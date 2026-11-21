@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 1 (foundation). Components marked *planned* don't exist yet.
+Status: Phase 2 (data model). Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
