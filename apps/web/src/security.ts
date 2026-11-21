@@ -25,6 +25,11 @@ export function safeNext(next: string | undefined | null, fallback = "/account")
   return next;
 }
 
+/** Paths that contain a secret (feed tokens) are logged with the secret removed. */
+export function redactPath(path: string): string {
+  return path.replace(/^\/f\/[^/]*$/, "/f/[token]");
+}
+
 const UNSAFE = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 /**

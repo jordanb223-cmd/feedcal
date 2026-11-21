@@ -341,6 +341,9 @@ isOneToOne: false
 "due_account_deletions":
 { Args: Record<PropertyKey, never>; Returns: string[]
                            },
+"feed_calendar":
+{ Args: { "p_client_ip"?: string,"p_token": string,"p_ua_family"?: string,"p_user_agent"?: string }; Returns: Json
+                           },
 "get_feed_token":
 { Args: { "p_feed_id": string }; Returns: string
                            },

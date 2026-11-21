@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 3 (sign-in). Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 4 (calendar feeds). Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
@@ -41,6 +41,17 @@ Status: Phase 3 (sign-in). Components marked *planned* don't exist yet. Schema a
 - **Every POST** passes the origin check and the CSRF check first (D17).
 - **Signed-in pages** check the session with the Auth server on every request (D15).
 - **Account deletion:** `/account` → `request_account_deletion()`. After 14 days, the `delete-accounts` Edge Function purges the account (D18).
+
+## Feed flow (Phase 4)
+
+`GET /f/<token>.ics`:
+1. Check the token's format.
+2. Call `feed_calendar()` with the anon key.
+3. Validate the result with Zod (`FeedCalendarData`).
+4. Build the file with `@feedcal/ics`.
+5. Send it with an ETag, `Cache-Control: max-age=900` and no CORS headers; private and unlisted feeds also get `X-Robots-Tag: noindex`.
+
+The request log records the path as `/f/[token]`. Owners and editors see the link at `/feeds/<id>/link`, and the owner can rotate it there.
 
 ## Environments
 

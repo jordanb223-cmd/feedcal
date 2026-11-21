@@ -105,6 +105,27 @@ export function messagePage(title: string, message: string, link?: { href: strin
   );
 }
 
+export function feedLinkPage(opts: { csrf: string; feedId: string; url: string; notice?: string }): Html {
+  return layout(
+    "Feed link",
+    html`<div class="card">
+  <h1>Your feed link</h1>
+  ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}
+  <p>Anyone with this link can subscribe. Share it only with people who should see the feed.</p>
+  <p><label for="feed-url">Subscription link</label>
+    <input id="feed-url" type="url" readonly value="${opts.url}" style="width:100%;font:inherit;padding:.75rem;border:2px solid #6b6b66;border-radius:8px"></p>
+</div>
+<div class="card">
+  <h2>Make a new link</h2>
+  <p>If the link reached the wrong people, make a new one. The old link stops working right away, and current subscribers will need the new one.</p>
+  <form method="post" action="/feeds/${opts.feedId}/rotate-token">
+    <input type="hidden" name="csrf" value="${opts.csrf}">
+    <button type="submit" class="danger">Make a new link</button>
+  </form>
+</div>`,
+  );
+}
+
 export function accountPage(opts: { csrf: string; email: string | null; displayName: string | null; deletionDate: string | null; notice?: string }): Html {
   return layout(
     "Your account",

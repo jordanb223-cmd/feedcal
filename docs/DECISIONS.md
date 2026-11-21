@@ -66,3 +66,14 @@ GitHub's docs say that on GitHub Free, private repositories get no environments,
 - **No database password.** Supabase CLI 3.2.0 connects with the access token alone when `--remote` is used without `--password`. Its `db push --help` lists "Scoped access token … database_write" for that case. The CI secrets are therefore only `SUPABASE_ACCESS_TOKEN` and `CLOUDFLARE_API_TOKEN`. The old workflow also had two bugs this fixes: `db push` without `--remote` targets the *local* database in CLI 3.x, and `functions deploy` no longer takes `--project-ref`.
 - **Pages settings per project.** Each Pages project deploys `main` as its production environment, so `wrangler.toml` `[env.production.vars]` would have labelled staging "production". `wrangler.toml` now has no vars. `.github/scripts/deploy.sh` sets `ENVIRONMENT`, `SUPABASE_URL` and `SUPABASE_ANON_KEY` on each Pages project, reading the public key with `supabase projects api-keys`. It also creates the Pages project if it's missing. Local values live in `apps/web/.dev.vars`.
 - **Not yet checked:** the JSON field names from `supabase projects api-keys` (the script accepts both known shapes), and that `pages.dev` gives the projects their exact names. Both are confirmed by the first deploy.
+
+## D22 — Calendar output: local times with generated VTIMEZONEs (2026-11-20)
+- **Local times.** Timed events are written in their own zone (`DTSTART;TZID=America/Los_Angeles:…`) with a VTIMEZONE built from the runtime's IANA data (`Intl`). So a weekly 5:30pm practice stays at 5:30pm across daylight saving, which a UTC-only feed gets wrong.
+- **How the VTIMEZONE is built.** Each offset change in the years the events touch is its own observance, with no RRULE. That is valid RFC 5545 and doesn't guess future rules. Recurring events get 5 years of coverage. Past that, calendar apps fall back to their own data for the IANA name.
+- **Found in review:** the first version put the spring-forward change at 01:00 instead of 02:00. The tests missed it; reading the golden file caught it. Tests now pin exact change times for Los Angeles, Sydney and Adelaide, plus an event in the hour after a change.
+- **Stable output.** `DTSTAMP` is the event's last change, not the request time. Identical data gives a byte-identical file and the same ETag, so `If-None-Match` gets a 304.
+- **All-day events.** `starts_at` is any instant on the first day and `ends_at` any instant on the last day, both read in the event's zone. `DTEND` is the day after the last day (exclusive).
+- **Validation.** Golden-file tests, plus ical.js (Mozilla's parser, MPL-2.0, test-only) parsing every file. Each timed event's start must read back as the original instant.
+- **Gaps.**
+  - The schema has no EXDATE column, so a single occurrence of a recurring event can't be skipped yet. Phase 10 needs this for updates.
+  - Apple, Google and Outlook subscriptions are untested, because they need a hosted deploy.
