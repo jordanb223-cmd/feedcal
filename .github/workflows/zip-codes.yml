@@ -1,0 +1,36 @@
+name: Load ZIP codes
+# Phase 13 (D34): loads the US Census ZCTA gazetteer (public domain) into public.zip_codes for
+# "near me" directory search. Run by hand (Actions → Load ZIP codes → Run workflow). The file is
+# downloaded on GitHub's runner, never on anyone's computer, and loaded with the deploy's
+# scoped access token (Database: read-write), so no service-role key is involved.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which project"
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      # Project refs aren't secret (they're in each project's URL).
+      SUPABASE_PROJECT_REF: ${{ inputs.target == 'production' && 'psqytjoxeejxgnaqrisn' || 'rqfpfgogylcjvuqrhgeb' }}
+      ZCTA_URL: https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2024_Gazetteer/2024_Gaz_zcta_national.zip
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .nvmrc }
+      - name: Download the Census file
+        run: |
+          mkdir -p zcta && curl -fsSL --max-time 120 "$ZCTA_URL" -o zcta/zcta.zip
+          ls -l zcta/zcta.zip && sha256sum zcta/zcta.zip
+          unzip -o -q zcta/zcta.zip -d zcta && ls -l zcta
+      - name: Load into ${{ inputs.target }}
+        run: node scripts/load-zcta-api.mjs "$(ls zcta/*.txt | head -1)"
