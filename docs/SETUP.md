@@ -149,6 +149,7 @@ Use a **separate** Google Cloud project from sign-in, so sign-in is never affect
 - [ ] Supabase → Edge Functions → Secrets: `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`.
 - [ ] GitHub → Settings → Environments → production → variables: `GMAIL_CLIENT_ID` (public). The next deploy shows "Connect Gmail" on each feed's Gmail page.
 - [ ] Remember: in test mode the connection lasts 7 days; Feedcal emails a reminder.
+- Test mode is the plan for now (D42): only people listed under **Test users** can connect, and everyone reconnects weekly. Leaving test mode means Google's restricted-scope verification plus a paid yearly security assessment; the free route for everyone is forwarding with a Gmail filter, once there's a domain.
 
 ## When it's all done
 Merge a pull request into `main`: CI passes, staging deploys, and `https://feedcal-web-staging.pages.dev/health` returns `"status":"ok"`. For production, push a tag like `v0.1.0` and approve the `production` deployment in GitHub.
