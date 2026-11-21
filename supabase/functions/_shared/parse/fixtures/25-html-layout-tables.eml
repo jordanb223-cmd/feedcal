@@ -1,0 +1,13 @@
+From: Hillside Music School <hello@hillsidemusic.example.test>
+To: Alex Parent <parent@home.example.test>
+Subject: Recital details
+Date: Sat, 08 Nov 2026 11:00:00 -0800
+Message-ID: <f25@fixtures.example.test>
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<table role="presentation" width="100%"><tr><td align="center"><table width="600"><tr><td>
+<h2>Winter Recital</h2><p>Sunday, December 14 at 2:00 PM, Hillside Community Hall.</p>
+<table><tr><td>Piano students</td><td>2:00 PM</td></tr><tr><td>Violin students</td><td>3:15 PM</td></tr></table>
+</td></tr><tr><td><p>Doors open at 1:30 PM.</p></td></tr></table></td></tr></table>

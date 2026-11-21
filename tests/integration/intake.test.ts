@@ -34,7 +34,9 @@ function email(raw: string, to = TO) {
   return { msg, rejected: () => rejected };
 }
 
-const newsletter = (messageId: string, body = "Field trip on Friday at 9.") =>
+const RUN = Date.now();
+// Bodies are unique per run: body-hash dedupe would otherwise treat a rerun as a duplicate.
+const newsletter = (messageId: string, body = `Field trip on Friday at 9. (run ${RUN})`) =>
   `${CF}Message-ID: <${messageId}>\r\nFrom: School Office <office@school.example.test>\r\nSubject: Newsletter\r\n\r\n${body}\r\n`;
 
 describe.skipIf(!enabled)("email intake, end to end on the local stack", () => {
@@ -60,8 +62,8 @@ describe.skipIf(!enabled)("email intake, end to end on the local stack", () => {
 
   it("forwarding the same email again is ignored, and its copy is deleted", async () => {
     const id = `dup-${Date.now()}@school.example.test`;
-    await deliver(newsletter(id, "Unique body for the duplicate test."));
-    expect(await deliver(newsletter(id, "Unique body for the duplicate test."))).toBeNull();
+    await deliver(newsletter(id, `Unique body for the duplicate test ${RUN}.`));
+    expect(await deliver(newsletter(id, `Unique body for the duplicate test ${RUN}.`))).toBeNull();
     const { count } = await db.from("messages").select("id", { count: "exact", head: true }).eq("message_id_header", `<${id}>`);
     expect(count).toBe(1);
     const { data: files } = await db.storage.from("inbound-raw").list(ALICE_FEED, { limit: 1000 });

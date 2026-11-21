@@ -1,0 +1,23 @@
+From: Coach Dana Reyes <dana@riverleague.example.test>
+To: Alex Parent <parent@home.example.test>
+Subject: Invitation: End of season party
+Date: Mon, 10 Nov 2026 18:00:00 -0800
+Message-ID: <f17@fixtures.example.test>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mix17"
+
+--mix17
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+You're invited to the end of season party, Saturday November 22, 4-6 PM at Pizza Planet.
+--mix17
+Content-Type: text/calendar; name="invite.ics"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="invite.ics"
+
+QkVHSU46VkNBTEVOREFSDQpWRVJTSU9OOjIuMA0KTUVUSE9EOlJFUVVFU1QNCkJFR0lOOlZFVkVO
+VA0KVUlEOnBhcnR5QHJpdmVybGVhZ3VlLmV4YW1wbGUudGVzdA0KRFRTVEFSVDoyMDI2MTEyM1Qw
+MDAwMDBaDQpEVEVORDoyMDI2MTEyM1QwMjAwMDBaDQpTVU1NQVJZOkVuZCBvZiBzZWFzb24gcGFy
+dHkNCkVORDpWRVZFTlQNCkVORDpWQ0FMRU5EQVINCg==
+--mix17--

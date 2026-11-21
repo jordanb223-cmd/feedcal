@@ -1,0 +1,15 @@
+From: Rec Department <news@cityrec.example.test>
+To: Alex Parent <parent@home.example.test>
+Subject: Winter registration opens
+Date: Mon, 03 Nov 2026 06:00:00 -0800
+Message-ID: <f19@fixtures.example.test>
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<html><body><span style="display: none !important; mso-hide: all">Secret preheader text</span>
+<div hidden>Hidden block</div><script>alert(1)</script>
+<p>Winter class registration opens Monday, November 10 at 9:00 AM.</p>
+<p><a href="https://cityrec.example.test/register?utm_source=email">Register here</a> or visit <a href="https://cityrec.example.test">https://cityrec.example.test</a>.</p>
+<img src="https://pixel.example.test/o.gif" width="1" height="1" alt="">
+<p style="font-size:11px"><a href="https://cityrec.example.test/unsubscribe">Unsubscribe</a></p></body></html>

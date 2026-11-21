@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 6 (email intake by forwarding; hosted email waits on a domain). Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 7 (email parsing). Hosted email still waits on a domain. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
@@ -12,7 +12,7 @@ Status: Phase 6 (email intake by forwarding; hosted email waits on a domain). Co
                                                         │
                        Storage (inbound-raw, private) + pgmq queue "process_message"
                                                         ▼
-                     Queue consumer: parse → triage → extract → reconcile         (planned)
+         process-messages (Phase 7, every minute): parse → [triage → extract → reconcile: planned]
                                                         │
                                                         ▼
                                 Supabase Postgres (RLS on every table)

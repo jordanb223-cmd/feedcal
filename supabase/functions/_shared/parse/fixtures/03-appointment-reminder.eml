@@ -1,0 +1,19 @@
+From: Riverside Pediatrics <noreply@riversideped.example.test>
+To: Alex Parent <parent@home.example.test>
+Subject: Appointment reminder
+Date: Mon, 24 Nov 2026 10:00:00 -0800
+Message-ID: <f03@fixtures.example.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Hello,
+
+This is a reminder that Sam has an appointment with Dr. Okafor on Tuesday, December 2 at 3:45 PM at our Elm Street office.
+
+Please arrive 10 minutes early.
+
+--
+Riverside Pediatrics
+1200 Elm Street, Suite 4
+(555) 010-2299

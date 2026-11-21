@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"attachments": {
                   Row: {
-                    "bytes": number | null,"chosen": boolean,"created_at": string,"filename": string | null,"id": string,"message_id": string,"mime": string | null,"pages": number | null,"sha256": string | null,"status": string,"storage_path": string | null
+                    "bytes": number | null,"chosen": boolean,"content_id": string | null,"created_at": string,"filename": string | null,"height": number | null,"id": string,"inline": boolean,"message_id": string,"mime": string | null,"pages": number | null,"sha256": string | null,"status": string,"storage_path": string | null,"width": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "bytes"?: number | null,"chosen"?: boolean,"created_at"?: string,"filename"?: string | null,"id"?: string,"message_id": string,"mime"?: string | null,"pages"?: number | null,"sha256"?: string | null,"status"?: string,"storage_path"?: string | null
+                    "bytes"?: number | null,"chosen"?: boolean,"content_id"?: string | null,"created_at"?: string,"filename"?: string | null,"height"?: number | null,"id"?: string,"inline"?: boolean,"message_id": string,"mime"?: string | null,"pages"?: number | null,"sha256"?: string | null,"status"?: string,"storage_path"?: string | null,"width"?: number | null
                   }
                   Update: {
-                    "bytes"?: number | null,"chosen"?: boolean,"created_at"?: string,"filename"?: string | null,"id"?: string,"message_id"?: string,"mime"?: string | null,"pages"?: number | null,"sha256"?: string | null,"status"?: string,"storage_path"?: string | null
+                    "bytes"?: number | null,"chosen"?: boolean,"content_id"?: string | null,"created_at"?: string,"filename"?: string | null,"height"?: number | null,"id"?: string,"inline"?: boolean,"message_id"?: string,"mime"?: string | null,"pages"?: number | null,"sha256"?: string | null,"status"?: string,"storage_path"?: string | null,"width"?: number | null
                   }
                   Relationships: [
                     {
@@ -211,14 +211,14 @@ isOneToOne: false
                   ]
                 },"messages": {
                   Row: {
-                    "attachment_count": number | null,"auth_dkim": string | null,"auth_dmarc": string | null,"auth_spf": string | null,"created_at": string,"expires_at": string,"feed_id": string,"id": string,"message_id_header": string | null,"quarantine_reason": string | null,"raw_bytes": number | null,"received_at": string,"sender": string | null,"sha256": string | null,"source_id": string | null,"status": string,"storage_path": string | null,"subject": string | null
+                    "attachment_count": number | null,"auth_dkim": string | null,"auth_dmarc": string | null,"auth_spf": string | null,"clean_text": string | null,"created_at": string,"expires_at": string,"feed_id": string,"id": string,"language": string | null,"message_id_header": string | null,"original_sender": string | null,"original_subject": string | null,"parse_attempts": number,"parse_details": Json | null,"parsed_at": string | null,"quarantine_reason": string | null,"raw_bytes": number | null,"received_at": string,"reference_date": string | null,"reference_date_source": string | null,"sender": string | null,"sha256": string | null,"source_id": string | null,"status": string,"storage_path": string | null,"stripped_text": string | null,"subject": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "attachment_count"?: number | null,"auth_dkim"?: string | null,"auth_dmarc"?: string | null,"auth_spf"?: string | null,"created_at"?: string,"expires_at"?: string,"feed_id": string,"id"?: string,"message_id_header"?: string | null,"quarantine_reason"?: string | null,"raw_bytes"?: number | null,"received_at"?: string,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"subject"?: string | null
+                    "attachment_count"?: number | null,"auth_dkim"?: string | null,"auth_dmarc"?: string | null,"auth_spf"?: string | null,"clean_text"?: string | null,"created_at"?: string,"expires_at"?: string,"feed_id": string,"id"?: string,"language"?: string | null,"message_id_header"?: string | null,"original_sender"?: string | null,"original_subject"?: string | null,"parse_attempts"?: number,"parse_details"?: Json | null,"parsed_at"?: string | null,"quarantine_reason"?: string | null,"raw_bytes"?: number | null,"received_at"?: string,"reference_date"?: string | null,"reference_date_source"?: string | null,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"stripped_text"?: string | null,"subject"?: string | null
                   }
                   Update: {
-                    "attachment_count"?: number | null,"auth_dkim"?: string | null,"auth_dmarc"?: string | null,"auth_spf"?: string | null,"created_at"?: string,"expires_at"?: string,"feed_id"?: string,"id"?: string,"message_id_header"?: string | null,"quarantine_reason"?: string | null,"raw_bytes"?: number | null,"received_at"?: string,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"subject"?: string | null
+                    "attachment_count"?: number | null,"auth_dkim"?: string | null,"auth_dmarc"?: string | null,"auth_spf"?: string | null,"clean_text"?: string | null,"created_at"?: string,"expires_at"?: string,"feed_id"?: string,"id"?: string,"language"?: string | null,"message_id_header"?: string | null,"original_sender"?: string | null,"original_subject"?: string | null,"parse_attempts"?: number,"parse_details"?: Json | null,"parsed_at"?: string | null,"quarantine_reason"?: string | null,"raw_bytes"?: number | null,"received_at"?: string,"reference_date"?: string | null,"reference_date_source"?: string | null,"sender"?: string | null,"sha256"?: string | null,"source_id"?: string | null,"status"?: string,"storage_path"?: string | null,"stripped_text"?: string | null,"subject"?: string | null
                   }
                   Relationships: [
                     {
@@ -361,6 +361,11 @@ isOneToOne: false
 "cancel_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"claim_process_jobs":
+{ Args: { "p_limit"?: number,"p_visibility_seconds"?: number }; Returns: {
+              "attempts": number,"feed_id": string,"job_id": number,"message_id": string,"received_at": string,"storage_path": string
+            }[]
+                           },
 "claim_storage_trash":
 { Args: { "p_limit"?: number }; Returns: {
               "bucket": string,"id": number,"path": string
@@ -375,11 +380,17 @@ isOneToOne: false
 "due_account_deletions":
 { Args: Record<PropertyKey, never>; Returns: string[]
                            },
+"fail_process_job":
+{ Args: { "p_job_id": number,"p_max_attempts"?: number,"p_message_id": string }; Returns: string
+                           },
 "feed_calendar":
 { Args: { "p_client_ip"?: string,"p_token": string,"p_ua_family"?: string,"p_user_agent"?: string }; Returns: Json
                            },
 "feed_subscribe_stats":
 { Args: { "p_feed_id": string }; Returns: Json
+                           },
+"finish_process_job":
+{ Args: { "p_job_id": number }; Returns: boolean
                            },
 "forget_storage_trash":
 { Args: { "p_ids": (number)[] }; Returns: number
@@ -404,6 +415,9 @@ isOneToOne: false
                            },
 "purge_account_data":
 { Args: { "p_user_id": string }; Returns: Json
+                           },
+"record_parsed_message":
+{ Args: { "p_attachments": Json,"p_message_id": string,"p_parsed": Json }; Returns: string
                            },
 "record_subscribe_click":
 { Args: { "p_platform": string,"p_slug": string }; Returns: boolean
