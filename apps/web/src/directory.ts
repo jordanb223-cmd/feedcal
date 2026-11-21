@@ -7,7 +7,7 @@ import { z } from "zod";
 import type { Database } from "@feedcal/shared";
 import { originOf } from "./security.js";
 import type { AppEnv, Supa } from "./types.js";
-import { layout, messagePage } from "./views.js";
+import { messagePage, publicLayout } from "./views.js";
 
 export const DIRECTORY_CATEGORIES = ["school", "youth sports", "community", "faith", "library", "government", "venue/music", "other"] as const;
 const Query = z.object({
@@ -27,7 +27,7 @@ export function anonSupabase(c: Context<AppEnv>): Supa {
 
 function directoryPage(opts: { q?: string | undefined; zip?: string | undefined; miles: number; category?: string | undefined; rows: DirectoryRow[]; searched: boolean; unknownZip: boolean }) {
   const title = opts.zip ? `Calendars near ${opts.zip}` : "Find a calendar";
-  return layout(title, html`<div class="card">
+  return publicLayout(title, html`<div class="card">
   <h1>${title}</h1>
   <p class="muted">Public calendars from schools, teams, libraries and community groups. Subscribe once; they stay up to date.</p>
   <form method="get" action="/directory" role="search">

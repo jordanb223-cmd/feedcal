@@ -7,7 +7,7 @@ import { buildCalendar, type CalendarEvent } from "@feedcal/ics";
 import { currentUser } from "./auth.js";
 import { originOf } from "./security.js";
 import type { AppEnv } from "./types.js";
-import { layout, messagePage } from "./views.js";
+import { messagePage, publicLayout } from "./views.js";
 
 const DRAFT = html`<p class="muted"><strong>Draft.</strong> To be reviewed by a lawyer before public launch (see BUILD-PLAN "Non-negotiables").</p>`;
 
@@ -54,7 +54,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     return c.body(ics);
   });
 
-  app.get("/privacy", (c) => c.html(layout("Privacy", html`<div class="card"><h1>Privacy</h1>${DRAFT}
+  app.get("/privacy", (c) => c.html(publicLayout("Privacy", html`<div class="card"><h1>Privacy</h1>${DRAFT}
   <p>Feedcal turns emails you forward into calendars. This page says what we keep, for how long, and what you can do about it.</p>
   <h2>What we keep</h2>
   <ul>

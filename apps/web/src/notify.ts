@@ -6,7 +6,7 @@ import { z } from "zod";
 import { currentUser, MESSAGES } from "./auth.js";
 import { csrfToken, csrfValid } from "./security.js";
 import type { AppEnv } from "./types.js";
-import { layout, messagePage } from "./views.js";
+import { layout, messagePage, publicLayout } from "./views.js";
 
 const Uid = z.string().regex(/^[0-9a-f-]{36}@feedcal\.app$/);
 const Kind = z.enum(["wrong_details", "missing_event", "spam", "abuse", "other"]);
@@ -28,7 +28,7 @@ async function form(c: Context<AppEnv>): Promise<Record<string, string>> {
 }
 
 function reportPage(csrf: string, uid: string, error?: string) {
-  return layout("Report a problem", html`<div class="card">
+  return publicLayout("Report a problem", html`<div class="card">
   <h1>Report a problem</h1>
   <p>Tell the person who runs this calendar what's wrong. They'll get your note right away. We don't ask for your name or email.</p>
   ${error ? html`<p class="error" role="alert">${error}</p>` : ""}
@@ -77,7 +77,7 @@ export function registerNotifyRoutes(app: Hono<AppEnv>): void {
   app.get("/unsubscribe", (c) => {
     const q = UnsubQuery.safeParse(c.req.query());
     if (!q.success) return c.html(messagePage("Link not valid", "This unsubscribe link isn't complete. You can change emails on your account page.", { href: "/account", text: "Account" }), 400);
-    return c.html(layout("Unsubscribe", html`<div class="card"><h1>Stop ${UNSUB_LABELS[q.data.k]}?</h1>
+    return c.html(publicLayout("Unsubscribe", html`<div class="card"><h1>Stop ${UNSUB_LABELS[q.data.k]}?</h1>
       <form method="post" action="/unsubscribe?u=${q.data.u}&amp;k=${q.data.k}&amp;t=${q.data.t}"><button type="submit">Yes, stop them</button></form>
       <p class="muted">You can turn them back on from your account page.</p></div>`));
   });

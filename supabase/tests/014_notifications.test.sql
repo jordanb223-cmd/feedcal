@@ -71,7 +71,8 @@ select is((select milestone from public.feed_milestones where feed_id = 'aaaaaaa
 create temp table claimed as select * from public.claim_outbox(100);
 select ok((select count(*) from claimed) >= 3, 'the sender claims queued mail');
 select ok((select bool_and(email is not null and unsubscribe_token ~ '^[0-9a-f]{64}$') from claimed), 'each with an address and an unsubscribe token');
-select public.mark_outbox(id, true, 'msg-1') from claimed limit 1;
+-- Not the stale nudge: the retry check below needs it still queued (this was flaky when it picked it).
+select public.mark_outbox(id, true, 'msg-1') from claimed where kind <> 'stale_nudge' limit 1;
 select is((select count(*)::int from private.email_outbox where state = 'sent'), 1, 'marked sent');
 update private.email_outbox set attempts = 5 where state = 'queued' and kind = 'stale_nudge';
 select public.mark_outbox(id, false, null, 'provider down') from private.email_outbox where kind = 'stale_nudge';
