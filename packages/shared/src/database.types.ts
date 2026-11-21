@@ -686,7 +686,7 @@ isOneToOne: false
 { Args: { "p_feed_id": string }; Returns: string
                            },
 "gmail_check_done":
-{ Args: { "p_checked_at": string,"p_error"?: string,"p_feed_id": string,"p_reconnect"?: boolean }; Returns: undefined
+{ Args: { "p_checked_at": string,"p_error"?: string,"p_feed_id": string,"p_more"?: boolean,"p_reconnect"?: boolean }; Returns: undefined
                            },
 "gmail_choose_example":
 { Args: { "p_feed_id": string,"p_gmail_id": string,"p_interval_days": number }; Returns: boolean
