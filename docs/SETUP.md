@@ -106,5 +106,9 @@ Without a key, emails are parsed and triaged, then wait at extraction ("waiting"
 - [ ] Send waiting emails back through: run `select public.requeue_waiting_extractions();` in the Supabase SQL editor.
 - [ ] Optional: measure the real models on the evaluation set (see docs/TESTING.md).
 
+## 9. Notification email (Phase 12), needs a domain
+Locally, emails go to Mailpit (http://127.0.0.1:54324): `supabase/functions/.env` holds `MAILPIT_URL=http://supabase_inbucket_feedcal:8025` and `SITE_URL`. Hosted, until a provider is set, notifications stay queued (nothing is lost; they send once one is configured).
+- [ ] With the domain verified at Resend (free tier), set Supabase secrets: `RESEND_API_KEY`, `EMAIL_FROM` (e.g. `Feedcal <notifications@in.<domain>>`), `SITE_URL` (the site's address).
+
 ## When it's all done
 Merge a pull request into `main`: CI passes, staging deploys, and `https://feedcal-web-staging.pages.dev/health` returns `"status":"ok"`. For production, push a tag like `v0.1.0` and approve the `production` deployment in GitHub.

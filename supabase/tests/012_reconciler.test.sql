@@ -41,10 +41,10 @@ select is((select published from public.events where title = 'Winter concert'), 
 select is((select count(*)::int from public.event_revisions r join public.events e on e.id = r.event_id where e.title = 'Winter concert'), 1, 'one revision: extracted');
 
 -- ---------------------------------------------------------------- time change
-select pg_temp.cand(pg_temp.msg('Practice'), 'Thursday practice', '2026-11-20 17:00');
+select pg_temp.cand(pg_temp.msg('Practice'), 'Friday practice', '2026-11-20 17:00');
 select pg_temp.run();
-create temp table t1 as select id, sequence from public.events where title = 'Thursday practice';
-create temp table ch as select pg_temp.cand(pg_temp.msg('Re: Practice'), 'Thursday practice', '2026-11-20 18:00', 'changed') as id;
+create temp table t1 as select id, sequence from public.events where title = 'Friday practice';
+create temp table ch as select pg_temp.cand(pg_temp.msg('Re: Practice'), 'Friday practice', '2026-11-20 18:00', 'changed') as id;
 select pg_temp.run();
 select is(pg_temp.outcome((select id from ch)), 'update/applied', 'a time change is an update');
 select is((select starts_at from public.events where id = (select id from t1)), '2026-11-20 18:00 America/Los_Angeles'::timestamptz, 'the event moves to 6 PM');
@@ -52,7 +52,7 @@ select is((select sequence from public.events where id = (select id from t1)), (
 select is((select cause from public.event_revisions where event_id = (select id from t1) order by id desc limit 1), 'matched_update', 'a matched_update revision is written');
 select is((select diff -> 'starts_at' ->> 1 from public.event_revisions where event_id = (select id from t1) order by id desc limit 1)::timestamptz,
   '2026-11-20 18:00 America/Los_Angeles'::timestamptz, 'the revision holds before and after');
-select is(pg_temp.events('thursday practice'), 1, 'still one event');
+select is(pg_temp.events('friday practice'), 1, 'still one event');
 
 -- ---------------------------------------------------------------- date move
 select pg_temp.cand(pg_temp.msg('Conferences'), 'Parent conferences', '2026-11-24 15:30');

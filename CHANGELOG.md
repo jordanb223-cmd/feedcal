@@ -23,6 +23,9 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 - A dashboard for your feeds, and a review screen made for phones: see what Feedcal found with the sentence it came from highlighted, then approve, edit, or reject it. "Approve all marked Sure" handles the easy ones. Add and edit events by hand, with each event's history.
 - Settings for each feed: name, who can find it, time zone, how sure Feedcal must be to publish on its own, trusted senders, editors, and delete (with 10 seconds to undo).
 - Fixed: creating a new feed failed for signed-in users.
+- Subscribers can report a problem with any event from their calendar (the link is in each event), without an account; the organizer hears about it right away.
+- A weekly summary for organizers: followers this week versus last, subscribe taps, events added, items to review, reports. A reminder when a feed goes quiet, and a thank-you card at 10, 50 and 100 followers. Every email has one-click unsubscribe; choices are on the account page.
+- Follower counts now count Google and Outlook once each, as they fetch for many people at once.
 - Forwarding the same email twice is harmless; Feedcal keeps one copy and deletes copies after 30 days.
 
 ### Fixed

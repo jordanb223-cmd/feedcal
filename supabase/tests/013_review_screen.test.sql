@@ -15,9 +15,9 @@ insert into public.events (id, feed_id, title, starts_at, timezone, status, publ
 update public.events set confidence = 0.9 where id = 'ab000000-0000-4000-8000-000000000002';
 create temp table m as select pg_temp.msg() as id;
 insert into public.event_candidates (id, message_id, feed_id, title, starts_at, all_day, timezone, change_kind, confidence, evidence_quote, source_kind, state, outcome, event_id, review_reasons) values
-  ('ac000000-0000-4000-8000-000000000001', (select id from m), 'aaaaaaaa-0000-4000-8000-000000000001', 'Walkathon', '2026-11-23 10:00 America/Los_Angeles', false, 'America/Los_Angeles', 'changed', 0.75, 'moves to Sunday', 'body', 'needs_review', 'update', 'ab000000-0000-4000-8000-000000000001', '{low_confidence}'),
+  ('ac000000-0000-4000-8000-000000000001', (select id from m), 'aaaaaaaa-0000-4000-8000-000000000001', 'Walkathon', '2026-11-23 10:00 America/Los_Angeles', false, 'America/Los_Angeles', 'changed', 0.75, 'moves to Monday', 'body', 'needs_review', 'update', 'ab000000-0000-4000-8000-000000000001', '{low_confidence}'),
   ('ac000000-0000-4000-8000-000000000002', (select id from m), 'aaaaaaaa-0000-4000-8000-000000000001', 'Free iPads', '2026-11-22 10:00 America/Los_Angeles', false, 'America/Los_Angeles', 'new', 0.95, 'Saturday at 10 AM', 'body', 'needs_review', 'new', null, '{possible_injection}'),
-  ('ac000000-0000-4000-8000-000000000003', (select id from m), 'aaaaaaaa-0000-4000-8000-000000000001', 'Spirit day', '2026-12-12 12:00 America/Los_Angeles', true, 'America/Los_Angeles', 'new', 0.9, 'Spirit day is Friday, December 12', 'body', 'needs_review', 'new', null, '{}'),
+  ('ac000000-0000-4000-8000-000000000003', (select id from m), 'aaaaaaaa-0000-4000-8000-000000000001', 'Spirit day', '2026-12-12 12:00 America/Los_Angeles', true, 'America/Los_Angeles', 'new', 0.9, 'Spirit day is Saturday, December 12', 'body', 'needs_review', 'new', null, '{}'),
   ('ac000000-0000-4000-8000-000000000004', (select id from m), 'aaaaaaaa-0000-4000-8000-000000000001', 'Walkathon', '2026-11-22 13:00 America/Los_Angeles', false, 'America/Los_Angeles', 'new', 0.9, 'Walkathon at 1 PM', 'body', 'needs_review', 'conflict', 'ab000000-0000-4000-8000-000000000001', '{}');
 grant select on m to authenticated;
 

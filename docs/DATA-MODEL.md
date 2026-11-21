@@ -128,6 +128,9 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `decide_sender(p_source_id, p_trust)` / `decide_message(p_message_id, p_release)` | signed-in members | Phase 6. Approve or decline a waiting sender (or one message). Approving queues its waiting mail. |
 | `rotate_intake_address(p_feed_id)` | signed-in owner | Phase 6. New forwarding address; the old one stops at once. |
 | `claim_storage_trash` / `forget_storage_trash` | service role | Phase 6. Used by the `storage-trash` Edge Function. |
+| `submit_report(p_event_uid, p_kind, p_details, p_client_ip)` | anon, signed-in | Phase 12 (D33). A subscriber's "Report a problem"; 10 an hour per network (hashed); queues an instant email to the feed's people. |
+| `unsubscribe(p_user, p_kind, p_token)` | anon | Phase 12. One-click unsubscribe with an HMAC-signed token. |
+| `claim_outbox` / `mark_outbox` / `run_weekly_digests` | service role | Phase 12. The email outbox (deduped, 5 tries) and an on-demand digest run. |
 | `approve_candidate` / `reject_candidate` / `approve_all_sure` / `publish_draft` / `discard_draft` / `save_event` / `cancel_event` / `clear_attachment_rule` | signed-in members | Phase 11 (D32). Review actions; each writes a revision with actor `user:<id>`. Rejections keep a reason for the evaluation set. |
 | `add_editor(p_feed_id, p_email)` / `request_feed_deletion(p_feed_id)` | signed-in owner | Phase 11. Add an editor by the email they signed in with; delete a feed (hidden at once, purged after 10 seconds). |
 | `undo(p_undo_id)` | the user who acted | Phase 11. Reverses a reject, discard, cancel or feed deletion within 10 seconds (`undo_log`). |

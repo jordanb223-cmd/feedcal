@@ -6,7 +6,7 @@ select pgmq.purge_queue('reconcile_message');
 
 insert into public.messages (id, feed_id, status, original_subject, original_sender, clean_text, reference_date) values
   ('a9000000-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'parsed', 'Concert', 'office@x.test',
-   'The winter concert is Thursday, December 11 at 6:30 PM.', '2026-11-17T17:14:00Z');
+   'The winter concert is Friday, December 11 at 6:30 PM.', '2026-11-17T17:14:00Z');
 insert into public.attachments (id, message_id, filename, mime, status) values
   ('a9100000-0000-4000-8000-000000000001', 'a9000000-0000-4000-8000-000000000001', 'cal.pdf', 'application/pdf', 'pending');
 update public.attachments set status = 'text_layer' where id = 'a9100000-0000-4000-8000-000000000001';
@@ -17,7 +17,7 @@ select pgmq.send('extract_message', '{"message_id": "a9000000-0000-4000-8000-000
 create temp table j as select * from public.claim_extract_jobs(5, 60);
 select is((select context ->> 'timezone' from j), 'America/Los_Angeles', 'the feed''s timezone is the default context');
 select is((select context -> 'pages' -> 0 ->> 'text' from j), 'Dec 9 | Spelling bee | 1:00 PM', 'kept pages are in the context');
-select is((select context ->> 'body' from j), 'The winter concert is Thursday, December 11 at 6:30 PM.', 'and the clean text');
+select is((select context ->> 'body' from j), 'The winter concert is Friday, December 11 at 6:30 PM.', 'and the clean text');
 set local role authenticated;
 select throws_ok($$ select * from public.claim_extract_jobs() $$, '42501', null, 'only the service role claims extraction jobs');
 reset role;
@@ -25,7 +25,7 @@ reset role;
 create temp table res as select jsonb_build_object('state', 'extracted', 'reason', null, 'model', 'claude-haiku-5-5', 'calls', '[]'::jsonb, 'rejected', '[]'::jsonb,
   'candidates', jsonb_build_array(
     jsonb_build_object('title', 'Winter concert', 'starts_at', '2026-12-12T02:30:00Z', 'ends_at', null, 'all_day', false, 'timezone', 'America/Los_Angeles',
-      'location', 'Gym', 'description', null, 'recurrence', null, 'status', 'new', 'confidence', 0.92, 'evidence_quote', 'Thursday, December 11 at 6:30 PM',
+      'location', 'Gym', 'description', null, 'recurrence', null, 'status', 'new', 'confidence', 0.92, 'evidence_quote', 'Friday, December 11 at 6:30 PM',
       'source_ref', jsonb_build_object('kind', 'body', 'attachment_id', null, 'page_index', null), 'review', '[]'::jsonb, 'from_transcription', false),
     jsonb_build_object('title', 'Spelling bee', 'starts_at', '2026-12-09T21:00:00Z', 'ends_at', null, 'all_day', false, 'timezone', 'America/Los_Angeles',
       'location', null, 'description', null, 'recurrence', null, 'status', 'new', 'confidence', 0.6, 'evidence_quote', 'Dec 9 | Spelling bee | 1:00 PM',

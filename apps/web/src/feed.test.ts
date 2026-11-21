@@ -142,11 +142,13 @@ describe("userAgentFamily", () => {
   });
 });
 
-describe("report link placeholder", () => {
-  it("the link in every event's description is not dead", async () => {
+describe("report link", () => {
+  it("the link in every event's description opens the report form (Phase 12)", async () => {
     const { request } = setup(() => ({ data: null, error: null }));
     const res = await request("/report/eeeeeeee-0000-4000-8000-000000000001%40feedcal.app");
     expect(res.status).toBe(200);
-    expect(await res.text()).toContain("Report a problem");
+    const body = await res.text();
+    expect(body).toContain("Report a problem");
+    expect(body).toContain('name="kind" value="wrong_details"');
   });
 });

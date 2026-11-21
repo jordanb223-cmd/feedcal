@@ -199,16 +199,36 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"feeds": {
+                },"feed_milestones": {
                   Row: {
-                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"delete_requested_at": string | null,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id": string,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"timezone": string,"visibility": string,"zip_code": string | null
+                    "feed_id": string,"milestone": number,"reached_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id"?: string,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"timezone"?: string,"visibility"?: string,"zip_code"?: string | null
+                    "feed_id": string,"milestone": number,"reached_at"?: string
                   }
                   Update: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"id"?: string,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"timezone"?: string,"visibility"?: string,"zip_code"?: string | null
+                    "feed_id"?: string,"milestone"?: number,"reached_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "feed_milestones_feed_id_fkey"
+      columns: ["feed_id"]
+isOneToOne: false
+      referencedRelation: "feeds"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"feeds": {
+                  Row: {
+                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"delete_requested_at": string | null,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id": string,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"stale_nudged_at": string | null,"timezone": string,"visibility": string,"zip_code": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"id"?: string,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"stale_nudged_at"?: string | null,"timezone"?: string,"visibility"?: string,"zip_code"?: string | null
+                  }
+                  Update: {
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"id"?: string,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"stale_nudged_at"?: string | null,"timezone"?: string,"visibility"?: string,"zip_code"?: string | null
                   }
                   Relationships: [
                     {
@@ -276,6 +296,26 @@ isOneToOne: false
       columns: ["source_id"]
 isOneToOne: false
       referencedRelation: "sources"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notification_settings": {
+                  Row: {
+                    "instant_reports": boolean,"milestones": boolean,"staleness": boolean,"updated_at": string,"user_id": string,"weekly_digest": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "instant_reports"?: boolean,"milestones"?: boolean,"staleness"?: boolean,"updated_at"?: string,"user_id": string,"weekly_digest"?: boolean
+                  }
+                  Update: {
+                    "instant_reports"?: boolean,"milestones"?: boolean,"staleness"?: boolean,"updated_at"?: string,"user_id"?: string,"weekly_digest"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notification_settings_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -451,6 +491,11 @@ isOneToOne: false
               "context": Json,"feed_id": string,"job_id": number,"message_id": string
             }[]
                            },
+"claim_outbox":
+{ Args: { "p_limit"?: number }; Returns: {
+              "email": string,"id": string,"kind": string,"payload": Json,"unsubscribe_token": string,"user_id": string
+            }[]
+                           },
 "claim_process_jobs":
 { Args: { "p_limit"?: number,"p_visibility_seconds"?: number }; Returns: {
               "attempts": number,"feed_id": string,"job_id": number,"message_id": string,"received_at": string,"storage_path": string
@@ -523,6 +568,9 @@ isOneToOne: false
 "login_attempt_allowed":
 { Args: { "p_client_ip"?: string,"p_email": string }; Returns: boolean
                            },
+"mark_outbox":
+{ Args: { "p_error"?: string,"p_id": string,"p_provider_id"?: string,"p_sent": boolean }; Returns: undefined
+                           },
 "never_use_attachment":
 { Args: { "p_attachment_id": string }; Returns: Json
                            },
@@ -571,6 +619,9 @@ isOneToOne: false
 "rotate_intake_address":
 { Args: { "p_feed_id": string }; Returns: string
                            },
+"run_weekly_digests":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "save_event":
 { Args: { "p_event_id": string,"p_feed_id": string,"p_fields": Json }; Returns: string
                            },
@@ -580,11 +631,17 @@ isOneToOne: false
 "state_machines":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"submit_report":
+{ Args: { "p_client_ip"?: string,"p_details"?: string,"p_event_uid": string,"p_kind": string }; Returns: string
+                           },
 "take_quota":
 { Args: { "p_feed_id": string,"p_kind": string,"p_wanted": number }; Returns: number
                            },
 "undo":
 { Args: { "p_undo_id": string }; Returns: string
+                           },
+"unsubscribe":
+{ Args: { "p_kind": string,"p_token": string,"p_user": string }; Returns: boolean
                            }
           }
           Enums: {

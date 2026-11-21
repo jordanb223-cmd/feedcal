@@ -141,8 +141,10 @@ export function accountPage(opts: {
   /** From the database; null if it couldn't be read. */
   graceDays: number | null;
   feeds: { id: string; name: string; visibility: string }[];
+  notifications?: { weekly_digest: boolean; instant_reports: boolean; staleness: boolean; milestones: boolean };
   notice?: string;
 }): Html {
+  const n = opts.notifications ?? { weekly_digest: true, instant_reports: true, staleness: true, milestones: true };
   return layout(
     "Your account",
     html`<div class="card">
@@ -156,9 +158,21 @@ export function accountPage(opts: {
 </div>
 <div class="card">
   <h2>Your feeds</h2>
+  <p><a href="/feeds">Open your feeds dashboard</a></p>
   ${opts.feeds.length === 0
     ? html`<p class="muted">You don't have any feeds yet. <a href="/feeds/new">Create one</a>.</p>`
     : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${f.visibility})</span><span class="when"><a href="/feeds/${f.id}">Review and events</a> · <a href="/feeds/${f.id}/share">Share</a> · <a href="/feeds/${f.id}/email">Email forwarding</a></span></li>`)}</ul>`}
+</div>
+<div class="card">
+  <h2>Emails from Feedcal</h2>
+  <form method="post" action="/account/notifications">
+    ${csrfField(opts.csrf)}
+    <p><label class="check"><input type="checkbox" name="weekly_digest" value="1" ${n.weekly_digest ? "checked" : ""}> A weekly summary every Monday</label></p>
+    <p><label class="check"><input type="checkbox" name="instant_reports" value="1" ${n.instant_reports ? "checked" : ""}> Right away when a subscriber reports a problem</label></p>
+    <p><label class="check"><input type="checkbox" name="staleness" value="1" ${n.staleness ? "checked" : ""}> A reminder when a feed goes quiet</label></p>
+    <p><label class="check"><input type="checkbox" name="milestones" value="1" ${n.milestones ? "checked" : ""}> A thank-you when a feed reaches 10, 50 or 100 followers</label></p>
+    <button type="submit" class="secondary">Save email choices</button>
+  </form>
 </div>
 <div class="card">
   <h2>Delete your account</h2>
