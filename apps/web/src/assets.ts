@@ -5,6 +5,8 @@ import type { Context, Hono } from "hono";
 import type { AppEnv } from "./types.js";
 
 export const APP_CSS = `
+.site{display:flex;flex-wrap:wrap;gap:.25rem 1rem;align-items:center;margin:0 0 1rem;font-size:.9375rem}
+.site .brand{font-weight:700;margin-right:auto;text-decoration:none;color:inherit}
 *{box-sizing:border-box}
 body{margin:0;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1d1d1b;background:#f6f6f4}
 main{max-width:30rem;margin:0 auto;padding:2rem 1rem}

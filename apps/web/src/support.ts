@@ -7,7 +7,7 @@ import { currentUser, MESSAGES } from "./auth.js";
 import { anonSupabase } from "./directory.js";
 import { csrfToken, csrfValid } from "./security.js";
 import type { AppEnv, Supa } from "./types.js";
-import { layout, messagePage } from "./views.js";
+import { layout, messagePage, publicLayout } from "./views.js";
 
 const Username = z.string().regex(/^[A-Za-z0-9_-]{1,50}$/);
 const Status = z.object({ linked: z.boolean(), member: z.boolean(), donations: z.number(), list_publicly: z.boolean(), since: z.string().nullable() });
@@ -27,7 +27,7 @@ async function form(c: Context<AppEnv>): Promise<Record<string, string>> {
 export function registerSupportRoutes(app: Hono<AppEnv>, anon: (c: Context<AppEnv>) => Supa = anonSupabase): void {
   app.get("/about/costs", (c) => {
     const bmc = bmcUrl(c.env.BMC_USERNAME);
-    return c.html(layout("What Feedcal costs", html`<div class="card"><h1>What Feedcal costs</h1>
+    return c.html(publicLayout("What Feedcal costs", html`<div class="card"><h1>What Feedcal costs</h1>
   <p>Feedcal is free for everyone. There are no ads, and we don't sell data.</p>
   <p>Today it runs on the free plans of the services below. As more groups use it, some of these start to cost money: the database, sending email, and the AI that reads forwarded emails.</p>
   <ul>
@@ -46,7 +46,7 @@ export function registerSupportRoutes(app: Hono<AppEnv>, anon: (c: Context<AppEn
   app.get("/supporters", async (c) => {
     const { data } = await anon(c).rpc("public_supporters");
     const rows = (data ?? []) as { display_name: string; since: string }[];
-    return c.html(layout("Supporters", html`<div class="card"><h1>Thank you</h1>
+    return c.html(publicLayout("Supporters", html`<div class="card"><h1>Thank you</h1>
   <p>These people help keep Feedcal free. Only supporters who chose to be listed appear here.</p>
   ${rows.length === 0 ? html`<p class="muted">No one has chosen to be listed yet.</p>`
     : html`<ul class="events">${rows.map((r) => html`<li><strong dir="auto">${r.display_name}</strong></li>`)}</ul>`}

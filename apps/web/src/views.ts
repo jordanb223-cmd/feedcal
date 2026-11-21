@@ -7,7 +7,29 @@ type Html = HtmlEscapedString | Promise<HtmlEscapedString>;
 // Colors checked for WCAG AA contrast: text #1d1d1b on #f6f6f4 (16.5:1), white on #1f5f3f (7.6:1),
 // muted #4f4f4b on #ffffff (8.3:1), error #8a1c1c on #fdf1f1 (7.9:1).
 
-export function layout(title: string, body: Html, head: Html | string = ""): Html {
+/**
+ * Every page has a way to move on (2026-11-21). Organizer pages: Feedcal · Your feeds · Account.
+ * Public pages (what families and visitors see): Feedcal · Find a calendar, with no organizer
+ * links. Messages and errors: just the Feedcal home link.
+ */
+export type Audience = "organizer" | "public" | "minimal";
+
+function siteHeader(audience: Audience): Html {
+  if (audience === "public") {
+    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/directory">Feedcal</a><a href="/directory">Find a calendar</a></nav>`;
+  }
+  if (audience === "minimal") {
+    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Feedcal</a></nav>`;
+  }
+  return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Feedcal</a><a href="/feeds">Your feeds</a><a href="/account">Account</a></nav>`;
+}
+
+/** For pages anyone can see without signing in. */
+export function publicLayout(title: string, body: Html, head: Html | string = ""): Html {
+  return layout(title, body, head, "public");
+}
+
+export function layout(title: string, body: Html, head: Html | string = "", audience: Audience = "organizer"): Html {
   return html`<!doctype html>
 <html lang="en">
 <head>
@@ -21,7 +43,7 @@ ${head}
 <meta name="theme-color" content="#1d1d1b">
 <script src="${ASSET_PATHS.js}" defer></script>
 </head>
-<body><main id="main">${body}
+<body><main id="main">${siteHeader(audience)}${body}
 <footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/privacy">Privacy</a> · <a href="/about/costs">Support Feedcal</a></footer></main></body>
 </html>`;
 }
@@ -29,7 +51,7 @@ ${head}
 const csrfField = (token: string) => html`<input type="hidden" name="csrf" value="${token}">`;
 
 export function loginPage(opts: { csrf: string; googleEnabled: boolean; error?: string; email?: string; next?: string }): Html {
-  return layout(
+  return publicLayout(
     "Sign in",
     html`<div class="card">
   <h1>Sign in to Feedcal</h1>
@@ -55,7 +77,7 @@ export function loginPage(opts: { csrf: string; googleEnabled: boolean; error?: 
 }
 
 export function checkEmailPage(): Html {
-  return layout(
+  return publicLayout(
     "Check your email",
     html`<div class="card">
   <h1>Check your email</h1>
@@ -66,7 +88,7 @@ export function checkEmailPage(): Html {
 }
 
 export function confirmPage(opts: { csrf: string; tokenHash: string; type: string }): Html {
-  return layout(
+  return publicLayout(
     "Finish signing in",
     html`<div class="card">
   <h1>Finish signing in</h1>
@@ -89,6 +111,8 @@ export function messagePage(title: string, message: string, link?: { href: strin
   <p role="alert">${message}</p>
   ${link ? html`<p><a class="button" href="${link.href}">${link.text}</a></p>` : ""}
 </div>`,
+    "",
+    "minimal",
   );
 }
 
@@ -102,6 +126,8 @@ export function errorPage(opts: { title: string; message: string; tryThis: strin
   <p class="row"><a class="button" href="/account">Go to your account</a></p>
   <p class="muted">If it keeps happening, tell us this code: <code>${opts.requestId}</code></p>
 </div>`,
+    "",
+    "minimal",
   );
 }
 

@@ -6,7 +6,7 @@ import { z } from "zod";
 import { currentUser, MESSAGES } from "./auth.js";
 import { csrfToken, csrfValid } from "./security.js";
 import type { AppEnv } from "./types.js";
-import { layout, messagePage } from "./views.js";
+import { layout, messagePage, publicLayout } from "./views.js";
 
 const Id = z.uuid();
 const AdminStatus = z.object({ is_admin: z.boolean(), aal: z.string() });
@@ -148,7 +148,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
 
   // ---------------------------------------------------------------- "Report this calendar" (public pages)
   const Slug = z.string().regex(/^[a-z0-9]([a-z0-9-]{0,78}[a-z0-9])?$/);
-  const reportForm = (c: Context<AppEnv>, slug: string, error?: string) => layout("Report this calendar", html`<div class="card"><h1>Report this calendar</h1>
+  const reportForm = (c: Context<AppEnv>, slug: string, error?: string) => publicLayout("Report this calendar", html`<div class="card"><h1>Report this calendar</h1>
     <p>Reports go to Feedcal's team, not the calendar's organizer. We don't ask for your name.</p>
     ${error ? html`<p class="error" role="alert">${error}</p>` : ""}
     <form method="post" action="/c/${slug}/report">${raw(`<input type="hidden" name="csrf" value="${csrfToken(c)}">`)}
@@ -195,7 +195,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
 // ---------------------------------------------------------------- policy pages (drafts)
 const DRAFT = html`<p class="muted"><strong>Draft.</strong> To be reviewed by a lawyer before public launch (see BUILD-PLAN "Non-negotiables").</p>`;
 export function registerPolicyRoutes(app: Hono<AppEnv>): void {
-  app.get("/rules", (c) => c.html(layout("Community rules", html`<div class="card"><h1>Community rules</h1>${DRAFT}
+  app.get("/rules", (c) => c.html(publicLayout("Community rules", html`<div class="card"><h1>Community rules</h1>${DRAFT}
     <p>Feedcal calendars are for real events from real groups. To keep it useful and safe:</p>
     <ul>
       <li>Only share events you have the right to share: your own group's, or ones you were sent to pass on.</li>
@@ -205,7 +205,7 @@ export function registerPolicyRoutes(app: Hono<AppEnv>): void {
       <li>Keep events accurate. If plans change, update or cancel them.</li>
     </ul>
     <p>Breaking these rules can get a calendar hidden or an account suspended. <a href="/takedown">How reports and takedowns work</a>.</p></div>`)));
-  app.get("/terms", (c) => c.html(layout("Terms of use", html`<div class="card"><h1>Terms of use</h1>${DRAFT}
+  app.get("/terms", (c) => c.html(publicLayout("Terms of use", html`<div class="card"><h1>Terms of use</h1>${DRAFT}
     <p>Feedcal is a free service that turns forwarded emails into calendars people can subscribe to.</p>
     <ul>
       <li><strong>Your content.</strong> You keep the rights to what you send. You let Feedcal store and process it to run your calendars, and publish what you choose to publish.</li>
@@ -214,7 +214,7 @@ export function registerPolicyRoutes(app: Hono<AppEnv>): void {
       <li><strong>Ending.</strong> You can delete your account at any time from your account page. We may hide calendars or suspend accounts that break the rules.</li>
       <li><strong>Email.</strong> Forwarded emails and attachments are deleted after 30 days.</li>
     </ul></div>`)));
-  app.get("/takedown", (c) => c.html(layout("Reports and takedowns", html`<div class="card"><h1>Reports and takedowns</h1>${DRAFT}
+  app.get("/takedown", (c) => c.html(publicLayout("Reports and takedowns", html`<div class="card"><h1>Reports and takedowns</h1>${DRAFT}
     <p>Anyone can report a calendar with the "Report this calendar" link on its page, or report one event from the link inside it in their calendar.</p>
     <ul>
       <li><strong>Safety issues</strong> (a child's private information, threats): we aim to act within 1 business day, usually by hiding the calendar while we look.</li>

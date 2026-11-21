@@ -3,7 +3,7 @@ import type { HtmlEscapedString } from "hono/utils/html";
 import type { PublicFeedPage } from "@feedcal/shared";
 import type { Device, SubscribeLinks } from "./subscribe-links.js";
 import { feedNav } from "./nav.js";
-import { layout } from "./views.js";
+import { layout, publicLayout } from "./views.js";
 
 type Html = HtmlEscapedString | Promise<HtmlEscapedString>;
 type PageEvent = PublicFeedPage["events"][number];
@@ -69,7 +69,7 @@ export function subscribePage(opts: { page: PublicFeedPage; device: Device; link
 ${feed.visibility === "unlisted" ? html`<meta name="robots" content="noindex">` : ""}
 ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonLd(feed.name, opts.pageUrl, events)}</script>`) : ""}`;
 
-  return layout(
+  return publicLayout(
     feed.name,
     html`<div class="card">
   <h1 dir="auto">${feed.name}${feed.verified ? html` <span title="Verified organizer" style="font-size:1rem">✓ Verified</span>` : ""}</h1>
@@ -159,7 +159,7 @@ ${opts.stats
 }
 
 export function flyerPage(opts: { name: string; url: string; qrSvg: string; feedId: string }): Html {
-  return layout(
+  return publicLayout(
     `${opts.name} flyer`,
     html`<div class="card" style="text-align:center">
   <h1 dir="auto" style="font-size:2rem">${opts.name}</h1>
