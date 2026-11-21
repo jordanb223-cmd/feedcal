@@ -59,8 +59,11 @@ describe.skipIf(!enabled)("email parsing, end to end on the local stack", { time
     db = createClient<Database>(s.url, s.service, { auth: { persistSession: false } });
     // Trust the fixture senders on Alice's feed, as the owner would after one "Yes".
     for (const sender of ["parent@home.example.test", "office@maplegrove.example.test"]) {
-      await db.from("sources").upsert({ feed_id: ALICE_FEED, sender_email: sender, sender_domain: sender.split("@")[1] ?? "", trusted: true }, { onConflict: "feed_id,sender_email", ignoreDuplicates: false });
-      await db.from("sources").update({ trusted: true, blocked: false }).eq("feed_id", ALICE_FEED).eq("sender_email", sender);
+      // Not an upsert: the unique index is on lower(sender_email), which upsert can't target.
+      const { error: insertError } = await db.from("sources").insert({ feed_id: ALICE_FEED, sender_email: sender, sender_domain: sender.split("@")[1] ?? "" });
+      if (insertError && insertError.code !== "23505") throw new Error(`insert source: ${insertError.message}`);
+      const { data, error } = await db.from("sources").update({ trusted: true, blocked: false }).eq("feed_id", ALICE_FEED).eq("sender_email", sender).select("id");
+      if (error || data?.length !== 1) throw new Error(`trust source ${sender}: ${error?.message ?? data?.length}`);
     }
   });
 
