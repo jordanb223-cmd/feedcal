@@ -10,3 +10,4 @@ Turns forwarded emails into shareable, subscribable calendar feeds.
 - Owner setup: [docs/SETUP.md](docs/SETUP.md)
 - Contributing: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
 - Testing: [docs/TESTING.md](docs/TESTING.md)
+- Production readiness (147 items, assessed): [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md)
