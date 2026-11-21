@@ -161,7 +161,7 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `feed_calendar_guarded(p_token, p_client_ip, p_user_agent, p_ua_family)` | anon, signed-in | Phase 16 (D37). What the web app calls: `feed_calendar`, plus the miss limit (raises `P0429`). |
 | `rate_check(p_bucket, p_client_ip)` | anon, signed-in | Phase 16. `search` (60/min) or `click` (30/min); counts the hit. |
 | `export_my_data()` | signed-in | Phase 16. Everything about the caller as JSON, without token hashes or Vault ids. |
-| `gmail_start` / `gmail_status` / `gmail_choose_example` / `gmail_set_interval` / `gmail_disconnect` | the feed's owner | Phase 17 (D39). Connect, see status, confirm the example and schedule, change the schedule, disconnect (deletes the token and copies). |
+| `gmail_start` / `gmail_status` / `gmail_choose_example` / `gmail_set_interval` / `gmail_look_back` / `gmail_disconnect` | the feed's owner | Phase 17 (D39). Connect, see status, confirm the example and schedule (optionally reading the 30 days before it), change the schedule, read the last 30 days, disconnect (deletes the token and copies). |
 | `gmail_oauth_verifier` / `gmail_oauth_complete` / `gmail_token` / `gmail_save_candidates` / `gmail_claim_checks` / `gmail_seen` / `gmail_record` / `gmail_check_done` | service role (Edge Functions) | Phase 17. OAuth callback, example search, scheduled checks. |
 | `admin_ops()` / `admin_alert_drill()` | admins with a second factor | Phase 18 (D38). Spend, budget and alerts; the drill fires every alert once (audited). |
 | `directory_search(p_query, p_zip, p_miles, p_category, p_limit)` | anon, signed-in (SECURITY INVOKER) | Phase 13 (D34). Public feeds only, ranked by text match, distance, followers, freshness and verification. |

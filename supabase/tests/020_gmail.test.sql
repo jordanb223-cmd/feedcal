@@ -113,6 +113,29 @@ select is((select row(status, sender_email, interval_days)::text from private.gm
   row('active', 'office@school.example', 3)::text, 'reconnected: same sender, same schedule');
 select is((select count(*)::int from vault.secrets s join private.gmail_connections c on c.refresh_secret_id = s.id), 1, 'one token in Vault (replaced)');
 
+-- 30-day look-back (owner's request): only the owner; it moves the starting point back and checks now.
+select pg_temp.as_user('22222222-2222-4222-8222-222222222222');
+set local role authenticated;
+select throws_ok($$ select public.gmail_look_back('d1700000-0000-4000-8000-000000000001') $$, '42501', null, 'an editor cannot start a look-back');
+reset role;
+select pg_temp.as_user('11111111-1111-4111-8111-111111111111');
+set local role authenticated;
+select is(public.gmail_look_back('d1700000-0000-4000-8000-000000000001'), true, 'the owner can read the last 30 days');
+reset role;
+select ok((select last_checked_at <= now() - interval '30 days' and next_check_at <= now() from private.gmail_connections
+  where feed_id = 'd1700000-0000-4000-8000-000000000001'), 'look-back: start 30 days ago, check now');
+-- Picking an example with the look-back box ticked starts 30 days before the example.
+set local role service_role;
+select public.gmail_save_candidates('d1700000-0000-4000-8000-000000000001',
+  '[{"id":"abc124","from_email":"office@school.example","from_name":"Room F","subject":"December schedule","date":"2026-11-14T16:00:00Z"}]');
+reset role;
+select pg_temp.as_user('11111111-1111-4111-8111-111111111111');
+set local role authenticated;
+select is(public.gmail_choose_example('d1700000-0000-4000-8000-000000000001', 'abc124', 3, true), true, 'confirm with look-back');
+reset role;
+select is((select last_checked_at from private.gmail_connections where feed_id = 'd1700000-0000-4000-8000-000000000001'),
+  '2026-10-15 16:00:00+00'::timestamptz, 'look-back at confirm: 30 days before the example');
+
 update private.gmail_connections set connected_at = now() - interval '6 days 1 hour' where feed_id = 'd1700000-0000-4000-8000-000000000001';
 select is(private.gmail_reminders(), 1, 'a reminder before the connection expires');
 select is(private.gmail_reminders(), 0, 'only once');
