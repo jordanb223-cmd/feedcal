@@ -48,7 +48,7 @@ printf '%s' "https://$SUPABASE_PROJECT_REF.supabase.co" | npx wrangler pages sec
 printf '%s' "$ANON_KEY" | npx wrangler pages secret put SUPABASE_ANON_KEY --project-name "$PAGES_PROJECT"
 # The Buy Me a Coffee page name (D36), from the repository variable BMC_USERNAME. Public, not a
 # secret; unset means no donation link is shown.
-# "Continue with Google" (Phase 3): on only where the environment variable GOOGLE_SIGN_IN is "on",
+# "Sign in with Google" (Phase 3): on only where the environment variable GOOGLE_SIGN_IN is "on",
 # after that Supabase project's Google provider is configured (SETUP §6). Unset leaves the Pages setting as it was.
 if [ "${GOOGLE_SIGN_IN:-}" = "on" ]; then
   printf 'on' | npx wrangler pages secret put GOOGLE_SIGN_IN --project-name "$PAGES_PROJECT"

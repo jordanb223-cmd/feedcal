@@ -10,7 +10,7 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 ## [0.1.3] - 2026-11-21
 
 ### Added
-- "Continue with Google" on the sign-in page: no email link to wait for.
+- "Sign in with Google" on the sign-in page: no email link to wait for.
 
 ## [0.1.2] - 2026-11-21
 

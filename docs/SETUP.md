@@ -70,7 +70,7 @@ Local sign-in needs none of this: Mailpit at http://127.0.0.1:54324 catches the 
 - [ ] **Branded template.** Supabase only lets you edit email templates once custom SMTP is set. Then paste `supabase/templates/magic_link.html` into **Magic link or OTP** and **Confirm sign up**, with the subject "Your Feedcal sign-in link".
 - [ ] **Until then,** hosted projects send Supabase's default email. Its link goes through Supabase to `/auth/callback`, so sign-in works. Staging lacks two things until then: the "Continue" button that guards against link scanners, and the specific "expired or already used" message. Expired links get a general "try again". Supabase's built-in sender is for testing only and may only deliver to your own team's addresses (`UNVERIFIED`).
 
-**Google sign-in.**
+**Google sign-in.** Done for **production** on 2026-11-21 (v0.1.3): the Google Cloud project "Feedcal" with a Web OAuth client, Supabase's Google provider, and the production environment variable `GOOGLE_SIGN_IN=on`. Tested by the owner. Staging is not set up (optional).
 - [ ] Google Cloud Console → create an OAuth client (type: Web application).
   - Authorized redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
   - Consent screen scopes: only `openid`, `email` and `profile`.
