@@ -7,8 +7,14 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-21
+
 ### Added
-- Connect Gmail instead of forwarding: show Feedcal one example email, confirm, and it checks only that sender, every 3 or 7 days. Read-only, and disconnecting deletes everything it read.
+- Connect Gmail instead of forwarding: show Feedcal one example email, confirm, and it checks only that sender, every 3 or 7 days. Read-only, and disconnecting deletes everything it read. (Switched on once the Gmail connection is set up for the site.)
+- A big Private / Public choice when you make or edit a calendar. Private: only people with the link or QR code. Public: the same, and it can show up in Find a calendar.
+
+### Fixed
+- Settings now tells you the real reason a calendar can't be listed publicly yet, instead of "only the owner can change these settings".
 
 ## [0.1.3] - 2026-11-21
 
