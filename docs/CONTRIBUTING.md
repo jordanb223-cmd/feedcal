@@ -21,7 +21,7 @@ After any migration: `npm run db:types` and commit `packages/shared/src/database
 
 ## Branch protection (set in GitHub → Settings → Branches → `main`)
 
-- Require a pull request before merging; require 1 approval (or 0 while solo, but keep the PR).
+- Require a pull request before merging; 0 approvals while solo (set 2026-11-20).
 - Require status checks: `Lint, typecheck, unit tests, build, audit`, `Migrations, pgTAP, generated types`, `Secret scan`.
 - Require branches to be up to date before merging.
 - Block force pushes and deletions.

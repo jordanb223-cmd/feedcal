@@ -61,3 +61,8 @@ GitHub's docs say that on GitHub Free, private repositories get no environments,
 
 ## D20 — Secret scan runs the gitleaks CLI over full history (2026-11-20)
 `gitleaks-action@v2` scans only the pushed range (`<first>^..<last>`). That failed on the repo's first push, because the root commit has no parent. CI now downloads gitleaks 8.30.1, checks its SHA-256 against the release's checksums file, and scans the whole history on every run. That also covers rewritten or force-pushed history.
+
+## D21 — Deploys need no database password; Pages settings come from the deploy script (2026-11-20)
+- **No database password.** Supabase CLI 3.2.0 connects with the access token alone when `--remote` is used without `--password`. Its `db push --help` lists "Scoped access token … database_write" for that case. The CI secrets are therefore only `SUPABASE_ACCESS_TOKEN` and `CLOUDFLARE_API_TOKEN`. The old workflow also had two bugs this fixes: `db push` without `--remote` targets the *local* database in CLI 3.x, and `functions deploy` no longer takes `--project-ref`.
+- **Pages settings per project.** Each Pages project deploys `main` as its production environment, so `wrangler.toml` `[env.production.vars]` would have labelled staging "production". `wrangler.toml` now has no vars. `.github/scripts/deploy.sh` sets `ENVIRONMENT`, `SUPABASE_URL` and `SUPABASE_ANON_KEY` on each Pages project, reading the public key with `supabase projects api-keys`. It also creates the Pages project if it's missing. Local values live in `apps/web/.dev.vars`.
+- **Not yet checked:** the JSON field names from `supabase projects api-keys` (the script accepts both known shapes), and that `pages.dev` gives the projects their exact names. Both are confirmed by the first deploy.

@@ -1,16 +1,8 @@
-# Cloudflare Pages config. Secrets (SUPABASE_ANON_KEY) are set with
-# `wrangler pages secret put` per environment, never here.
+# Cloudflare Pages config. Per-environment values (ENVIRONMENT, SUPABASE_URL,
+# SUPABASE_ANON_KEY) are set on each Pages project by .github/scripts/deploy.sh,
+# because each project deploys `main` as its production environment (D21).
+# Local values live in apps/web/.dev.vars (git-ignored; see .dev.vars.example).
 name = "feedcal-web"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-10-01"
 compatibility_flags = ["nodejs_compat"]
-
-[vars]
-ENVIRONMENT = "local"
-SUPABASE_URL = "http://127.0.0.1:54321"
-
-[env.preview.vars]
-ENVIRONMENT = "staging"
-
-[env.production.vars]
-ENVIRONMENT = "production"

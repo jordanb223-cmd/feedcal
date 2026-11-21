@@ -20,46 +20,62 @@ Then `npm run db:start` in the repo. To have Colima start at login instead, run 
 - [x] Secret scanning and push protection turned on (free for public repos).
 - [ ] The old private repo was renamed `feedcal-old-private`. It still holds the pre-cleanup history (your personal email on the commits). Delete it when you're ready: GitHub → that repo → Settings → Delete this repository.
 
-## 3. Supabase
-- [ ] Create two projects: `feedcal-staging`, `feedcal-production` (Pro plan for production).
-- [ ] Note each project's ref, database password, URL and anon key.
-- [ ] Create a personal access token (Account → Access Tokens).
+## 3. Supabase — done 2026-11-20 (free plan)
+- [x] `feedcal-staging`: ref `rqfpfgogylcjvuqrhgeb`, East US (Ohio).
+- [x] `feedcal-production`: ref `psqytjoxeejxgnaqrisn`, East US.
+- [x] Supabase generated each database password. Nobody copied them, because deploys don't use them (D21). To get into a database directly, reset its password under Project Settings → Database.
+- [x] Free projects pause after 7 days of low activity, and the free plan allows two active projects (Supabase billing FAQ). Your paused "CA VOTE" and "Shortcut" projects don't count.
 
-## 4. Cloudflare
-- [ ] Add the domain to Cloudflare.
-- [ ] Create Pages projects `feedcal-web-staging` and `feedcal-web` (direct upload).
-- [ ] For each, set `SUPABASE_URL` (variable) and `SUPABASE_ANON_KEY` (secret): `npx wrangler pages secret put SUPABASE_ANON_KEY --project-name <project>`. Set `ENVIRONMENT` to `staging` / `production`.
-- [ ] Create an API token with *Cloudflare Pages: Edit* (and later *Workers Scripts: Edit*). Note your account id.
+## 4. Cloudflare — done 2026-11-20
+- [x] Account id `f8b8dbea6dc1bfb6de8ed355428ead36`, stored as the GitHub variable `CLOUDFLARE_ACCOUNT_ID`.
+- [x] Pages projects `feedcal-web-staging` and `feedcal-web` are created by the first deploy (`.github/scripts/deploy.sh`). Their addresses will be `https://feedcal-web-staging.pages.dev` and `https://feedcal-web.pages.dev`. Those names were free when checked; if Cloudflare adds a suffix, update `STAGING_URL` / `PRODUCTION_URL`.
+- [x] Each Pages project's `ENVIRONMENT`, `SUPABASE_URL` and `SUPABASE_ANON_KEY` are set by the deploy script (D21). Nothing to do by hand.
+- [ ] Later, with a domain: add it, then Email Routing (Phase 6).
 
-## 5. GitHub environment secrets
-In both `staging` and `production` environments, add:
-`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
-Add environment variables `STAGING_URL` / `PRODUCTION_URL` (for the post-deploy `/health` smoke test).
+## 5. GitHub secrets — TO DO: 2 pastes, works from a phone
+The values that aren't secret are already set: `CLOUDFLARE_ACCOUNT_ID` for the repo; `SUPABASE_PROJECT_REF` and `STAGING_URL` / `PRODUCTION_URL` per environment.
 
-## 6. Sign-in (Phase 3), for each hosted Supabase project
-Local sign-in needs none of this: Mailpit at http://127.0.0.1:54324 catches the emails. The hosted projects need these steps. Menu names below are `UNVERIFIED`; check them in the dashboard.
+**1. Supabase access token**
+- Open https://supabase.com/dashboard/account/tokens → **Generate new token**. Name it `feedcal-github-actions`. Copy it.
+- Open https://github.com/jordanb223-cmd/feedcal/settings/secrets/actions/new
+  - Name: `SUPABASE_ACCESS_TOKEN`
+  - Secret: paste the token.
+  - Tap **Add secret**.
 
-**Email sending (Resend or Postmark).** Pick one.
-- [ ] Create an account and verify your domain. Add the **SPF** and **DKIM** DNS records it gives you in Cloudflare DNS.
-- [ ] Add a **DMARC** record. Start with `v=DMARC1; p=none; rua=mailto:<your address>`, and tighten it later.
-- [ ] In Supabase → Authentication → Emails → SMTP settings, enter the provider's host, port, user and API key. The sender is `Feedcal <signin@your-domain>`. The key goes only here, never in the repo.
-- [ ] Without custom SMTP, Supabase's built-in sender is rate-limited and meant only for testing (`UNVERIFIED`: check the current limit in Supabase's docs).
+**2. Cloudflare API token**
+- Open https://dash.cloudflare.com/profile/api-tokens → **Create Token** → **Create Custom Token** (`UNVERIFIED`: button wording).
+  - Name: `feedcal-github-actions`
+  - Permissions: **Account → Cloudflare Pages → Edit**
+  - Account resources: your account.
+  - Continue → Create. Copy the token.
+- Open https://github.com/jordanb223-cmd/feedcal/settings/secrets/actions/new
+  - Name: `CLOUDFLARE_API_TOKEN`
+  - Secret: paste the token.
+  - Tap **Add secret**.
 
-**Auth settings.**
-- [ ] Authentication → URL Configuration:
-  - **Site URL** = the environment's web address, for example `https://staging.your-domain`.
-  - **Redirect URLs** = only `https://<that address>/auth/callback`. Use the exact address, without wildcards.
-- [ ] Authentication → Emails → Templates: paste `supabase/templates/magic_link.html` into both **Magic Link** and **Confirm signup**, with the subject "Your Feedcal sign-in link".
-- [ ] Email OTP expiry: **900** seconds (15 minutes).
-- [ ] Rate limits: start with the values in `supabase/config.toml` `[auth.rate_limit]`.
-- [ ] Optional: `supabase config push` may apply these settings from `config.toml` instead (`UNVERIFIED`: check that the CLI covers each one).
+**Then** tell Claude "secrets are in". It reruns the staging deploy and checks `https://feedcal-web-staging.pages.dev/health`.
+
+These are repository secrets, used by both environments. Production deploys still wait for your approval in the `production` environment.
+
+## 6. Sign-in (Phase 3), hosted projects
+Local sign-in needs none of this: Mailpit at http://127.0.0.1:54324 catches the emails.
+
+**Done 2026-11-20, on both projects:**
+- [x] Site URL set to the project's `pages.dev` address.
+- [x] Redirect URLs: only that address + `/auth/callback`.
+- [x] Email link expiry: 900 seconds (15 minutes).
+
+**Waiting on a domain (costs money, so not yet):**
+- [ ] **Custom email (Resend or Postmark).** Verify the domain and add its **SPF**, **DKIM** and **DMARC** records in Cloudflare DNS. Then enter the SMTP details in Supabase → Authentication → Emails → SMTP Settings. The key goes only there, never in the repo.
+- [ ] **Branded template.** Supabase only lets you edit email templates once custom SMTP is set. Then paste `supabase/templates/magic_link.html` into **Magic link or OTP** and **Confirm sign up**, with the subject "Your Feedcal sign-in link".
+- [ ] **Until then,** hosted projects send Supabase's default email. Its link goes through Supabase to `/auth/callback`, so sign-in works. Staging lacks two things until then: the "Continue" button that guards against link scanners, and the specific "expired or already used" message. Expired links get a general "try again". Supabase's built-in sender is for testing only and may only deliver to your own team's addresses (`UNVERIFIED`).
 
 **Google sign-in.**
 - [ ] Google Cloud Console → create an OAuth client (type: Web application).
   - Authorized redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
   - Consent screen scopes: only `openid`, `email` and `profile`.
 - [ ] Supabase → Authentication → Providers → Google: paste the client ID and secret.
-- [ ] Cloudflare Pages project → set the variable `GOOGLE_SIGN_IN` to `on`.
+- [ ] Turn it on for a Pages project: `printf on | npx wrangler pages secret put GOOGLE_SIGN_IN --project-name <project>`.
 - [ ] To use Google locally: set `[auth.external.google] enabled = true` in `config.toml`, export `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`, restart Supabase, and add `GOOGLE_SIGN_IN=on` to `apps/web/.dev.vars`. Also add `http://127.0.0.1:54321/auth/v1/callback` to the OAuth client's redirect URIs.
 
 **Account deletion schedule (not set up yet).**
@@ -69,4 +85,4 @@ Local sign-in needs none of this: Mailpit at http://127.0.0.1:54324 catches the 
   ```
 
 ## When it's all done
-Open a pull request: all three CI jobs should pass. Merge it: staging deploys, and `STAGING_URL/health` returns `"status":"ok"`.
+Merge a pull request into `main`: CI passes, staging deploys, and `https://feedcal-web-staging.pages.dev/health` returns `"status":"ok"`. For production, push a tag like `v0.1.0` and approve the `production` deployment in GitHub.

@@ -1,5 +1,7 @@
 # Copy to .dev.vars for `wrangler pages dev`. .dev.vars is git-ignored.
-# Get the local anon key from `npx supabase status`.
+ENVIRONMENT=local
+SUPABASE_URL=http://127.0.0.1:54321
+# The local anon key from `npx supabase status` (Supabase's public local demo key).
 SUPABASE_ANON_KEY=
 # Set to "on" once Google sign-in is configured for local Supabase (docs/SETUP.md).
 # GOOGLE_SIGN_IN=on
