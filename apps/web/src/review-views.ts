@@ -21,6 +21,11 @@ const REVIEW_LABELS: Record<string, string> = {
   low_confidence: "Feedcal isn't sure about this one.",
   from_transcription: "Read from an image; compare with the picture.",
   possible_injection: "This email contains text aimed at the AI. Check it carefully before approving.",
+  ambiguous_date: "The email's wording fits more than one date (like \"this Friday\" sent on a Friday). Check the date.",
+  date_mismatch: "The date doesn't match what the email says. Check the date.",
+  weekday_mismatch: "The weekday and the date in the email don't agree. Check which one is right.",
+  time_mismatch: "The time doesn't match the time written in the email.",
+  before_email: "This date is before the email was sent. It may be a recap, or a misread.",
 };
 
 export const DONE: Record<string, string> = {

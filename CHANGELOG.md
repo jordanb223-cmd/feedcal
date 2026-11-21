@@ -10,7 +10,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 ## [0.2.3] - 2026-11-21
 
 ### Changed
-- You can now have events published automatically when Feedcal is at least 50% or 60% sure (Settings). Before, anything under 70% always waited for you.
+- Publishing on its own is now decided by date rules, for every calendar: when the email's own words prove the date (a written date, or "tomorrow" / "this Friday" that can only mean one day), an approved sender's event is published even if Feedcal is only moderately sure. If the words don't match the event, could mean two different days, or put it before the email was sent, it waits for you with a plain reason.
+- Settings offers 50% and 60% as well.
 
 ## [0.2.2] - 2026-11-21
 

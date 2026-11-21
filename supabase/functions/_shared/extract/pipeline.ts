@@ -11,6 +11,7 @@ export interface Candidate extends ExtractedEvent {
   ends_at: string | null;
   review: string[];
   from_transcription: boolean;
+  date_confirmed: boolean; // D41: the quote proves the date (and time)
 }
 export interface Rejected { event: ExtractedEvent; reason: RejectReason }
 export interface ExtractionResult {
@@ -74,7 +75,7 @@ export async function extractEvents(input: ExtractInput, extractor: Extractor): 
       continue;
     }
     const review = [...(check.review ?? []), ...(injection ? ["possible_injection"] : [])];
-    candidates.push({ ...e, starts_at: zonedToUtc(e.start, e.timezone), ends_at: ends(e), review, from_transcription: check.fromTranscription });
+    candidates.push({ ...e, starts_at: zonedToUtc(e.start, e.timezone), ends_at: ends(e), review, from_transcription: check.fromTranscription, date_confirmed: check.dateConfirmed ?? false });
   }
   return {
     state: injection ? "needs_review" : "extracted",

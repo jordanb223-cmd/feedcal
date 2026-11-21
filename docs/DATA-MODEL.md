@@ -78,7 +78,7 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 
 **event_candidates (Phase 9).** One row per event the AI found and every check passed: times in UTC plus the zone, `change_kind` (new/changed/cancelled), `confidence`, the `evidence_quote` and where it came from (body, or attachment + page), `from_transcription` (the review card then shows the page image), and `review_reasons`. `state` goes pending → applied / needs_review / rejected in Phase 10. Members can read. Rejected AI output is listed in `messages.extraction.rejected`, with the reason.
 
-**events (Phase 10 columns).** `exdates` (starts of single occurrences removed from a series; written as EXDATE and covered by SEQUENCE) and `source_thread` (the normalised subject of the email it came from). `event_candidates` gains `outcome` (new / update / cancel / exdate / duplicate / conflict / unmatched_change), `match_score` and `decided_at`.
+**events (Phase 10 columns).** `exdates` (starts of single occurrences removed from a series; written as EXDATE and covered by SEQUENCE) and `source_thread` (the normalised subject of the email it came from). `event_candidates` gains `outcome` (new / update / cancel / exdate / duplicate / conflict / unmatched_change), `match_score` and `decided_at`. D41 adds `date_confirmed`: the email's own words prove the date (and any written time), checked in code; it lets a trusted sender's event publish at 50% confidence instead of the feed's `auto_publish_threshold`.
 
 **feeds.timezone (Phase 9).** The feed's default zone for reading "Friday at 6 PM" (default America/Los_Angeles).
 
