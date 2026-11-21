@@ -79,7 +79,7 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 - `timezone` must be a name in `pg_timezone_names`; a trigger rejects anything else.
 - `ends_at` must not be before `starts_at`.
 - `updated_at` is set on every update.
-- `sequence` is bumped by the reconcile logic in Phase 10, not by a trigger.
+- `sequence` rises automatically on any change a subscriber can see (`private.events_bump_sequence`, D24).
 - `published = false` events are drafts, visible only to members.
 
 **event_revisions.** One row per change. `cause` is one of `extracted`, `matched_update`, `manual_edit`, `cancelled`, `restored`. `actor` is `ai`, `system` or `user:<uuid>`.
@@ -96,6 +96,8 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 
 **zip_codes.** Zip code to point, loaded in Phase 13.
 
+Status changes on `events`, `messages`, `attachments` and `reports` are limited to the moves in docs/STATE-MACHINES.md (enforced by a trigger).
+
 ## Functions
 
 | Function | Who can call | What it does |
@@ -106,6 +108,8 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 | `get_feed_token(p_feed_id)` [Rev 1] | signed-in members | Returns the current token from Vault. Anyone else gets error `42501`. |
 | `rotate_feed_token(p_feed_id)` [Rev 1] | signed-in owner | Makes a new token, overwrites the hash and the Vault copy, and returns the new token. The old link stops matching. |
 | `feed_calendar(p_token, p_client_ip, p_user_agent, p_ua_family)` | anon, signed-in | Phase 4. Looks the feed up by `sha256(token)`; returns `null` for an unknown or malformed token. Returns the feed's public fields and its published events, plus events cancelled in the last 30 days (so calendars remove them). Each event's `source` is the sender's domain only. Records one `feed_fetch_daily` row per client per day, as `sha256(daily salt ‖ IP ‖ user agent)`; the raw IP and user agent are never stored. |
+| `state_machines()` | anon, signed-in | Every legal status move (D24). No user data. Source for `npm run db:states`. |
+| `account_status()` | signed-in user | `{state: active or scheduled_for_deletion, deletion_requested_at, deletes_on, grace_days}`. |
 | `health_check()` | anon, signed-in | Returns `true` (Phase 1). |
 | `request_account_deletion()` / `cancel_account_deletion()` | signed-in user, for themselves | Sets or clears `profiles.deleted_at`. Returns the deletion date (14 days out). |
 | `due_account_deletions()` | service role | Lists accounts whose 14 days have passed. |

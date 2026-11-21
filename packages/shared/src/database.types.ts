@@ -335,7 +335,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "cancel_account_deletion":
+            "account_status":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"cancel_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "due_account_deletions":
@@ -367,6 +370,9 @@ isOneToOne: false
                            },
 "rotate_feed_token":
 { Args: { "p_feed_id": string }; Returns: string
+                           },
+"state_machines":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            }
           }
           Enums: {

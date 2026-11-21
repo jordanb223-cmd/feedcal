@@ -45,6 +45,10 @@ jobs:
         run: |
           npx supabase gen types typescript > packages/shared/src/database.types.ts
           git diff --exit-code -- packages/shared/src/database.types.ts
+      - name: Fail if generated state machines are stale
+        run: |
+          npm run db:states
+          git diff --exit-code -- packages/shared/src/state-machines.generated.ts docs/STATE-MACHINES.md
 
   secrets:
     name: Secret scan

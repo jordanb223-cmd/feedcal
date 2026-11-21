@@ -123,6 +123,8 @@ export function accountPage(opts: {
   email: string | null;
   displayName: string | null;
   deletionDate: string | null;
+  /** From the database; null if it couldn't be read. */
+  graceDays: number | null;
   feeds: { id: string; name: string; visibility: string }[];
   notice?: string;
 }): Html {
@@ -148,10 +150,10 @@ export function accountPage(opts: {
   ${opts.deletionDate
     ? html`<p class="error">Your account will be deleted on <strong>${opts.deletionDate}</strong>.</p>
   <form method="post" action="/account/cancel-delete">${csrfField(opts.csrf)}<button type="submit">Keep my account</button></form>`
-    : html`<p>We wait 14 days, then delete your personal data. Feeds you own go to a co-editor if they have one; otherwise they're deleted.</p>
+    : html`<p>We wait ${opts.graceDays ? `${opts.graceDays} days` : "a short grace period"}, then delete your personal data. Feeds you own go to a co-editor if they have one; otherwise they're deleted.</p>
   <form method="post" action="/account/delete">
     ${csrfField(opts.csrf)}
-    <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand my account will be deleted in 14 days.</label></p>
+    <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand my account will be deleted ${opts.graceDays ? `in ${opts.graceDays} days` : "after the grace period"}.</label></p>
     <button type="submit" class="danger">Delete my account</button>
   </form>`}
 </div>`,

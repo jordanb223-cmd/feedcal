@@ -13,6 +13,13 @@ export const MESSAGES = {
   googleOff: "Google sign-in isn't available yet. Please use the email link.",
 } as const;
 
+const AccountStatus = z.object({
+  state: z.enum(["active", "scheduled_for_deletion"]),
+  deletion_requested_at: z.string().nullable(),
+  deletes_on: z.string().nullable(),
+  grace_days: z.number().int().positive(),
+});
+
 const LoginForm = z.object({ email: z.string().trim().toLowerCase().max(320).pipe(z.email()) });
 const ConfirmForm = z.object({
   token_hash: z.string().regex(/^[A-Za-z0-9_-]{10,200}$/),
@@ -152,7 +159,7 @@ export function registerAuthRoutes(app: Hono<AppEnv>): void {
     const { error } = await c.get("supabase").rpc("request_account_deletion");
     if (error) throw new Error("request_account_deletion failed");
     c.get("log").info("account_deletion_requested");
-    return renderAccount(c, user, "Your account is scheduled for deletion. You can change your mind any time in the next 14 days.");
+    return renderAccount(c, user, "Your account is scheduled for deletion. You can change your mind any time before the date below.");
   });
 
   app.post("/account/cancel-delete", async (c) => {
@@ -168,10 +175,16 @@ export function registerAuthRoutes(app: Hono<AppEnv>): void {
 }
 
 async function renderAccount(c: Context<AppEnv>, user: SessionUser, notice?: string, status: 200 | 400 | 403 = 200) {
-  const { data } = await c.get("supabase").from("profiles").select("display_name, deleted_at").eq("id", user.id).maybeSingle();
-  const deletionDate = data?.deleted_at
-    ? new Date(new Date(data.deleted_at).getTime() + 14 * 24 * 3600 * 1000).toLocaleDateString("en-US", { dateStyle: "long", timeZone: "UTC" })
-    : null;
+  const sb = c.get("supabase");
+  const { data } = await sb.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
+  // The deletion state, date and grace period come from the database (one definition; D24).
+  const { data: acct } = await sb.rpc("account_status");
+  const account = AccountStatus.safeParse(acct);
+  const deletionDate =
+    account.success && account.data.state === "scheduled_for_deletion" && account.data.deletes_on
+      ? new Date(account.data.deletes_on).toLocaleDateString("en-US", { dateStyle: "long", timeZone: "UTC" })
+      : null;
+  const graceDays = account.success ? account.data.grace_days : null;
   const { data: feeds } = await c.get("supabase").from("feeds").select("id, name, visibility").order("name");
   return c.html(
     accountPage({
@@ -179,6 +192,7 @@ async function renderAccount(c: Context<AppEnv>, user: SessionUser, notice?: str
       email: user.email,
       displayName: data?.display_name ?? null,
       deletionDate,
+      graceDays,
       feeds: (feeds ?? []).map((f) => ({ id: f.id, name: f.name, visibility: f.visibility })),
       ...(notice ? { notice } : {}),
     }),
