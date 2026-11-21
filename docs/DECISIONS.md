@@ -77,3 +77,15 @@ GitHub's docs say that on GitHub Free, private repositories get no environments,
 - **Gaps.**
   - The schema has no EXDATE column, so a single occurrence of a recurring event can't be skipped yet. Phase 10 needs this for updates.
   - Apple, Google and Outlook subscriptions are untested, because they need a hosted deploy.
+
+## D23 — Subscribe page and links (2026-11-20)
+- **The page carries the link.** `public_feed_page` returns the subscription token for public and unlisted feeds. A public feed's link is public by design (Rev 1); an unlisted page is reached only through its unguessable slug, so its link is exactly as secret as the page. Private feeds have no page.
+- **Link formats are community-sourced; neither vendor documents them officially.**
+  - Google: `https://calendar.google.com/calendar/r?cid=<url-encoded webcal URL>`. Seen in a Google Calendar Help Community thread and several developer write-ups.
+  - Outlook: `https://outlook.live.com/calendar/0/addfromweb?url=…&name=…` (and `outlook.office.com` for Microsoft 365). Described as "never documented" by Microsoft (dev.to write-up).
+  - The page always shows the plain link with a copy button, plus Android fallback steps.
+  - Recheck all of these in the Phase 5 phone test (docs/TESTING.md).
+- **Tap counting without JavaScript.** Buttons go through `/c/<slug>/go/<app>`, which counts the tap and then redirects. "Copy link" reports with a same-origin POST. The counts hold no personal data. Anyone can inflate them: that's accepted, and they're shown only as "taps", never as subscribers.
+- **Count wording (Rev 4).** "At least N calendars follow this", with a line saying how it's counted (distinct calendar clients over 7 days; Google counts once for all its users).
+- **Share kit.** `/feeds/<id>/share` replaces `/feeds/<id>/link` (which now gets a 301). Rotation redirects back to it after the POST, so refreshing can't rotate twice. QR codes are server-side SVG from `uqr` (MIT, no dependencies, works in Workers).
+- **Found while testing:** the Phase 2 seed left `auth.users` token columns NULL, so seeded people couldn't sign in. Fixed; `005_seed_users_can_sign_in.test.sql` guards it.

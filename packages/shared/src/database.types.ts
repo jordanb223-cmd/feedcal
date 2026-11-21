@@ -344,6 +344,9 @@ isOneToOne: false
 "feed_calendar":
 { Args: { "p_client_ip"?: string,"p_token": string,"p_ua_family"?: string,"p_user_agent"?: string }; Returns: Json
                            },
+"feed_subscribe_stats":
+{ Args: { "p_feed_id": string }; Returns: Json
+                           },
 "get_feed_token":
 { Args: { "p_feed_id": string }; Returns: string
                            },
@@ -355,6 +358,9 @@ isOneToOne: false
                            },
 "purge_account_data":
 { Args: { "p_user_id": string }; Returns: Json
+                           },
+"record_subscribe_click":
+{ Args: { "p_platform": string,"p_slug": string }; Returns: boolean
                            },
 "request_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: string

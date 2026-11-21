@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 4 (calendar feeds). Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 5 (subscribe and share pages). Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
@@ -52,6 +52,10 @@ Status: Phase 4 (calendar feeds). Components marked *planned* don't exist yet. S
 5. Send it with an ETag, `Cache-Control: max-age=900` and no CORS headers; private and unlisted feeds also get `X-Robots-Tag: noindex`.
 
 The request log records the path as `/f/[token]`. Owners and editors see the link at `/feeds/<id>/link`, and the owner can rotate it there.
+
+## Subscribe and share (Phase 5)
+
+`/c/<slug>` is the public subscribe page: `public_feed_page()` validated with Zod, a device-aware button, link-preview tags, and `noindex` for unlisted feeds. `/c/<slug>/go/<app>` counts a tap and redirects to the calendar app. `/feeds/<id>/share` is the owner's kit: page link, calendar link, QR code, group-chat text, stats, link rotation. `/feeds/<id>/flyer` is the printable flyer.
 
 ## Environments
 

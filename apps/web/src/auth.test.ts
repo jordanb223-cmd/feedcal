@@ -27,7 +27,12 @@ function fakeSupabase(opts: { user?: { sub: string; email: string } | null; otpE
     signOut: vi.fn(async () => ({ error: null })),
   };
   const rpc = vi.fn(async () => ({ data: null, error: null }));
-  const from = vi.fn(() => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { display_name: null, deleted_at: null } }) }) }) }));
+  const from = vi.fn(() => ({
+    select: () => ({
+      eq: () => ({ maybeSingle: async () => ({ data: { display_name: null, deleted_at: null } }) }),
+      order: async () => ({ data: [] }),
+    }),
+  }));
   return { client: { auth, rpc, from } as unknown as Supa, auth, rpc };
 }
 

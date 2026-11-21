@@ -172,8 +172,16 @@ async function renderAccount(c: Context<AppEnv>, user: SessionUser, notice?: str
   const deletionDate = data?.deleted_at
     ? new Date(new Date(data.deleted_at).getTime() + 14 * 24 * 3600 * 1000).toLocaleDateString("en-US", { dateStyle: "long", timeZone: "UTC" })
     : null;
+  const { data: feeds } = await c.get("supabase").from("feeds").select("id, name, visibility").order("name");
   return c.html(
-    accountPage({ csrf: csrfToken(c), email: user.email, displayName: data?.display_name ?? null, deletionDate, ...(notice ? { notice } : {}) }),
+    accountPage({
+      csrf: csrfToken(c),
+      email: user.email,
+      displayName: data?.display_name ?? null,
+      deletionDate,
+      feeds: (feeds ?? []).map((f) => ({ id: f.id, name: f.name, visibility: f.visibility })),
+      ...(notice ? { notice } : {}),
+    }),
     status,
   );
 }
