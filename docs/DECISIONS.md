@@ -75,7 +75,7 @@ GitHub's docs say that on GitHub Free, private repositories get no environments,
 - **All-day events.** `starts_at` is any instant on the first day and `ends_at` any instant on the last day, both read in the event's zone. `DTEND` is the day after the last day (exclusive).
 - **Validation.** Golden-file tests, plus ical.js (Mozilla's parser, MPL-2.0, test-only) parsing every file. Each timed event's start must read back as the original instant.
 - **Gaps.**
-  - The schema has no EXDATE column, so a single occurrence of a recurring event can't be skipped yet. Phase 10 needs this for updates.
+  - (Closed in Phase 10, D31: `events.exdates`.) The schema has no EXDATE column, so a single occurrence of a recurring event can't be skipped yet. Phase 10 needs this for updates.
   - Apple, Google and Outlook subscriptions are untested, because they need a hosted deploy.
 
 ## D23 — Subscribe page and links (2026-11-20)
@@ -182,3 +182,20 @@ What was checked, against what, and what changed:
 - **Evaluation set.** 50 labelled fixtures with **recorded, hand-written model replies**. They include the mistakes the checks exist for: invented events, guessed times, paraphrased quotes, wrong pages, bad zones, an end before a start, past mentions, malformed JSON, and replies that obey planted instructions. In CI this measures **Feedcal's pipeline and checks, not the model.** Baseline: precision 0.939 over all candidates, **1.0 over events that could publish without review**, recall 0.902 (the misses are events correctly rejected for bad output), date and time accuracy 1.0, 0 unquoted events, 0 injected events that could publish. CI fails if a metric drops more than 3 points. Also hard-coded: unflagged precision ≥ 95%, date accuracy ≥ 95%, every event quoted, no injected event publishable.
 - **Not verified:** the real models' precision, recall and injection resistance. That needs `EVAL_LIVE=1` with an API key (paid). The pass bar of "at least 95% precision on dates" is met only on recorded replies.
 - **Without a key** (the free-tier default), messages wait at extraction ("waiting", `no_api_key`) and `requeue_waiting_extractions()` sends them back once a key exists (SETUP §8). Cap: 60 AI calls per owner per day; each call's tokens and estimated cost are logged (Haiku 5.5 $0.10/$0.50, Opus 5.5 $4/$20 per million tokens, from the cached claude-api reference).
+
+## D31 — Matching updates to existing events (Phase 10, 2026-11-21)
+- **In SQL, not an Edge Function.** Matching is set logic over the feed's events, so `reconcile_pending()` runs inside Postgres on pg_cron every minute, draining `reconcile_message`. It's tested directly with pgTAP and needs no API key.
+- **Matching** (`private.match_candidate`): events in the same feed within ±14 days, or a weekly series with an occurrence at that time. Score = 0.6 × title trigram similarity (pg_trgm), + 0.2 for the same thread (subject with Re/Fwd stripped), + 0.1 for a similar location, + 0.1 for closeness in date. A title similarity of 0.35 or more is needed (0.2 within the same thread).
+- **Outcomes:**
+  - **duplicate**: same start and a similar title, so nothing new; it fills in a missing location.
+  - **update**: the email says "changed" and a match exists. Start, end and location move, SEQUENCE goes up, and a `matched_update` revision records before and after plus the quote.
+  - **cancel**: status becomes cancelled. The event stays in feeds for 30 days so calendars remove it, with a `cancelled` revision and the quote.
+  - **exdate**: one occurrence of a series is cancelled; the date is added to `exdates`, the series stays, and SEQUENCE goes up.
+  - **conflict**: same day, similar title, different time, but not stated as a change, so it goes to review.
+  - **new**: anything else.
+  - **unmatched_change**: a cancellation with no match goes to review.
+- **Never deletes.** No code path deletes an event; the test counts events before and after a second run.
+- **Auto-apply rule** (build plan): confidence ≥ the feed's threshold (default 0.85) **and** a trusted sender **and** no review reasons (low confidence, from a transcription, possible injection). Otherwise new events are created as unpublished drafts (`tentative`), and updates, cancellations and conflicts wait as `needs_review` candidates for the review screen (Phase 11), which also moves the message to needs_review.
+- **Change to Phase 9:** "changed"/"cancelled" are no longer automatic review reasons. Before, a trusted school's "practice moves to 6 PM" could never reach subscribers without the owner acting, against this phase's "time change shows up in a subscribed phone calendar". Rain dates and other unsure changes still go to review through low confidence.
+- **EXDATE** in the calendar output, in DTSTART's form (a DATE for all-day series, TZID local time otherwise). ical.js confirms the occurrence is skipped. Only weekly rules are matched for single occurrences (`private.occurs_at`), which covers practices; other rules are treated as separate events.
+- **Not verified:** a time change seen updating in a real subscribed phone calendar (needs the hosted deploy and a phone). What's proven: SEQUENCE goes up, DTSTAMP and LAST-MODIFIED follow `updated_at`, and the .ics parses (D22, D24).

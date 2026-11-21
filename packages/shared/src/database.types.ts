@@ -65,14 +65,14 @@ isOneToOne: false
                   ]
                 },"event_candidates": {
                   Row: {
-                    "all_day": boolean,"attachment_id": string | null,"change_kind": string,"confidence": number,"created_at": string,"description": string | null,"ends_at": string | null,"event_id": string | null,"evidence_quote": string,"feed_id": string,"from_transcription": boolean,"id": string,"location": string | null,"message_id": string,"model": string | null,"page_index": number | null,"review_reasons": (string)[],"rrule": string | null,"source_kind": string,"starts_at": string,"state": string,"timezone": string,"title": string
+                    "all_day": boolean,"attachment_id": string | null,"change_kind": string,"confidence": number,"created_at": string,"decided_at": string | null,"description": string | null,"ends_at": string | null,"event_id": string | null,"evidence_quote": string,"feed_id": string,"from_transcription": boolean,"id": string,"location": string | null,"match_score": number | null,"message_id": string,"model": string | null,"outcome": string | null,"page_index": number | null,"review_reasons": (string)[],"rrule": string | null,"source_kind": string,"starts_at": string,"state": string,"timezone": string,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "all_day": boolean,"attachment_id"?: string | null,"change_kind": string,"confidence": number,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"event_id"?: string | null,"evidence_quote": string,"feed_id": string,"from_transcription"?: boolean,"id"?: string,"location"?: string | null,"message_id": string,"model"?: string | null,"page_index"?: number | null,"review_reasons"?: (string)[],"rrule"?: string | null,"source_kind": string,"starts_at": string,"state"?: string,"timezone": string,"title": string
+                    "all_day": boolean,"attachment_id"?: string | null,"change_kind": string,"confidence": number,"created_at"?: string,"decided_at"?: string | null,"description"?: string | null,"ends_at"?: string | null,"event_id"?: string | null,"evidence_quote": string,"feed_id": string,"from_transcription"?: boolean,"id"?: string,"location"?: string | null,"match_score"?: number | null,"message_id": string,"model"?: string | null,"outcome"?: string | null,"page_index"?: number | null,"review_reasons"?: (string)[],"rrule"?: string | null,"source_kind": string,"starts_at": string,"state"?: string,"timezone": string,"title": string
                   }
                   Update: {
-                    "all_day"?: boolean,"attachment_id"?: string | null,"change_kind"?: string,"confidence"?: number,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"event_id"?: string | null,"evidence_quote"?: string,"feed_id"?: string,"from_transcription"?: boolean,"id"?: string,"location"?: string | null,"message_id"?: string,"model"?: string | null,"page_index"?: number | null,"review_reasons"?: (string)[],"rrule"?: string | null,"source_kind"?: string,"starts_at"?: string,"state"?: string,"timezone"?: string,"title"?: string
+                    "all_day"?: boolean,"attachment_id"?: string | null,"change_kind"?: string,"confidence"?: number,"created_at"?: string,"decided_at"?: string | null,"description"?: string | null,"ends_at"?: string | null,"event_id"?: string | null,"evidence_quote"?: string,"feed_id"?: string,"from_transcription"?: boolean,"id"?: string,"location"?: string | null,"match_score"?: number | null,"message_id"?: string,"model"?: string | null,"outcome"?: string | null,"page_index"?: number | null,"review_reasons"?: (string)[],"rrule"?: string | null,"source_kind"?: string,"starts_at"?: string,"state"?: string,"timezone"?: string,"title"?: string
                   }
                   Relationships: [
                     {
@@ -123,14 +123,14 @@ isOneToOne: false
                   ]
                 },"events": {
                   Row: {
-                    "all_day": boolean,"confidence": number | null,"created_at": string,"description": string | null,"ends_at": string | null,"evidence_quote": string | null,"feed_id": string,"id": string,"location": string | null,"published": boolean,"rrule": string | null,"sequence": number,"source_message_id": string | null,"starts_at": string,"status": string,"timezone": string,"title": string,"uid": string | null,"updated_at": string
+                    "all_day": boolean,"confidence": number | null,"created_at": string,"description": string | null,"ends_at": string | null,"evidence_quote": string | null,"exdates": (string)[],"feed_id": string,"id": string,"location": string | null,"published": boolean,"rrule": string | null,"sequence": number,"source_message_id": string | null,"source_thread": string | null,"starts_at": string,"status": string,"timezone": string,"title": string,"uid": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "all_day"?: boolean,"confidence"?: number | null,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"evidence_quote"?: string | null,"feed_id": string,"id"?: string,"location"?: string | null,"published"?: boolean,"rrule"?: string | null,"sequence"?: number,"source_message_id"?: string | null,"starts_at": string,"status"?: string,"timezone"?: string,"title": string,"uid"?: never,"updated_at"?: string
+                    "all_day"?: boolean,"confidence"?: number | null,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"evidence_quote"?: string | null,"exdates"?: (string)[],"feed_id": string,"id"?: string,"location"?: string | null,"published"?: boolean,"rrule"?: string | null,"sequence"?: number,"source_message_id"?: string | null,"source_thread"?: string | null,"starts_at": string,"status"?: string,"timezone"?: string,"title": string,"uid"?: never,"updated_at"?: string
                   }
                   Update: {
-                    "all_day"?: boolean,"confidence"?: number | null,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"evidence_quote"?: string | null,"feed_id"?: string,"id"?: string,"location"?: string | null,"published"?: boolean,"rrule"?: string | null,"sequence"?: number,"source_message_id"?: string | null,"starts_at"?: string,"status"?: string,"timezone"?: string,"title"?: string,"uid"?: never,"updated_at"?: string
+                    "all_day"?: boolean,"confidence"?: number | null,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"evidence_quote"?: string | null,"exdates"?: (string)[],"feed_id"?: string,"id"?: string,"location"?: string | null,"published"?: boolean,"rrule"?: string | null,"sequence"?: number,"source_message_id"?: string | null,"source_thread"?: string | null,"starts_at"?: string,"status"?: string,"timezone"?: string,"title"?: string,"uid"?: never,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -481,6 +481,9 @@ isOneToOne: false
                            },
 "purge_account_data":
 { Args: { "p_user_id": string }; Returns: Json
+                           },
+"reconcile_pending":
+{ Args: { "p_limit"?: number }; Returns: number
                            },
 "record_extraction":
 { Args: { "p_message_id": string,"p_result": Json }; Returns: number

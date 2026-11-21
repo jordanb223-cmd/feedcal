@@ -84,6 +84,7 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   const review: string[] = [];
   if (e.confidence < 0.7) review.push("low_confidence");
   if (source.fromTranscription) review.push("from_transcription");
-  if (e.status !== "new") review.push(e.status);
+  // Changes and cancellations aren't flagged here: from a trusted sender at high confidence they
+  // apply automatically (D31), so subscribers see a moved practice without the owner stepping in.
   return { review, fromTranscription: source.fromTranscription };
 }

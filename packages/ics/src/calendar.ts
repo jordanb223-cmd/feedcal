@@ -18,6 +18,8 @@ export interface CalendarEvent {
   timeZone: string;
   /** RRULE value without the "RRULE:" prefix, e.g. "FREQ=WEEKLY;BYDAY=TU". */
   rrule?: string | null;
+  /** Starts (ISO instants) of single occurrences removed from a recurring event (EXDATE). */
+  exdates?: string[] | null;
   status: EventStatus;
   sequence: number;
   createdAt: string;
@@ -83,8 +85,16 @@ function eventLines(e: CalendarEvent, tz: string, opts: BuildOptions, warnings: 
   }
 
   if (e.rrule) {
-    if (RRULE.test(e.rrule)) lines.push(`RRULE:${e.rrule}`);
-    else warnings.push(`dropped invalid RRULE on ${e.uid}`);
+    if (RRULE.test(e.rrule)) {
+      lines.push(`RRULE:${e.rrule}`);
+      // EXDATE must match DTSTART's form: a DATE for all-day series, a local time in the same zone otherwise.
+      const ex = (e.exdates ?? []).map(ms).filter((t) => Number.isFinite(t)).sort((a, b) => a - b);
+      if (ex.length) {
+        lines.push(e.allDay
+          ? `EXDATE;VALUE=DATE:${ex.map((t) => formatDate(wallTime(t, tz))).join(",")}`
+          : `EXDATE;TZID=${tz}:${ex.map((t) => formatLocal(wallTime(t, tz))).join(",")}`);
+      }
+    } else warnings.push(`dropped invalid RRULE on ${e.uid}`);
   }
   if (e.location) lines.push(`LOCATION:${escapeText(e.location)}`);
 

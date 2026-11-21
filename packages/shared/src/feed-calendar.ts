@@ -12,6 +12,7 @@ export const FeedCalendarEvent = z.object({
   all_day: z.boolean(),
   timezone: z.string().min(1).max(64),
   rrule: z.string().max(500).nullable(),
+  exdates: z.array(z.string()).max(500).optional().default([]),
   status: z.enum(["tentative", "confirmed", "cancelled"]),
   sequence: z.number().int().nonnegative(),
   created_at: z.string(),

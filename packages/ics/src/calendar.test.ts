@@ -215,3 +215,27 @@ describe("time zone data", () => {
     expect(offsetMinutes(Date.parse("2026-11-01T10:00:00Z"), "America/Los_Angeles")).toBe(-480);
   });
 });
+
+describe("EXDATE (one occurrence of a series removed, Phase 10)", () => {
+  const series: CalendarEvent = { ...base, uid: "ex-1@feedcal.app", title: "Practice", startsAt: "2026-12-02T01:00:00Z", endsAt: "2026-12-02T02:15:00Z",
+    timeZone: "America/Los_Angeles", rrule: "FREQ=WEEKLY;BYDAY=TU;COUNT=4", exdates: ["2026-12-09T01:00:00Z"] };
+
+  it("writes EXDATE in DTSTART's zone, and ical.js skips that occurrence", () => {
+    const { ics } = buildCalendar({ name: "Team" }, [series], opts);
+    expect(ics).toContain("EXDATE;TZID=America/Los_Angeles:20261208T170000");
+    const cal = new ICAL.Component(ICAL.parse(ics));
+    for (const vtz of cal.getAllSubcomponents("vtimezone")) ICAL.TimezoneService.register(vtz);
+    const event = new ICAL.Event(cal.getFirstSubcomponent("vevent") ?? undefined);
+    const it = event.iterator();
+    const starts: string[] = [];
+    for (let next = it.next(); next; next = it.next()) starts.push(next.toJSDate().toISOString());
+    expect(starts).toEqual(["2026-12-02T01:00:00.000Z", "2026-12-16T01:00:00.000Z", "2026-12-23T01:00:00.000Z"]);
+  });
+
+  it("all-day series use DATE values; events without RRULE never get EXDATE", () => {
+    const allDay = buildCalendar({ name: "T" }, [{ ...series, allDay: true, uid: "ex-2@feedcal.app", startsAt: "2026-12-01T20:00:00Z", endsAt: null, exdates: ["2026-12-08T20:00:00Z"] }], opts).ics;
+    expect(allDay).toContain("EXDATE;VALUE=DATE:20261208");
+    const single = buildCalendar({ name: "T" }, [{ ...series, rrule: null }], opts).ics;
+    expect(single).not.toContain("EXDATE");
+  });
+});
