@@ -25,6 +25,45 @@ export function safeNext(next: string | undefined | null, fallback = "/account")
   return next;
 }
 
+/**
+ * Response headers for every page (D37). Scripts and styles come only from this origin
+ * (/assets); inline style attributes are allowed (style-src-attr) because they can't run code.
+ * Forms may post here, or to Supabase/Google during "Continue with Google" (a form post that
+ * redirects is still checked against form-action by browsers).
+ */
+export function securityHeaders(c: Context, supabaseUrl: string | undefined, hstsMaxAge?: string): Record<string, string> {
+  // HSTS starts at one day; raise HSTS_MAX_AGE to 31536000 (a year) once HTTPS is settled on the
+  // real domain (SETUP §13). Only digits are accepted.
+  const maxAge = hstsMaxAge && /^\d{1,9}$/.test(hstsMaxAge) ? hstsMaxAge : "86400";
+  let supabaseOrigin: string;
+  try {
+    supabaseOrigin = supabaseUrl ? new URL(supabaseUrl).origin : "";
+  } catch {
+    supabaseOrigin = "";
+  }
+  const csp = [
+    "default-src 'none'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "style-src-attr 'unsafe-inline'",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    `form-action 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""} https://accounts.google.com`,
+    "frame-ancestors 'none'",
+    "base-uri 'none'",
+    ...(isSecure(c) ? ["upgrade-insecure-requests"] : []),
+  ].join("; ");
+  return {
+    "content-security-policy": csp,
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "same-origin",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    "cross-origin-opener-policy": "same-origin",
+    "x-frame-options": "DENY",
+    ...(isSecure(c) ? { "strict-transport-security": `max-age=${maxAge}; includeSubDomains` } : {}),
+  };
+}
+
 /** Paths that contain a secret (feed tokens) are logged with the secret removed. */
 export function redactPath(path: string): string {
   return path.replace(/^\/f\/[^/]*$/, "/f/[token]");
@@ -80,7 +119,7 @@ export function csrfToken(c: Context): string {
   const existing = getCookie(c, name);
   if (existing && /^[A-Za-z0-9_-]{43}$/.test(existing)) return existing;
   const token = randomToken();
-  setCookie(c, name, token, { path: "/", httpOnly: true, secure: isSecure(c), sameSite: "Lax", maxAge: 60 * 60 * 24 });
+  setCookie(c, name, token, { path: "/", httpOnly: true, secure: isSecure(c), sameSite: "Lax" });  // session-only (D37)
   return token;
 }
 

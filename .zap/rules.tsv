@@ -1,0 +1,1 @@
+10055	WARN	(CSP) style-src-attr unsafe-inline is allowed on purpose: inline style attributes cannot run code; scripts are self only. See D37.

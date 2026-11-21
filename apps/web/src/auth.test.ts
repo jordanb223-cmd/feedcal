@@ -338,6 +338,7 @@ describe("sessions and the account page", () => {
     const { request } = setup();
     const res = await request("/login");
     expect(res.headers.get("cache-control")).toBe("private, no-store");
-    expect(res.headers.get("content-security-policy")).toBe("frame-ancestors 'none'");
+    expect(res.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
+    expect(res.headers.get("content-security-policy")).toContain("script-src 'self'");
   });
 });

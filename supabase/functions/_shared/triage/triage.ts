@@ -18,6 +18,7 @@ export const MAX_VISION_BYTES = 7 * 1024 * 1024; // 10 MB base64 per image (Clau
 const MAX_SCANNED_PAGES = 2;
 const MAX_VISION_TOKENS = 4784; // high-resolution tier cap per image (Claude vision docs)
 const SCANNED_CHARS_PER_PAGE = 40;
+export const PDF_PARSE_MS = 20_000; // per file (D37)
 
 const TEXT_TYPES = new Set(["text/plain", "text/calendar", "text/csv"]);
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
@@ -68,14 +69,40 @@ function skip(att: AttachmentIn, stage: 0 | 1 | 2 | 4, reason: string, extra: Pa
   return { id: att.id, status: "skipped", pages: [], pages_total: null, triage: { stage, reason }, ...extra };
 }
 
+/**
+ * Phase 16 (D37): files we refuse to open. Not a PDF at all (despite its type), or encrypted
+ * (a password-protected file can't be read reliably, and pdf.js would need its password).
+ * Embedded JavaScript is never run: text extraction doesn't execute scripts, and a page sent
+ * to vision is copied into a fresh document, which leaves the original's scripts behind.
+ */
+export function pdfRefusal(bytes: Uint8Array): "malformed" | "encrypted" | null {
+  const head = new TextDecoder("latin1").decode(bytes.subarray(0, 1024));
+  if (!head.includes("%PDF-")) return "malformed";
+  // The /Encrypt entry lives in the trailer or the cross-reference stream's dictionary, which
+  // are never compressed, so a plain search finds it.
+  const all = new TextDecoder("latin1").decode(bytes);
+  if (/\/Encrypt\s*(\d+\s+\d+\s+R|<<)/.test(all)) return "encrypted";
+  return null;
+}
+
+export function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("timeout")), ms); });
+  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function pdfPages(bytes: Uint8Array): Promise<string[]> {
   const pdf = await getDocumentProxy(new Uint8Array(bytes));
-  const { text } = await extractText(pdf, { mergePages: false });
-  return (text as string[]).map((t) => t.replace(/[ \t]+/g, " ").trim());
+  try {
+    const { text } = await withTimeout(extractText(pdf, { mergePages: false }), PDF_PARSE_MS);
+    return (text as string[]).map((t) => t.replace(/[ \t]+/g, " ").trim());
+  } finally {
+    await pdf.loadingTask.destroy().catch(() => {}); // free the parser's memory now, not at the end of the run
+  }
 }
 
 async function singlePagePdf(bytes: Uint8Array, index: number): Promise<Uint8Array> {
-  const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+  const src = await PDFDocument.load(bytes);
   const out = await PDFDocument.create();
   const [page] = await out.copyPages(src, [index]);
   out.addPage(page!);
@@ -121,9 +148,15 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
     let pages: string[];
     try {
       const bytes = await deps.readFile(att.storage_path!);
+      const refusal = TEXT_TYPES.has(att.mime) ? null : pdfRefusal(bytes);
+      if (refusal) {
+        results.set(att.id, { id: att.id, status: "failed", pages: [], pages_total: null, triage: { stage: 2, reason: refusal } });
+        continue;
+      }
       pages = TEXT_TYPES.has(att.mime) ? [new TextDecoder().decode(bytes).slice(0, 50_000)] : await pdfPages(bytes);
-    } catch {
-      results.set(att.id, { id: att.id, status: "failed", pages: [], pages_total: null, triage: { stage: 2, reason: "unreadable" } });
+    } catch (e) {
+      const reason = e instanceof Error && e.message === "timeout" ? "too_slow" : "unreadable";
+      results.set(att.id, { id: att.id, status: "failed", pages: [], pages_total: null, triage: { stage: 2, reason } });
       continue;
     }
     if (pages.length > MAX_PAGES && !rule.allowLarge) { results.set(att.id, skip(att, 1, "too_many_pages", { pages_total: pages.length })); continue; }

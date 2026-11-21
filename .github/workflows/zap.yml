@@ -1,0 +1,32 @@
+name: ZAP baseline
+# Phase 16 (D37, Prompt F item 48): OWASP ZAP's passive baseline scan of staging. It only reads
+# pages (no attacks). Skips until staging answers /health (staging deploys need the owner's
+# secrets). Rules we accept on purpose are listed, with reasons, in .zap/rules.tsv.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 10 * * 1"
+
+permissions:
+  contents: read
+  issues: write   # the action files its report as an issue
+
+jobs:
+  zap:
+    name: ZAP baseline scan of staging
+    runs-on: ubuntu-latest
+    env:
+      TARGET: https://feedcal-web-staging.pages.dev
+    steps:
+      - name: Is staging up?
+        id: up
+        run: |
+          if curl -fsS --max-time 20 "$TARGET/health" | grep -q '"status":"ok"'; then echo "go=true" >> "$GITHUB_OUTPUT"; else echo "Staging isn't deployed yet; skipping."; echo "go=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@v4
+        if: steps.up.outputs.go == 'true'
+      - uses: zaproxy/action-baseline@6c5a007541891231cd9e0ddec25d4f25c59c9874 # v0.15.0
+        if: steps.up.outputs.go == 'true'
+        with:
+          target: ${{ env.TARGET }}
+          rules_file_name: .zap/rules.tsv
+          allow_issue_writing: true

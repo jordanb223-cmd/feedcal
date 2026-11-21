@@ -27,16 +27,6 @@ const PRIMARY: Record<Device, { target: string; label: string }> = {
   other: { target: "google", label: "Add to Google Calendar" },
 };
 
-export const copyScript = raw(`<script>
-document.addEventListener("click", async (ev) => {
-  const btn = ev.target.closest("[data-copy]");
-  if (!btn) return;
-  const input = document.getElementById(btn.dataset.copy);
-  try { await navigator.clipboard.writeText(input.value); btn.textContent = "Copied"; }
-  catch { input.select(); btn.textContent = "Press Ctrl+C or ⌘C"; }
-  if (btn.dataset.count) fetch(btn.dataset.count, { method: "POST" }).catch(() => {});
-});
-</script>`);
 
 /** schema.org Events for search engines (public feeds only). "<" is escaped so it can't end the script. */
 export function jsonLd(name: string, url: string, events: PublicFeedPage["events"]): string {
@@ -106,8 +96,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
     ? html`<p class="muted">No upcoming events yet. Subscribe now and new ones will appear in your calendar on their own.</p>`
     : html`<ul class="events">${next.map((e) => html`<li><strong dir="auto">${e.title}</strong><span class="when">${formatWhen(e)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></li>`)}</ul>`}
 </div>
-<p class="muted no-print" style="text-align:center"><a href="/c/${feed.slug}/report">Report this calendar</a></p>
-${copyScript}`,
+<p class="muted no-print" style="text-align:center"><a href="/c/${feed.slug}/report">Report this calendar</a></p>`,
     head,
   );
 }
@@ -163,8 +152,7 @@ ${opts.stats
     <input type="hidden" name="csrf" value="${opts.csrf}">
     <button type="submit" class="danger">Make a new link</button>
   </form>
-</div>
-${copyScript}`,
+</div>`,
   );
 }
 
@@ -177,7 +165,7 @@ export function flyerPage(opts: { name: string; url: string; qrSvg: string; feed
   <div class="qr" role="img" aria-label="QR code for ${opts.url}" style="margin:1.5rem 0">${raw(opts.qrSvg)}</div>
   <p style="font-size:1.125rem"><strong>1.</strong> Point your phone's camera at the code. <strong>2.</strong> Tap the link. <strong>3.</strong> Tap Subscribe.</p>
   <p class="muted" style="word-break:break-all">${opts.url}</p>
-  <p class="no-print"><button type="button" onclick="window.print()">Print</button> <a class="button secondary" href="/feeds/${opts.feedId}/share">Back</a></p>
+  <p class="no-print"><button type="button" data-print>Print</button> <a class="button secondary" href="/feeds/${opts.feedId}/share">Back</a></p>
 </div>`,
   );
 }

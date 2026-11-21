@@ -34,6 +34,13 @@ const notFoundPage = (c: Context<AppEnv>) => {
   return c.html(messagePage("Calendar not found", "This calendar doesn't exist, or its owner made it private. Check the link with the person who shared it."), 404);
 };
 
+async function tapAllowed(c: Context<AppEnv>): Promise<boolean> {
+  const ip = c.req.header("cf-connecting-ip");
+  if (!ip) return true;
+  const { data, error } = await c.get("supabase").rpc("rate_check", { p_bucket: "click", p_client_ip: ip });
+  return !error && data === true;
+}
+
 export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
   // The public subscribe page [Rev 3]. Private feeds never have one.
   app.get("/c/:slug", async (c) => {
@@ -57,8 +64,11 @@ export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
     if (!slug.success || !target.success) return notFoundPage(c);
     const page = await loadPublicPage(c, slug.data);
     if (!page) return notFoundPage(c);
-    const { error } = await c.get("supabase").rpc("record_subscribe_click", { p_slug: slug.data, p_platform: platformOf(target.data) });
-    if (error) c.get("log").warn("subscribe_click_not_recorded");
+    // Taps are counted at most 30 a minute per address (D37); the hand-off always works.
+    if (await tapAllowed(c)) {
+      const { error } = await c.get("supabase").rpc("record_subscribe_click", { p_slug: slug.data, p_platform: platformOf(target.data) });
+      if (error) c.get("log").warn("subscribe_click_not_recorded");
+    }
     const links = subscribeLinks(feedUrl(c, page.feed.feed_token), page.feed.name);
     c.header("cache-control", "no-store");
     c.header("referrer-policy", "no-referrer");
@@ -68,7 +78,7 @@ export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
   // The "Copy link" button reports its tap here (same-origin POST; best effort).
   app.post("/c/:slug/copied", async (c) => {
     const slug = Slug.safeParse(c.req.param("slug"));
-    if (slug.success) await c.get("supabase").rpc("record_subscribe_click", { p_slug: slug.data, p_platform: "copy_link" });
+    if (slug.success && (await tapAllowed(c))) await c.get("supabase").rpc("record_subscribe_click", { p_slug: slug.data, p_platform: "copy_link" });
     return c.body(null, 204);
   });
 

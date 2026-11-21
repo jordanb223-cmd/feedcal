@@ -1,0 +1,54 @@
+name: Backup
+# Phase 16 (D37): daily encrypted logical backups, kept apart from Supabase (GitHub artifacts).
+# Daily copies are kept 7 days; Sunday's copy is kept 90 days. Does nothing until the owner adds
+# the BACKUP_DB_URL and BACKUP_PASSPHRASE secrets (SETUP §13). The repository is public, so the
+# artifact is encrypted; without the passphrase it is unreadable.
+on:
+  schedule:
+    - cron: "20 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Encrypted database backup
+    runs-on: ubuntu-latest
+    env:
+      BACKUP_DB_URL: ${{ secrets.BACKUP_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Check the secrets are set
+        id: ready
+        run: |
+          if [ -z "$BACKUP_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "Backup secrets not set yet (SETUP §13); skipping."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.ready.outputs.go == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.ready.outputs.go == 'true'
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+        if: steps.ready.outputs.go == 'true'
+      - name: Dump and encrypt
+        if: steps.ready.outputs.go == 'true'
+        run: scripts/backup.sh backups "$BACKUP_DB_URL"
+      - name: Keep the daily copy for 7 days
+        if: steps.ready.outputs.go == 'true'
+        uses: actions/upload-artifact@v4
+        with: { name: "backup-daily-${{ github.run_id }}", path: backups/, retention-days: 7, if-no-files-found: error }
+      - name: Keep Sunday's copy for 90 days
+        if: steps.ready.outputs.go == 'true' && github.event_name == 'schedule'
+        run: echo "dow=$(date -u +%u)" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        if: steps.ready.outputs.go == 'true' && env.dow == '7'
+        with: { name: "backup-weekly-${{ github.run_id }}", path: backups/, retention-days: 90, if-no-files-found: error }

@@ -5,7 +5,7 @@ import { assert, assertEquals } from "jsr:@std/assert@1";
 import { PDFDocument, StandardFonts } from "npm:pdf-lib@1.17.1";
 import { scorePage } from "./score.ts";
 import { RefusedError, type Transcriber, type TranscribeInput } from "./transcriber.ts";
-import { type AttachmentIn, estimateVisionTokens, triageMessage, type TriageDeps } from "./triage.ts";
+import { type AttachmentIn, estimateVisionTokens, pdfRefusal, triageMessage, type TriageDeps, withTimeout } from "./triage.ts";
 
 async function pdf(pages: string[][]): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
@@ -166,6 +166,25 @@ Deno.test("a calendar invite is always kept; a broken file fails without stoppin
   const ics = new TextEncoder().encode("BEGIN:VCALENDAR\nSUMMARY:Party\nEND:VCALENDAR");
   const results = await triageMessage([att("invite", { mime: "text/calendar", filename: "invite.ics" }), att("broken")], null, deps({ "f/m/invite": ics }).d);
   assertEquals(results.map((r) => r.status), ["text_layer", "failed"]);
+});
+
+Deno.test("unsafe PDFs are refused before parsing: not really a PDF, or encrypted (D37)", async () => {
+  const fake = new TextEncoder().encode("<html><script>alert(1)</script></html>");
+  const real = await pdf([SCHEDULE_A]);
+  const locked = new Uint8Array([...real, ...new TextEncoder().encode("\ntrailer\n<< /Size 9 /Root 1 0 R /Encrypt 8 0 R >>\n%%EOF")]);
+  assertEquals(pdfRefusal(fake), "malformed");
+  assertEquals(pdfRefusal(locked), "encrypted");
+  assertEquals(pdfRefusal(real), null);
+  const results = await triageMessage([att("fake"), att("locked"), att("ok")], null, deps({ "f/m/fake": fake, "f/m/locked": locked, "f/m/ok": real }).d);
+  assertEquals(results.map((r) => [r.id, r.status, r.triage.reason]), [["fake", "failed", "malformed"], ["locked", "failed", "encrypted"], ["ok", "text_layer", results[2]!.triage.reason]]);
+});
+
+Deno.test("a parse that runs too long is stopped (D37)", async () => {
+  const never = new Promise<string>(() => {});
+  let err = "";
+  try { await withTimeout(never, 10); } catch (e) { err = (e as Error).message; }
+  assertEquals(err, "timeout");
+  assertEquals(await withTimeout(Promise.resolve("done"), 10), "done");
 });
 
 Deno.test("vision token estimate follows the documented formula and cap", () => {

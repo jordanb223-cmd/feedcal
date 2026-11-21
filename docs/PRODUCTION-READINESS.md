@@ -53,8 +53,8 @@ Assessed 2026-11-20, against the code on `main` (after Phase 5 and the state-mac
 | 16 | Migrations that don't lock the main table at 2pm | Tables are tiny now. No guidance for when they grow. | ➕ Act (rules in CONTRIBUTING; Prompt B) |
 | 17 | Indexes for 5 million rows | Indexes exist on the hot paths (`feeds.search` GIN, `location` GiST, `events(feed_id, starts_at)`, token hash). No large-data `EXPLAIN` checks yet. | ⏸ Later. Trigger: the load test (93) |
 | 18 | Connection pooling | The app reaches Postgres only over Supabase's HTTP APIs (PostgREST, Auth), which pool on Supabase's side. No direct database connections. | ✅ Done (by design) |
-| 19 | Backups every night | Depends on the Supabase plan. What the free plan keeps is UNVERIFIED. Nothing of our own. | ➕ Act (nightly `pg_dump` from GitHub Actions to private storage; Prompt B) |
-| 20 | A tested restore | Never tested. | ➕ Act (restore drill into local Supabase; Prompt B) |
+| 19 | Backups every night | `backup.yml`: a daily encrypted dump (roles, schema, data, Vault) to GitHub artifacts, kept 7 days, with weekly copies kept 90 (D37). Off until the owner adds `BACKUP_DB_URL` and `BACKUP_PASSPHRASE` (SETUP §13). What Supabase's free plan keeps on its own is still UNVERIFIED. | ➕ Act (owner: two secrets) |
+| 20 | A tested restore | `scripts/restore-drill.sh` passed locally on 2026-11-21: all counts, the events checksum and token decryption matched (D37). A drill with a hosted backup is still to do (`docs/runbooks/restore.md`). | ➕ Act (owner: first hosted drill) |
 | 21 | Point-in-time recovery | A paid Supabase add-on (UNVERIFIED pricing). | ⏸ Later. Trigger: paid plan or valuable production data |
 | 22 | Soft deletes | Events are cancelled, not deleted. Accounts have a 14-day grace period. **Feeds are hard-deleted at once** (cascading to events and messages), so a misclick loses everything. | ➕ Act (feed deletion grace; Prompt B) |
 | 23 | Validation on the server | Zod at every boundary (HTTP, RPC results) plus database CHECK constraints and transition triggers (D24). | ✅ Done |
@@ -69,7 +69,7 @@ Assessed 2026-11-20, against the code on `main` (after Phase 5 and the state-mac
 | 32 | Pagination that works on page 400 | No long lists yet. Phase 11's review list and Phase 13's directory need keyset pagination, not offsets. | 🗓 Planned (Prompt E) |
 | 33 | Exports | The `.ics` feed is an export. No CSV export of a feed's events for organizers. | ➕ Act (Phase 11; Prompt E) |
 | 34 | Imports that survive a 2009 CSV | Phase 13 imports public ICS feeds. CSV import isn't planned. | ⏸ Later. Trigger: organizers ask |
-| 35 | Retention rules, and code that deletes | `messages.expires_at` defaults to 30 days, but **nothing deletes expired messages yet.** The rule exists only on paper. | ➕ Act (Phase 6 must ship the purge job; Prompt E) |
+| 35 | Retention rules, and code that deletes | Code deletes on schedule: expired messages and their files (daily `expire_intake` + `storage-trash`, Phase 6), undo records (1 day), limit records (1 hour), fetch counts (400 days) and sent email contents (30 days) (D37). The full table is in DATA-MODEL, "Where personal data lives". | ✅ Done |
 
 ### Security
 
@@ -80,14 +80,14 @@ Assessed 2026-11-20, against the code on `main` (after Phase 5 and the state-mac
 | 38 | Confirm every package exists and is the one you meant | Checked 2026-11-20: all 17 direct dependencies resolve to their official repos (publisher-declared field: strong evidence, not proof). Lockfile committed. | ✅ Done |
 | 39 | Dependency scanning | `npm audit --audit-level=high` in CI (0 findings); Dependabot weekly for npm and Actions. | ✅ Done |
 | 40 | Input sanitization everywhere | Hono's `html` template escapes every value; there's no raw HTML from users. Phase 7 will parse email HTML, which must be sanitized. | ✅ Done (Phase 7 note in Prompt E) |
-| 41 | SQL injection, XSS, CSRF and the OWASP list | No string-built SQL; output escaping; CSRF double-submit plus origin check on every POST (D17); RLS. No full OWASP pass yet. | 🗓 Planned (Phase 16; Prompt F) |
+| 41 | SQL injection, XSS, CSRF and the OWASP list | `docs/SECURITY-REVIEW.md`, OWASP Top 10:2025: 8 pass, 2 partial (A03 action pinning, A09 alerting) (D37). An item-by-item ASVS level 1 pass is not done. | ➕ Act (item-by-item ASVS; A03 pinning; A09 alerting in Phase 18) |
 | 42 | File uploads scanned, size-limited, stored where they can't execute | No uploads yet. Phase 6 stores email attachments in private buckets. Size limits are planned (rule 10). Malware scanning isn't planned. Files are only read by our code and never served to other users. | 🗓 Planned (Phases 6/8; Prompt E adds type and size checks) |
 | 43 | CORS that isn't "allow everything" | No CORS headers on any route (tested on the feed route). | ✅ Done |
-| 44 | Security headers on every response | Set now: `nosniff`, `referrer-policy`, CSP `frame-ancestors 'none'`. Missing: HSTS, a full CSP, `permissions-policy`. | ➕ Act (Prompt F) |
+| 44 | Security headers on every response | A full CSP with no inline scripts, HSTS (one day to start), nosniff, COOP, Permissions-Policy and X-Frame-Options, on pages, feeds and errors (tested; D37). | ✅ Done (raise HSTS after launch: SETUP §13) |
 | 45 | Encryption at rest and in transit | HTTPS everywhere (Cloudflare, Supabase). At-rest encryption is the vendors' (UNVERIFIED claims). Feed tokens are hashed, plus a Vault-encrypted copy. | ✅ Done (vendor-dependent) |
 | 46 | Least privilege, including the AI agent | The service-role key never reaches a browser or the Email Worker; the CI Cloudflare token is limited to Pages. Claude on this Mac holds a GitHub token with `repo` and `workflow` scopes and no production database or Cloudflare credentials. Not written down as a policy. | ➕ Act (agent access policy; Prompt F) |
 | 47 | Logs of who did what, without secrets | Request logs are JSON with request ids and never include emails or tokens (tested: the feed token is redacted). No "who changed what" audit log yet; `event_revisions` is planned for Phase 10. | 🗓 Planned (Phases 10/14; Prompt G) |
-| 48 | A penetration test | None. | ➕ Act (light version before public launch: an OWASP ZAP baseline scan, free; Prompt F) |
+| 48 | A penetration test | `zap.yml` runs a weekly OWASP ZAP baseline scan of staging. Not run yet: there's no staging deploy (D37). | ➕ Act (after the first staging deploy) |
 | 49 | Answers to security questionnaires | No enterprise buyers. | ❌ N/A |
 | 50 | A disclosure process for strangers' reports | None. | ➕ Act (`SECURITY.md` + `/.well-known/security.txt`; Prompt A) |
 | 51 | A plan for a stolen laptop | None written. | ➕ Act (one-page runbook; Prompt A) |
@@ -96,7 +96,7 @@ Assessed 2026-11-20, against the code on `main` (after Phase 5 and the state-mac
 | 54 | A BAA with every vendor | Same as 53. Separately, email content goes to the AI provider in Phase 9 and must be disclosed (item 115). | ❌ N/A |
 | 55 | Audit trails of who *viewed* a record | No regulated records. | ⏸ Later. Trigger: a support view (item 12) logs its own views (Prompt G) |
 | 56 | PCI scope; card numbers out of the database | Buy Me a Coffee takes the cards; we store only an email hash, the name given to BMC, totals in cents and currency (D36). Keep it that way. | ❌ N/A (rule stays) |
-| 57 | GDPR deletion reaches every table, backup and log | Account purge covers our tables (tested), and logs hold no personal data by design. Not covered yet: raw emails in Storage (Phase 6), and backups (item 19) keep data until they age out. | ➕ Act (Phase 6 + retention note; Prompts B and E) |
+| 57 | GDPR deletion reaches every table, backup and log | Account purge covers our tables (tested) and now runs daily. It deletes a linked supporter record (D37). Raw emails expire in 30 days. Backups age out within 90 days. Logs hold no emails or tokens by design. | ✅ Done |
 | 58 | EU-only data residency | No such contracts. | ❌ N/A |
 | 59 | Quarterly access reviews | One person. | ⏸ Later. Trigger: a second person gets access |
 
@@ -174,7 +174,7 @@ Assessed 2026-11-20, against the code on `main` (after Phase 5 and the state-mac
 | 107 | Webhook retries, with a log of failed deliveries | We only *receive* webhooks; `jobs_dedupe` makes them safe to retry. | 🗓 Planned (Phase 15) |
 | 108 | A versioned API | No public API planned. The feed URL format is the only contract; keep it stable. | ❌ N/A |
 | 109 | API keys customers can create and revoke | No public API. | ❌ N/A |
-| 110 | API rate limits | No public API. The feed route will get a light limit in Prompt F. | ❌ N/A (feed limit: Prompt F) |
+| 110 | API rate limits | No public API. `/f/` returns 429 with Retry-After after 30 misses in 10 minutes per address; search and subscribe taps are limited too (D37). | ✅ Done |
 | 111 | A plan for a third-party API changing its format | Zod validates every response from our own database today. Phase 9 must validate the AI's output the same way (plan rule 3). | 🗓 Planned (Prompt D) |
 | 112 | OAuth token refresh | Gmail connection, Phase 17. | 🗓 Planned |
 | 113 | A sandbox for integrations | No public API. | ❌ N/A |

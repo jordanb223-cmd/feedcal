@@ -1,6 +1,6 @@
 // Phase 11 pages: dashboard, new feed, feed home with the review queue, event editor, settings.
 // Mobile-first: one column, big buttons, plain words.
-import { html, raw } from "hono/html";
+import { html } from "hono/html";
 import { formatWhen } from "./subscribe-views.js";
 import { layout } from "./views.js";
 
@@ -46,9 +46,8 @@ function banner(done: string | undefined, undo: { id: string; back: string } | n
   if (!done || !(done in DONE)) return "";
   return html`<div class="card" role="status"><p>${DONE[done]}</p>
   ${undo
-    ? html`<form method="post" action="/undo/${undo.id}" id="undo-form">${csrf(token)}<input type="hidden" name="back" value="${undo.back}">
-    <button type="submit" class="secondary">Undo <span id="undo-left">(10)</span></button></form>
-    ${raw(`<script>(()=>{let n=10;const f=document.getElementById("undo-form"),l=document.getElementById("undo-left");const t=setInterval(()=>{n--;if(n<=0){clearInterval(t);f.remove();}else l.textContent="("+n+")";},1000);})();</script>`)}`
+    ? html`<form method="post" action="/undo/${undo.id}" id="undo-form" data-countdown="10">${csrf(token)}<input type="hidden" name="back" value="${undo.back}">
+    <button type="submit" class="secondary">Undo <span id="undo-left" data-countdown-left>(10)</span></button></form>`
     : ""}</div>`;
 }
 

@@ -7,7 +7,7 @@ import { z } from "zod";
 import type { Database } from "@feedcal/shared";
 import { originOf } from "./security.js";
 import type { AppEnv, Supa } from "./types.js";
-import { layout } from "./views.js";
+import { layout, messagePage } from "./views.js";
 
 export const DIRECTORY_CATEGORIES = ["school", "youth sports", "community", "faith", "library", "government", "venue/music", "other"] as const;
 const Query = z.object({
@@ -65,6 +65,15 @@ export function registerDirectoryRoutes(app: Hono<AppEnv>, anon: (c: Context<App
     let rows: DirectoryRow[] = [];
     let unknownZip = false;
     if (searched) {
+      const ip = c.req.header("cf-connecting-ip");
+      if (ip) {
+        // 60 searches a minute per address (D37).
+        const { data: ok } = await anon(c).rpc("rate_check", { p_bucket: "search", p_client_ip: ip });
+        if (ok !== true) {
+          c.header("retry-after", "60");
+          return c.html(messagePage("Slow down a little", "That's a lot of searches in a minute. Please wait a moment and try again."), 429);
+        }
+      }
       const { data, error } = await anon(c).rpc("directory_search", {
         ...(q.q ? { p_query: q.q } : {}), ...(q.zip ? { p_zip: q.zip } : {}), p_miles: miles, ...(q.category ? { p_category: q.category } : {}), p_limit: 30,
       });

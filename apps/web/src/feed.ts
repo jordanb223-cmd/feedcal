@@ -51,12 +51,18 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     const ua = c.req.header("user-agent");
     // Cloudflare sets cf-connecting-ip. Locally it's absent, so local fetches aren't counted.
     const ip = c.req.header("cf-connecting-ip");
-    const { data, error } = await c.get("supabase").rpc("feed_calendar", {
+    const { data, error } = await c.get("supabase").rpc("feed_calendar_guarded", {
       p_token: token.data,
       p_ua_family: userAgentFamily(ua),
       ...(ip ? { p_client_ip: ip } : {}),
       ...(ua ? { p_user_agent: ua } : {}),
     });
+    if (error?.code === "P0429") {
+      // This address asked for many calendars that don't exist (D37).
+      c.header("retry-after", "600");
+      c.header("cache-control", "no-store");
+      return c.text("Too many requests. Try again in 10 minutes.", 429);
+    }
     if (error) throw new Error("feed_calendar failed");
     if (data === null) return notFound();
     const parsed = FeedCalendarData.safeParse(data);

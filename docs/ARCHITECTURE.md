@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 15 (Buy Me a Coffee donations). Real email needs a provider key and a domain; locally it goes to Mailpit. Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
+Status: Phase 16 (security hardening and privacy). Threats: `docs/THREAT-MODEL.md`; review: `docs/SECURITY-REVIEW.md`. Real email needs a provider key and a domain; locally it goes to Mailpit. Hosted email waits on a domain; AI calls wait on an Anthropic API key. Components marked *planned* don't exist yet. Schema and access rules: `docs/DATA-MODEL.md`.
 
 ## Components
 
@@ -30,6 +30,7 @@ Status: Phase 15 (Buy Me a Coffee donations). Real email needs a provider key an
 | Shared schemas/types | `packages/shared` | 1+ | none |
 | Directory | Postgres functions + `apps/web` pages | 13 | none |
 | Donations webhook | `supabase/functions/bmc-webhook` (D36) | 15 | BMC signing secret + service-role key |
+| Backups | `.github/workflows/backup.yml` + `scripts/backup.sh` (D37) | 16 | Database URL + backup passphrase (GitHub secrets) |
 
 ## Request flow today (Phase 1)
 

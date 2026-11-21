@@ -106,6 +106,26 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 
 **supporters.** Buy Me a Coffee supporters (Phase 15, D36). Keyed by `supporter_hash`, the SHA-256 of the lower-cased email; the email itself isn't stored. Also holds the name given to BMC, the donation count, `total_cents` (integer) and currency, and whether they're a member. `user_id` is set only when the person links their account; `list_publicly` is their choice. No direct access for anon or signed-in users. `profiles.supporter_since` is the badge. Each webhook delivery is in `private.bmc_events`, keyed by BMC's `event_id`, so it counts once.
 
+**Where personal data lives (D37).** The privacy page's retention list comes from this table.
+
+| Data | Where | Kept | How deletion reaches it |
+|---|---|---|---|
+| Email address, sign-in history | `auth.users`, `auth.sessions` | Until the account is deleted | `delete-accounts` (daily, 14 days after the request) |
+| Name, settings | `profiles`, `notification_settings` | Same | Purge, then cascade |
+| Calendars, events, senders | `feeds`, `events`, `sources`, `feed_editors`, `event_revisions` | Same; cancelled events show in feeds for 30 days | Purge: feeds go to a co-editor or are deleted; revision actors become "system" |
+| Forwarded emails and attachments | `messages`, `attachments`, `attachment_pages`, Storage `inbound-raw` | 30 days (`expires_at`; daily `expire_intake` plus `storage-trash`) | Expiry, or with the feed |
+| Undo records | `undo_log` | 1 day | Purge job |
+| Sign-in and rate-limit records | `private.login_attempts`, `private.report_limits`, `private.rate_hits` | 1 hour (salted hashes) | Deleted on use and hourly |
+| Calendar fetch counts | `feed_fetch_daily` | 400 days (hash, with a daily salt kept 2 days) | `private.apply_retention` daily |
+| Emails we sent | `private.email_outbox` | Contents 30 days after sending; the row stays so a once-only email isn't repeated | `apply_retention`; cascade on account delete |
+| Supporter (donation) record | `supporters` | Until the account is deleted, if linked; otherwise kept (an email hash and the name given to BMC) | Purge deletes a linked record |
+| Reports about feeds | `feed_reports`, `reports` | Kept for moderation | With the feed |
+| Admin actions | `admin_audit` | Kept | The admin's id becomes null on account delete |
+| Backups | GitHub artifacts, encrypted | 7 days daily, 90 days weekly | Age out |
+| Logs | Cloudflare, Supabase | Their platform defaults (UNVERIFIED) | No emails or tokens are logged |
+
+**rate_hits.** Phase 16 rate limiter: bucket, salted hash of the client address, time. Cleared hourly.
+
 **zip_codes.** Zip code to point, loaded in Phase 13.
 
 Status changes on `events`, `messages`, `attachments` and `reports` are limited to the moves in docs/STATE-MACHINES.md (enforced by a trigger).
@@ -134,6 +154,9 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `record_bmc_event(...)` | service role (the `bmc-webhook` function) | Phase 15 (D36). One Buy Me a Coffee event, once per `event_id`; test events ignored unless asked. |
 | `my_supporter_status()` / `link_supporter()` / `set_supporter_listing(p_list)` | signed-in | Phase 15. Opt-in link by email hash, badge, thank-you email, listing choice. |
 | `public_supporters()` | anon, signed-in | Phase 15. Only linked supporters who chose to be listed, by the name they gave. |
+| `feed_calendar_guarded(p_token, p_client_ip, p_user_agent, p_ua_family)` | anon, signed-in | Phase 16 (D37). What the web app calls: `feed_calendar`, plus the miss limit (raises `P0429`). |
+| `rate_check(p_bucket, p_client_ip)` | anon, signed-in | Phase 16. `search` (60/min) or `click` (30/min); counts the hit. |
+| `export_my_data()` | signed-in | Phase 16. Everything about the caller as JSON, without token hashes or Vault ids. |
 | `directory_search(p_query, p_zip, p_miles, p_category, p_limit)` | anon, signed-in (SECURITY INVOKER) | Phase 13 (D34). Public feeds only, ranked by text match, distance, followers, freshness and verification. |
 | `add_imported_feed` / `claim_imports` / `record_import` | service role | Phase 13. Operator-added public calendars, re-fetched daily; vanished events are cancelled, never deleted. |
 | `submit_report(p_event_uid, p_kind, p_details, p_client_ip)` | anon, signed-in | Phase 12 (D33). A subscriber's "Report a problem"; 10 an hour per network (hashed); queues an instant email to the feed's people. |
