@@ -7,6 +7,10 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-21
+
+The first release: everything built so far, for a private beta.
+
 ### Added
 - A page for each calendar that families can open from a text or a group chat, with a one-tap subscribe button for their phone.
 - A share kit: the page link, a QR code, a ready-to-paste message and a printable flyer.
