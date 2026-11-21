@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-21
+
+### Changed
+- You can now have events published automatically when Feedcal is at least 50% or 60% sure (Settings). Before, anything under 70% always waited for you.
+
 ## [0.2.2] - 2026-11-21
 
 ### Added
