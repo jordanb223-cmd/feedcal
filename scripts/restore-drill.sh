@@ -5,7 +5,7 @@
 #                                            hosted backup) into the local stack and report counts
 # Needs: the local stack running (npx supabase start), BACKUP_PASSPHRASE for an .enc file.
 set -euo pipefail
-db() { docker exec -i supabase_db_feedcal psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -qAt "$@"; }
+db() { docker exec -i supabase_db_feedcal psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -qAt "$@" 2>&1 | sed 's/^NOTICE:  //'; }
 fingerprint() {
   db <<'SQL'
 select string_agg(t || '=' || n, ' ' order by t) from (
@@ -20,7 +20,20 @@ select string_agg(t || '=' || n, ' ' order by t) from (
   select 'supporters', count(*) from public.supporters union all
   select 'vault.secrets', count(*) from vault.secrets) x;
 select 'events_md5=' || coalesce(md5(string_agg(id::text || title || starts_at::text, ',' order by id)), 'none') from public.events;
-select 'feed_tokens_readable=' || count(*) from public.feeds f join vault.decrypted_secrets ds on ds.id = f.feed_token_secret_id where ds.decrypted_secret is not null;
+-- Vault secrets from another project can't be decrypted here, and Vault raises an error rather
+-- than returning nothing, so each one is tried on its own (first hosted drill, 2026-11-21).
+do $$
+declare n integer := 0; f record;
+begin
+  for f in select feed_token_secret_id as id from public.feeds where feed_token_secret_id is not null loop
+    begin
+      perform 1 from vault.decrypted_secrets ds where ds.id = f.id and ds.decrypted_secret is not null;
+      if found then n := n + 1; end if;
+    exception when others then null;
+    end;
+  end loop;
+  raise notice 'feed_tokens_readable=%', n;
+end $$;
 SQL
 }
 work="$(mktemp -d)"
