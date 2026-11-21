@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-21
+
+### Fixed
+- The empty ZIP box no longer shows a real-looking example ZIP that could be mistaken for a filled-in value.
+
 ## [0.3.0] - 2026-11-21
 
 ### Added

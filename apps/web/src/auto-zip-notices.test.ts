@@ -22,6 +22,7 @@ describe("area (ZIP) on the Public choice", () => {
     const none = String(await visibilityChoice("unlisted"));
     expect(none).toContain('value=""');
     expect(none).toContain("Optional");
+    expect(none).toContain('placeholder="5 digits"'); // not a real-looking ZIP that could pass for a filled-in value
   });
   it("says what Public means, including the area being shown", async () => {
     expect(String(await visibilityChoice("public"))).toContain("anyone can find it and see every event, and its area is shown");
