@@ -7,6 +7,12 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-21
+
+### Added
+- Every page has a way to move on: a header with Your feeds and Account for organizers, and Find a calendar on public pages.
+- Each calendar's Share and Email pages have the same menu as its other pages.
+
 ## [0.1.1] - 2026-11-21
 
 ### Added
