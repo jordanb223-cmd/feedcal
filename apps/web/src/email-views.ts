@@ -1,4 +1,5 @@
 import { html } from "hono/html";
+import { feedNav } from "./nav.js";
 import { layout } from "./views.js";
 
 type Html = ReturnType<typeof layout>;
@@ -101,6 +102,7 @@ export function emailSetupPage(opts: {
   return layout(
     `Email for ${opts.name}`,
     html`<div class="card">
+  ${feedNav(opts.feedId, "email")}
   <h1>Email for <span dir="auto">${opts.name}</span></h1>
   ${opts.notice ? html`<p role="status">${EMAIL_NOTICES[opts.notice]}</p>` : ""}
   <p>Forward school or team emails to this address. Feedcal reads them and finds the events.</p>

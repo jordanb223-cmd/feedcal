@@ -2,6 +2,7 @@ import { html, raw } from "hono/html";
 import type { HtmlEscapedString } from "hono/utils/html";
 import type { PublicFeedPage } from "@feedcal/shared";
 import type { Device, SubscribeLinks } from "./subscribe-links.js";
+import { feedNav } from "./nav.js";
 import { layout } from "./views.js";
 
 type Html = HtmlEscapedString | Promise<HtmlEscapedString>;
@@ -117,6 +118,7 @@ export function shareKitPage(opts: {
   return layout(
     `Share ${opts.name}`,
     html`<div class="card">
+  ${feedNav(opts.feedId, "share")}
   <h1>Share <span dir="auto">${opts.name}</span></h1>
   ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}
   ${opts.pageUrl

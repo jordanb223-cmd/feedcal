@@ -2,6 +2,7 @@
 // Mobile-first: one column, big buttons, plain words.
 import { html } from "hono/html";
 import { formatWhen } from "./subscribe-views.js";
+import { feedNav } from "./nav.js";
 import { layout } from "./views.js";
 
 type Html = ReturnType<typeof layout>;
@@ -51,14 +52,6 @@ function banner(done: string | undefined, undo: { id: string; back: string } | n
     : ""}</div>`;
 }
 
-const nav = (feedId: string, here: string) => html`<p class="row" style="gap:1rem">
-  <a href="/feeds">All feeds</a>
-  ${here === "home" ? html`<strong>Review</strong>` : html`<a href="/feeds/${feedId}">Review</a>`}
-  <a href="/feeds/${feedId}/events/new">Add event</a>
-  <a href="/feeds/${feedId}/share">Share</a>
-  <a href="/feeds/${feedId}/email">Email</a>
-  ${here === "settings" ? html`<strong>Settings</strong>` : html`<a href="/feeds/${feedId}/settings">Settings</a>`}
-</p>`;
 
 // ---------------------------------------------------------------- dashboard
 export interface DashboardFeed { id: string; name: string; visibility: string; lastUpdated: string; reviewCount: number; subscribers: number | null }
@@ -138,7 +131,7 @@ export function feedHomePage(opts: {
   return layout(opts.name, html`${banner(opts.done, opts.undo ?? null, t)}
 <div class="card">
   <h1 dir="auto">${opts.name}</h1>
-  ${nav(opts.feedId, "home")}
+  ${feedNav(opts.feedId, "home")}
   ${opts.cards.length + opts.drafts.length === 0
     ? html`<p class="muted">Nothing to review. New emails are read within a few minutes of arriving.</p>`
     : html`<p>${opts.cards.length + opts.drafts.length} to review.</p>
@@ -203,7 +196,7 @@ export function eventEditPage(opts: {
   return layout(opts.eventId ? "Edit event" : "Add event", html`${banner(opts.done, opts.undo ?? null, opts.csrf)}
 <div class="card">
   <h1>${opts.eventId ? "Edit event" : "Add event"}</h1>
-  ${nav(opts.feedId, "event")}
+  ${feedNav(opts.feedId, "event")}
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
   ${opts.status === "cancelled" ? html`<p class="error">This event is cancelled.</p>` : ""}
   <form method="post" action="${action}">${csrf(opts.csrf)}
@@ -241,7 +234,7 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
   return layout("Settings", html`${banner(opts.done, opts.undo ?? null, t)}
 <div class="card">
   <h1>Settings</h1>
-  ${nav(opts.feedId, "settings")}
+  ${feedNav(opts.feedId, "settings")}
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
   ${s.isOwner
     ? html`<form method="post" action="/feeds/${opts.feedId}/settings">${csrf(t)}
