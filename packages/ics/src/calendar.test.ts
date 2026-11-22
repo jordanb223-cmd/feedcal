@@ -239,3 +239,24 @@ describe("EXDATE (one occurrence of a series removed, Phase 10)", () => {
     expect(single).not.toContain("EXDATE");
   });
 });
+
+describe("sign-off (D64)", () => {
+  it("is the last line of every event, also when an event has no description, and survives odd calendar names", async () => {
+    const ICAL = (await import("ical.js")).default;
+    const name = "Room 12; Hawks, U10\nB-team \\ \"Sharks\"";
+    const signOff = `Added by Calantern for ${name}. It can make mistakes.`;
+    const events = [
+      { ...base, uid: "s-1@feedcal.app", title: "With notes", description: "Bring a smile", startsAt: "2026-12-05T16:30:00Z", timeZone: "America/Los_Angeles" },
+      { ...base, uid: "s-2@feedcal.app", title: "No notes", description: null, startsAt: "2026-12-06T16:30:00Z", timeZone: "America/Los_Angeles" },
+    ];
+    const { ics } = buildCalendar({ name }, events, { ...opts, signOff });
+    const parsed = new ICAL.Component(ICAL.parse(ics)).getAllSubcomponents("vevent").map((v) => String(v.getFirstPropertyValue("description")));
+    expect(parsed).toHaveLength(2);
+    for (const d of parsed) expect(d.endsWith(`— ${signOff}`)).toBe(true);
+    expect(parsed[0]?.startsWith("Bring a smile")).toBe(true);
+  });
+  it("is left out when not asked for (other callers and the golden files)", () => {
+    const { ics } = buildCalendar({ name: "x" }, [{ ...base, uid: "s-3@feedcal.app", title: "t", startsAt: "2026-12-05T16:30:00Z", timeZone: "America/Los_Angeles" }], opts);
+    expect(ics).not.toContain("Added by Calantern");
+  });
+});

@@ -199,6 +199,9 @@ export function flyerPage(opts: { name: string; url: string; qrSvg: string; feed
 }
 
 // D44: what a subscriber should know. They never see the terms page, so it's said here.
+/** D64: the last line of every event in a Calantern calendar, so people can tell where it came from. */
+export const eventSignOff = (calendarName: string) =>
+  `Added by Calantern for ${calendarName}. It fills calendars in automatically and can make mistakes, so check details with the organizer.`;
 export const NOTE_ACCURACY = "Calantern fills this calendar in automatically, from emails and other calendars, and it can make mistakes. Check important details (dates, times, places) with the organizer.";
 export const NOTE_UNOFFICIAL = "Not run or endorsed by any school, team or group named in it, unless they say so.";
 export const NOTE_REFRESH = "Your calendar app checks for changes on its own schedule, so updates can take a few hours to show.";
