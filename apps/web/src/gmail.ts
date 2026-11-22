@@ -66,6 +66,7 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
   const head = html`${feedNav(id, "gmail")}<h1>Gmail for <span dir="auto">${name}</span></h1>
     ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}`;
   const disconnect = html`<form method="post" action="/feeds/${id}/gmail/disconnect">${csrfField(t)}
+    <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand this deletes Feedcal's copies of these emails</label></p>
     <button type="submit" class="danger">Disconnect Gmail</button></form>
     <p class="muted" style="font-size:.875rem">Disconnecting deletes Feedcal's access and every copy of the emails it read from Gmail, right away.</p>`;
 
@@ -86,7 +87,7 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
 
   if (s.status === "needs_reconnect") {
     return layout(`Gmail for ${name}`, html`<div class="card">${head}
-      <p class="error">Google ended Feedcal's connection to ${s.google_email ?? "your Gmail"}. New emails from ${s.sender_email ?? "your sender"} won't arrive until you reconnect.</p>
+      <p class="error" role="alert">Google ended Feedcal's connection to ${s.google_email ?? "your Gmail"}. New emails from ${s.sender_email ?? "your sender"} won't arrive until you reconnect.</p>
       <form method="post" action="/feeds/${id}/gmail/connect">${csrfField(t)}<button type="submit">Reconnect Gmail</button></form>
       <p class="muted">Your sender and schedule are kept.</p></div><div class="card">${disconnect}</div>`);
   }
@@ -97,7 +98,7 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
       <h2>Step 1: find an example email</h2>
       <p>Search your Gmail for one email that has the calendar information, for example the school's name or "schedule". Feedcal searches the last 30 days and shows up to 10 results, sender, subject and date only.</p>
       <form method="post" action="/feeds/${id}/gmail/search">${csrfField(t)}
-        <p><label for="words">Search for</label><input id="words" name="words" required minlength="2" maxlength="100" placeholder="e.g. Room F newsletter"></p>
+        <p><label for="words">Search for</label><input class="copy" id="words" name="words" required minlength="2" maxlength="100" autocomplete="off" placeholder="e.g. Room F newsletter"></p>
         <button type="submit">Search</button></form>
     </div>
     ${cands.length > 0 ? html`<div class="card"><h2>Step 2: pick the email with the calendar information</h2>
@@ -242,7 +243,9 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
   app.post("/feeds/:id/gmail/disconnect", async (c) => {
     const o = await owner(c);
     if ("res" in o) return o.res;
-    if (!csrfValid(c, (await form(c)).csrf)) return c.html(page(c, o.id, o.name, o.status, { error: MESSAGES.badForm }), 403);
+    const body = await form(c);
+    if (!csrfValid(c, body.csrf)) return c.html(page(c, o.id, o.name, o.status, { error: MESSAGES.badForm }), 403);
+    if (body.confirm !== "yes") return c.html(page(c, o.id, o.name, o.status, { error: "Tick the box to confirm, then press Disconnect Gmail again. Nothing was changed." }), 400);
     const { data } = await c.get("supabase").rpc("gmail_disconnect", { p_feed_id: o.id });
     const n = Number((data as { messages_deleted?: number } | null)?.messages_deleted ?? 0);
     c.get("log").info("gmail_disconnected", { messages_deleted: n });

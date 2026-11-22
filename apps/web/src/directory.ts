@@ -31,9 +31,9 @@ function directoryPage(opts: { q?: string | undefined; zip?: string | undefined;
   <h1>${title}</h1>
   <p class="muted">Public calendars from schools, teams, libraries and community groups. Subscribe once; they stay up to date.</p>
   <form method="get" action="/directory" role="search">
-    <p><label for="q">Search</label><input class="copy" id="q" name="q" value="${opts.q ?? ""}" placeholder="Land Park soccer" dir="auto"></p>
+    <p><label for="q">Search</label><input class="copy" id="q" name="q" autocomplete="off" value="${opts.q ?? ""}" placeholder="Land Park soccer" dir="auto"></p>
     <div class="row">
-      <p style="flex:1"><label for="zip">ZIP code</label><input class="copy" id="zip" name="zip" inputmode="numeric" pattern="[0-9]{5}" value="${opts.zip ?? ""}"></p>
+      <p style="flex:1"><label for="zip">ZIP code</label><input class="copy" id="zip" name="zip" inputmode="numeric" autocomplete="postal-code" spellcheck="false" pattern="[0-9]{5}" value="${opts.zip ?? ""}"></p>
       <p style="flex:1"><label for="miles">Within</label><select class="copy" id="miles" name="miles">${[5, 10, 25].map((m) => html`<option value="${m}" ${opts.miles === m ? "selected" : ""}>${m} miles</option>`)}</select></p>
     </div>
     <p><label for="category">Kind</label><select class="copy" id="category" name="category"><option value="">All</option>${DIRECTORY_CATEGORIES.map((c) => html`<option value="${c}" ${opts.category === c ? "selected" : ""}>${c}</option>`)}</select></p>
@@ -42,7 +42,7 @@ function directoryPage(opts: { q?: string | undefined; zip?: string | undefined;
 </div>
 ${opts.searched
   ? html`<div class="card">
-  ${opts.unknownZip ? html`<p class="error">We don't know that ZIP code yet.</p>` : ""}
+  ${opts.unknownZip ? html`<p class="error" role="alert">We don't know that ZIP code yet.</p>` : ""}
   ${opts.rows.length === 0
     ? html`<p>No public calendars found. Try a wider distance or fewer words.</p>`
     : html`<ul class="events">${opts.rows.map((r) => html`<li>

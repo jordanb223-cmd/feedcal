@@ -7,6 +7,18 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-21
+
+### Changed
+- Making a new calendar link, getting a new email address and disconnecting Gmail now ask you to tick a box first, because they can't be undone.
+- Buttons and choices respond when you hover and press them (unless your device asks for less motion).
+- A "Skip to content" link for keyboard and screen-reader users; error messages are read out by screen readers.
+- Phones suggest the right things in email and ZIP fields and stop "correcting" email addresses.
+
+### Fixed
+- The Gmail example search box now looks like every other field.
+- The phone's top bar matches the page colour.
+
 ## [0.3.1] - 2026-11-21
 
 ### Fixed

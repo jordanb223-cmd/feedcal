@@ -119,6 +119,8 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     if (!user) return c.redirect("/login", 303);
     const body = await c.req.parseBody();
     if (!csrfValid(c, body.csrf)) return c.html(messagePage("Please try again", MESSAGES.badForm, { href: `/feeds/${id.data}/share`, text: "Back" }), 403);
+    // Can't be undone (every subscriber needs the new link), so it needs the tick box.
+    if (body.confirm !== "yes") return c.html(messagePage("Nothing changed", "Tick the box to confirm, then press Make a new link again.", { href: `/feeds/${id.data}/share`, text: "Back" }), 400);
     const { data: token, error } = await c.get("supabase").rpc("rotate_feed_token", { p_feed_id: id.data });
     if (error || typeof token !== "string") {
       return c.html(messagePage("Not allowed", "Only the feed's owner can make a new link."), 403);

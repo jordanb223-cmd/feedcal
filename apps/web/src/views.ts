@@ -40,10 +40,10 @@ ${head}
 <link rel="stylesheet" href="${ASSET_PATHS.css}">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#1d1d1b">
+<meta name="theme-color" content="#f6f6f4">
 <script src="${ASSET_PATHS.js}" defer></script>
 </head>
-<body><main id="main">${siteHeader(audience)}${body}
+<body><a class="skip" href="#main">Skip to content</a><main id="main">${siteHeader(audience)}${body}
 <footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/privacy">Privacy</a> · <a href="/about/costs">Support Feedcal</a></footer></main></body>
 </html>`;
 }
@@ -60,7 +60,7 @@ export function loginPage(opts: { csrf: string; googleEnabled: boolean; error?: 
     ${csrfField(opts.csrf)}
     <label for="email">Email address</label>
     <p class="muted" id="email-hint">We'll email you a sign-in link. No password needed.</p>
-    <p><input id="email" name="email" type="email" autocomplete="email" required maxlength="320"
+    <p><input id="email" name="email" type="email" autocomplete="email" spellcheck="false" required maxlength="320"
       aria-describedby="email-hint" value="${opts.email ?? ""}"></p>
     <button type="submit">Email me a sign-in link</button>
   </form>
@@ -185,7 +185,7 @@ export function accountPage(opts: {
 <div class="card">
   <h2>Delete your account</h2>
   ${opts.deletionDate
-    ? html`<p class="error">Your account will be deleted on <strong>${opts.deletionDate}</strong>.</p>
+    ? html`<p class="error" role="alert">Your account will be deleted on <strong>${opts.deletionDate}</strong>.</p>
   <form method="post" action="/account/cancel-delete">${csrfField(opts.csrf)}<button type="submit">Keep my account</button></form>`
     : html`<p>We wait ${opts.graceDays ? `${opts.graceDays} days` : "a short grace period"}, then delete your personal data. Feeds you own go to a co-editor if they have one; otherwise they're deleted.</p>
   <form method="post" action="/account/delete">

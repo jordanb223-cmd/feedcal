@@ -199,11 +199,14 @@ describe("decisions", () => {
   it("rotating the address: owner ok, otherwise a plain refusal", async () => {
     const ok = setup();
     const c1 = await csrf(ok.request);
-    const r1 = await ok.request(`/feeds/${FEED}/rotate-intake`, { method: "POST", headers: c1.headers, body: new URLSearchParams({ csrf: c1.token }) });
+    const r0 = await ok.request(`/feeds/${FEED}/rotate-intake`, { method: "POST", headers: c1.headers, body: new URLSearchParams({ csrf: c1.token }) });
+    expect(r0.status).toBe(400); // can't be undone, so the tick box is required
+    expect(await r0.text()).toContain("Nothing changed");
+    const r1 = await ok.request(`/feeds/${FEED}/rotate-intake`, { method: "POST", headers: c1.headers, body: new URLSearchParams({ csrf: c1.token, confirm: "yes" }) });
     expect(r1.headers.get("location")).toBe(`/feeds/${FEED}/email?done=rotated`);
     const no = setup({ rpcError: true });
     const c2 = await csrf(no.request);
-    const r2 = await no.request(`/feeds/${FEED}/rotate-intake`, { method: "POST", headers: c2.headers, body: new URLSearchParams({ csrf: c2.token }) });
+    const r2 = await no.request(`/feeds/${FEED}/rotate-intake`, { method: "POST", headers: c2.headers, body: new URLSearchParams({ csrf: c2.token, confirm: "yes" }) });
     expect(r2.status).toBe(403);
   });
 });

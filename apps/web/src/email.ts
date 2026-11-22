@@ -181,6 +181,7 @@ export function registerEmailRoutes(app: Hono<AppEnv>): void {
     if (!(await currentUser(c))) return c.redirect("/login", 303);
     const body = await formBody(c);
     if (!csrfValid(c, body.csrf)) return c.html(messagePage("Please try again", MESSAGES.badForm, { href: `/feeds/${id.data}/email`, text: "Back" }), 403);
+    if (body.confirm !== "yes") return c.html(messagePage("Nothing changed", "Tick the box to confirm, then press Get a new address again.", { href: `/feeds/${id.data}/email`, text: "Back" }), 400);
     const { error } = await c.get("supabase").rpc("rotate_intake_address", { p_feed_id: id.data });
     if (error) return c.html(messagePage("Not allowed", "Only the feed's owner can change its email address."), 403);
     c.get("log").info("intake_address_rotated", { feed_id: id.data });

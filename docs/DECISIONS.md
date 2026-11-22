@@ -391,3 +391,19 @@ What was checked, against what, and what changed:
   - Approving a sender: events with a clearly stated date go on without asking (D41); unclear ones wait.
   - Privacy policy, new "If you connect Gmail" section: one chosen sender only, read-only; kept 30 days and read by the AI service like forwarded mail; disconnecting deletes; no ads, sale or AI training, and no human reading except on request, for security or by law (Google's User Data Policy, read 2026-11-21, limits human reading to those cases); and the Limited Use statement. That statement's wording follows other apps' published policies; Google's exact required wording wasn't found on the policy page.
 - **Checked:** `admin.ts` has no screen that shows email contents, so the "no human reading" line holds for the admin pages. Not checked: whether Anthropic's API terms match "not used to train AI models"; the line is Feedcal's own commitment about what Feedcal does.
+
+## D45 — Interface audit against the Vercel Web Interface Guidelines (2026-11-21)
+
+- **Why.** The owner asked to revamp the UI using three published agent skills, in steps: audit, then visual direction, then polish. Read 2026-11-21 as reference, not installed: Vercel's `web-design-guidelines` (vercel-labs/agent-skills; rules pinned to vercel-labs/web-interface-guidelines @434b7f9; no license file detected, so rules are used as a checklist, not copied), Emil Kowalski's `emil-design-eng` (MIT; interaction and animation guidance, for step 3), and Leonxlnx's `taste-skill` (MIT; built for marketing sites with photo-led heroes and runnable scripts; judged a poor fit and not used).
+- **Audit scope.** `apps/web/src` (pages and stylesheet) read against every rule; six production pages opened at 375 px to check for sideways scrolling (none did, with today's data). Pages behind states that would need data changes (Gmail search step, admin, error states) were reviewed from code only. No screen reader was used.
+- **Fixed (owner approved items 1-9):**
+  1. Three irreversible one-click actions now need a tick box, checked on the server too: Make a new link (subscribers need the new link), Get a new address, Disconnect Gmail (deletes copies). Discard, Reject and Remove already had Undo.
+  2. The Gmail example search box had no field style; now matches the rest.
+  3. Hover and press feedback on buttons, links and the Private/Public cards; motion off under `prefers-reduced-motion`. Transitions list their properties (no `transition: all`).
+  4. A "Skip to content" link on every page.
+  5. Six error messages gain `role="alert"` (nine already had it).
+  6. Field hints: `autocomplete` (email, postal-code, off) and `spellcheck="false"` on email, ZIP, time zone and copy-only link fields.
+  7. `touch-action: manipulation` on tappable controls.
+  8. `theme-color` now matches the page background (#f6f6f4), not near-black.
+  9. `overflow-wrap: anywhere` on page content, so a long address can't push a page sideways.
+- **Not adopted:** Title Case for headings and buttons (Feedcal uses plain sentence case on purpose); placeholders ending in "…"; rules for React, large lists, images and video (not used here).

@@ -84,7 +84,7 @@ export function newFeedPage(opts: { csrf: string; error?: string; values?: Recor
   <h1>New feed</h1>
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
   <form method="post" action="/feeds/new">${csrf(opts.csrf)}
-    <p><label for="name">Name</label><input class="copy" id="name" name="name" required maxlength="120" value="${v.name ?? ""}" placeholder="Room 12 families" dir="auto"></p>
+    <p><label for="name">Name</label><input class="copy" id="name" name="name" required maxlength="120" autocomplete="off" value="${v.name ?? ""}" placeholder="Room 12 families" dir="auto"></p>
     <p><label for="category">Kind</label><select class="copy" id="category" name="category">${CATEGORIES.map((c) => html`<option value="${c}" ${v.category === c ? "selected" : ""}>${c}</option>`)}</select></p>
     ${visibilityChoice(v.visibility, { zip: v.zip_code || null })}
     <button type="submit">Create feed</button>
@@ -199,7 +199,7 @@ export function eventEditPage(opts: {
   <h1>${opts.eventId ? "Edit event" : "Add event"}</h1>
   ${feedNav(opts.feedId, "event")}
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
-  ${opts.status === "cancelled" ? html`<p class="error">This event is cancelled.</p>` : ""}
+  ${opts.status === "cancelled" ? html`<p class="error" role="alert">This event is cancelled.</p>` : ""}
   <form method="post" action="${action}">${csrf(opts.csrf)}
     <p><label for="title">Title</label><input class="copy" id="title" name="title" required maxlength="300" value="${v.title}" dir="auto"></p>
     <p><label class="check"><input type="checkbox" name="all_day" value="1" ${v.all_day ? "checked" : ""}> All day</label></p>
@@ -240,10 +240,10 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
   ${s.isOwner
     ? html`<form method="post" action="/feeds/${opts.feedId}/settings">${csrf(t)}
-    <p><label for="name">Name</label><input class="copy" id="name" name="name" required maxlength="120" value="${s.name}" dir="auto"></p>
+    <p><label for="name">Name</label><input class="copy" id="name" name="name" required maxlength="120" autocomplete="off" value="${s.name}" dir="auto"></p>
     <p><label for="description">Description</label><textarea id="description" name="description" rows="2" maxlength="2000" dir="auto">${s.description}</textarea></p>
     ${visibilityChoice(s.visibility, { zip: s.zip, suggestion: s.zipSuggestion })}
-    <p><label for="timezone">Time zone</label><input class="copy" id="timezone" name="timezone" value="${s.timezone}" pattern="[A-Za-z]+(/[A-Za-z0-9_+-]+){0,2}"></p>
+    <p><label for="timezone">Time zone</label><input class="copy" id="timezone" name="timezone" autocomplete="off" spellcheck="false" value="${s.timezone}" pattern="[A-Za-z]+(/[A-Za-z0-9_+-]+){0,2}"></p>
     <p><label for="threshold">Publish automatically when Feedcal is at least this sure (from trusted senders)</label>
       <select class="copy" id="threshold" name="threshold">${[0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1].map((n) => html`<option value="${n}" ${Math.abs(s.threshold - n) < 0.001 ? "selected" : ""}>${n === 1 ? "Never: I review everything" : `${Math.round(n * 100)}%`}</option>`)}</select></p>
     <button type="submit">Save settings</button>
@@ -273,7 +273,7 @@ ${s.isOwner ? html`<div class="card">
   <ul class="events">${s.editors.map((e) => html`<li>${e.label} <span class="muted">(${e.role})</span>
     ${s.isOwner && e.role !== "owner" ? html`<form method="post" action="/feeds/${opts.feedId}/editors/${e.userId}/remove">${csrf(t)}<button type="submit" class="secondary">Remove</button></form>` : ""}</li>`)}</ul>
   ${s.isOwner ? html`<form method="post" action="/feeds/${opts.feedId}/editors">${csrf(t)}
-    <p><label for="editor">Add an editor by email</label><input class="copy" type="email" id="editor" name="email" required maxlength="320"></p>
+    <p><label for="editor">Add an editor by email</label><input class="copy" type="email" id="editor" name="email" required maxlength="320" autocomplete="off" spellcheck="false"></p>
     <button type="submit" class="secondary">Add editor</button></form>` : ""}
 </div>
 ${s.isOwner ? html`<div class="card">
