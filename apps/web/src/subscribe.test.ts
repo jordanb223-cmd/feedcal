@@ -64,10 +64,14 @@ describe("GET /c/<slug>", () => {
     expect(res.status).toBe(200);
     const body = await res.text();
     expect(body).toContain('<h1 dir="auto">Sutterville Kindergarten</h1>');
-    expect(body).toContain(`Kept up to date by <span dir="auto">${esc("Alice O'Brien")}</span> · 95818`);
+    expect(body).toContain(`Kept up to date by <span dir="auto">${esc("Alice O'Brien")}</span></p>`);
     expect(body).toContain("At least 43 calendars follow this.");
     expect(body).toContain("How we count");
-    expect((body.match(/<li><strong dir="auto">Event/g) ?? []).length).toBe(5);
+    expect((body.match(/<span class="what"><strong dir="auto">Event/g) ?? []).length).toBe(5);
+    // Look C (D46): a date column per event, the first marked as next, and the kind · ZIP line.
+    expect((body.match(/<span class="day" aria-hidden="true">/g) ?? []).length).toBe(5);
+    expect(body).toContain('<li class="next">');
+    expect(body).toContain('<span class="kicker">school · 95818</span>');
     expect(body).toContain("Room 12");
   });
 

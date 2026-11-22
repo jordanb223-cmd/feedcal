@@ -37,7 +37,7 @@ describe("every page has a way to move on", () => {
       const html = await res.text();
       expect(html, path).toContain('aria-label="Site"');
       expect(html, path).toContain('<a class="skip" href="#main">Skip to content</a>');
-      expect(html, path).toContain('<meta name="theme-color" content="#f6f6f4">');
+      expect(html, path).toContain('<meta name="theme-color" content="#ffffff">');
       if (res.status === 200) expect(html, path).not.toContain('href="/feeds">Your feeds');
     }
   });
