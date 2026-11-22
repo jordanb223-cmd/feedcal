@@ -76,3 +76,15 @@ Deno.test("subjects stay one line whatever the names and titles contain (D60)", 
     ]) assert(!/[\x00-\x1f\x7f\u0085\u2028\u2029]/.test(r.subject), JSON.stringify(r.subject));
   }
 });
+
+Deno.test("contact message email (D63): escaped, one-line subject, safe Reply-To, no unsubscribe", () => {
+  const r = render("contact", { kind: "bug", message: "<img src=x onerror=alert(1)>\r\nBcc: evil@example.test\nThe flyer is blank", reply_to: "parent@example.test", page: "/feeds/x/flyer", signed_in: false }, SITE, UNSUB);
+  assert(!r.html.includes("<img src=x") && r.html.includes("&lt;img src=x"), "message is escaped");
+  assert(!/[\r\n]/.test(r.subject) && r.subject.startsWith("Calantern bug report:"), r.subject);
+  assertEquals(r.replyTo, "parent@example.test");
+  assert(r.text.includes("Reply to: parent@example.test") && r.text.includes("Page: /feeds/x/flyer"));
+  assert(NO_UNSUBSCRIBE.has("contact") && !r.text.includes("Stop these emails"));
+  for (const bad of ["a@b.co\r\nBcc: x@y.z", "<a@b.co>", "a@b", "a,b@c.co", "x".repeat(300) + "@a.co", 42, null]) {
+    assertEquals(render("contact", { kind: "other", message: "hi", reply_to: bad }, SITE, UNSUB).replyTo, undefined, JSON.stringify(bad));
+  }
+});

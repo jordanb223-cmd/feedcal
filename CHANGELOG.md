@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-11-22
+
+### Added
+- A Contact page (linked at the bottom of every page) for bug reports, questions and privacy requests. Add your email if you'd like a reply.
+
 ## [0.8.1] - 2026-11-22
 
 ### Added

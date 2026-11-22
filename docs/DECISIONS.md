@@ -555,3 +555,11 @@ What was checked, against what, and what changed:
 - **Tests.** `apps/web/src/footer.test.ts`: the disclaimer on eight pages including the not-found page, and the cookies section's content.
 - **Not changed.** The legal pages are still drafts for a lawyer's review; whether no cookie banner is needed is the general reading for strictly necessary cookies, for that review to confirm.
 
+## D63 — A contact and bug-report form (2026-11-22)
+
+- **Why.** The owner asked how people can contact them or report bugs, and whether that's mandatory. General reading, for the lawyer reviewing the draft legal pages to confirm: GDPR privacy notices name the service and a way to reach it; Google's OAuth app review generally needs a support contact; DMCA safe harbor generally needs a designated takedown contact. The owner chose a form now, an address on the domain later.
+- **What.** `/contact` (footer link on every page, and in the privacy page's "Your choices"): topic, message (≤ 4000), optional email for a reply. Sent messages are stored in `private.contact_messages` for 90 days and emailed to every admin (`public.admins`) as kind `contact`, with the sender's address as Reply-To when it's a single clean address (`safeReplyTo`), no unsubscribe link (an admin message, like ops alerts), and the one-line subject rule (D60). Messages aren't linked to accounts, so the privacy page's "download everything we hold about you" stays true; only "sent while signed in" is kept.
+- **Spam and abuse.** A hidden field only bots fill in (silently dropped); 5 messages an hour per address, with unproven callers sharing one bucket (D51); size and address checks; header tricks in the address refused in SQL and again before the header is set. The "came from" page is kept only when it's a Calantern path.
+- **Owner step.** Messages reach only people in `public.admins` (SETUP step "Make yourself an admin"); without that they're stored but nobody is emailed.
+- **Tests.** pgTAP 028 (grants, storage, admin email, invalid input, header tricks, rate limit incl. unproven callers, purge); `notify.test.ts` (escaping, subject, Reply-To safety); `contact.test.ts` (form, "came from" only on-site, honeypot, token, errors); security sweep covers `/contact`.
+

@@ -1,9 +1,9 @@
 // Notification emails, as plain text and simple HTML. Plain English; every email says why it
 // was sent and has a one-click unsubscribe for that kind.
-export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks" | "ops_alert" | "gmail_reconnect";
+export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks" | "ops_alert" | "gmail_reconnect" | "contact";
 
 /** Operations alerts (D38) go to admins and have no unsubscribe: an ignored alert is the failure. */
-export const NO_UNSUBSCRIBE: ReadonlySet<Kind> = new Set<Kind>(["ops_alert", "gmail_reconnect"]);
+export const NO_UNSUBSCRIBE: ReadonlySet<Kind> = new Set<Kind>(["ops_alert", "gmail_reconnect", "contact"]);
 const ALERT_TEXT: Record<string, { title: string; check: string }> = {
   queue_backlog: { title: "Emails are waiting in a queue", check: "Open docs/runbooks/queue-backlog.md. Check the Edge Function logs for the named queue." },
   ai_spend_daily: { title: "AI spend is over today's budget", check: "Open docs/runbooks/bad-extraction-wave.md. Look for one feed sending many emails." },
@@ -12,7 +12,14 @@ const ALERT_TEXT: Record<string, { title: string; check: string }> = {
   purge_stuck: { title: "Account deletions are overdue", check: "Open docs/runbooks/purge-stuck.md." },
   abuse_spike: { title: "Many requests are being rate-limited", check: "Open docs/runbooks/spam-wave.md." },
 };
-export interface Rendered { subject: string; text: string; html: string }
+export interface Rendered { subject: string; text: string; html: string; replyTo?: string }
+
+/** D63: a Reply-To is one plain address, or nothing (it goes into an email header). */
+export function safeReplyTo(v: unknown): string | undefined {
+  if (typeof v !== "string" || v.length > 254) return undefined;
+  return /^[^\s@<>",;:()[\]\\]{1,64}@[a-z0-9.-]{1,253}\.[a-z]{2,63}$/i.test(v) ? v : undefined;
+}
+const CONTACT_KINDS: Record<string, string> = { bug: "Bug report", question: "Question", privacy: "Privacy request", other: "Message" };
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const REPORT_KINDS: Record<string, string> = {
@@ -57,6 +64,18 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
     const body = `${lead}\n\nReconnecting takes one click and keeps your sender and schedule: ${link}`;
     const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;color:#1d1d1b"><p>${esc(lead)}</p><p>Reconnecting takes one click and keeps your sender and schedule.</p><p><a href="${esc(link)}">Reconnect Gmail</a></p><hr style="border:0;border-top:1px solid #e3e3df;margin:2rem 0 1rem"><p style="color:#4f4f4b;font-size:14px">You get this because you connected Gmail to a Calantern calendar. Disconnecting stops these emails.</p></body></html>`;
     return { subject, text: `${body}\n\n—\nYou get this because you connected Gmail to a Calantern calendar.`, html };
+  }
+  if (kind === "contact") {
+    const label = CONTACT_KINDS[String(p.kind)] ?? "Message";
+    const replyTo = safeReplyTo(p.reply_to);
+    const message = String(p.message ?? "");
+    const page = typeof p.page === "string" && p.page ? p.page : null;
+    const who = replyTo ? `Reply to: ${replyTo} (just reply to this email)` : "No reply address given.";
+    const signedIn = p.signed_in === true ? "Sent while signed in." : "Sent while signed out.";
+    const subject = `Calantern ${label.toLowerCase()}: ${message.slice(0, 60)}${message.length > 60 ? "…" : ""}`;
+    const text = `${label} from the contact form.\n\n${message}\n\n${page ? `Page: ${page}\n` : ""}${who}\n${signedIn}\n\n—\nYou get this because you're a Calantern admin.`;
+    const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;color:#1d1d1b"><p><strong>${esc(label)}</strong> from the contact form.</p><blockquote style="white-space:pre-wrap;border-left:3px solid #e3e3df;margin:0;padding:.5rem 1rem">${esc(message)}</blockquote>${page ? `<p>Page: ${esc(page)}</p>` : ""}<p>${esc(who)}<br>${esc(signedIn)}</p><hr style="border:0;border-top:1px solid #e3e3df;margin:2rem 0 1rem"><p style="color:#4f4f4b;font-size:14px">You get this because you're a Calantern admin.</p></body></html>`;
+    return { subject, text, html, ...(replyTo ? { replyTo } : {}) };
   }
   if (kind === "ops_alert") {
     const a = ALERT_TEXT[String(p.kind)] ?? { title: `Alert: ${String(p.kind)}`, check: "See docs/RUNBOOKS.md." };

@@ -845,6 +845,9 @@ isOneToOne: false
 "state_machines":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"submit_contact":
+{ Args: { "p_client_ip"?: string,"p_kind": string,"p_message": string,"p_page"?: string,"p_reply_to"?: string }; Returns: string
+                           },
 "submit_feed_report":
 { Args: { "p_client_ip"?: string,"p_details"?: string,"p_kind": string,"p_slug": string }; Returns: string
                            },
