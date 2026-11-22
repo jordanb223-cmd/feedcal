@@ -60,6 +60,14 @@ describe("GET /f/<token>.ics", () => {
     expect(ics).toMatch(/X-WR-CALDESC:.*can make mistakes/);
   });
 
+  it("every event ends with who added it, for which calendar (D64)", async () => {
+    const { request } = setup(() => ({ data: calendarData(), error: null }));
+    const ics = (await (await request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
+    const descriptions = ics.split("\r\n").filter((l) => l.startsWith("DESCRIPTION:"));
+    expect(descriptions.length).toBeGreaterThan(0);
+    for (const d of descriptions) expect(d).toMatch(/\\n\\n— Added by Calantern for Room 12\. It fills calendars in automatically and can make mistakes\\, so check details with the organizer\.$/);
+  });
+
   it("answers 304 when the calendar hasn't changed", async () => {
     const { request } = setup(() => ({ data: calendarData(), error: null }));
     const first = await request(`/f/${TOKEN}.ics`);

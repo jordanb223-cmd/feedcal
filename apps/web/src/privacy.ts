@@ -2,6 +2,7 @@
 // as an .ics file, and the plain-English privacy policy with its retention schedule.
 import type { Hono } from "hono";
 import { seoHead } from "./seo.js";
+import { eventSignOff } from "./subscribe-views.js";
 import { html } from "hono/html";
 import { z } from "zod";
 import { buildCalendar, type CalendarEvent } from "@feedcal/ics";
@@ -47,7 +48,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
       createdAt: e.created_at ?? e.starts_at, updatedAt: e.updated_at ?? e.starts_at, source: null,
     }));
     const { ics } = buildCalendar({ name: found.feed.name, description: found.feed.description ?? null }, events, {
-      defaultTimeZone: found.feed.timezone ?? "America/Los_Angeles", reportUrl: (uid) => `${originOf(c)}/report/${encodeURIComponent(uid)}`, product: "Calantern",
+      defaultTimeZone: found.feed.timezone ?? "America/Los_Angeles", reportUrl: (uid) => `${originOf(c)}/report/${encodeURIComponent(uid)}`, product: "Calantern", signOff: eventSignOff(found.feed.name),
     });
     c.header("content-type", "text/calendar; charset=utf-8");
     c.header("content-disposition", `attachment; filename="${found.feed.slug}-export.ics"`);

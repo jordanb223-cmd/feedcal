@@ -563,3 +563,10 @@ What was checked, against what, and what changed:
 - **Owner step.** Messages reach only people in `public.admins` (SETUP step "Make yourself an admin"); without that they're stored but nobody is emailed.
 - **Tests.** pgTAP 028 (grants, storage, admin email, invalid input, header tricks, rate limit incl. unproven callers, purge); `notify.test.ts` (escaping, subject, Reply-To safety); `contact.test.ts` (form, "came from" only on-site, honeypot, token, errors); security sweep covers `/contact`.
 
+## D64 — Every event says it came from Calantern (2026-11-22)
+
+- **Why.** The owner asked that each calendar entry show, at the bottom, that it came from Calantern, to set it apart from events people add themselves. The calendar-wide accuracy note (D44) is in `X-WR-CALDESC`, which most phone calendar apps don't show; an event's description is what people see when they tap it.
+- **What.** `buildCalendar` takes an optional `signOff`; when given, it's the last paragraph of every event's description, after the organizer's notes, the source line and the report link, prefixed with "— ". The feed (`/f/<token>.ics`) and the per-calendar export pass `eventSignOff(name)`: "Added by Calantern for <calendar>. It fills calendars in automatically and can make mistakes, so check details with the organizer." Events with no notes get it too. It's ordinary escaped text, so calendar names with commas, semicolons or line breaks can't break the file.
+- **Effect on subscribers.** Each changed event's description changes, so calendar apps show the line after their next refresh (hours, per app). Titles are unchanged.
+- **Tests.** `calendar.test.ts` (last line of every event, with and without notes; odd names; parsed back by ical.js; absent when not asked for, so golden files are unchanged); `feed.test.ts` (the served feed carries it with the calendar's name).
+

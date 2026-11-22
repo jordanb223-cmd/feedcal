@@ -6,7 +6,7 @@ import { currentUser, MESSAGES } from "./auth.js";
 import { csrfValid, originOf } from "./security.js";
 import type { AppEnv } from "./types.js";
 import { messagePage } from "./views.js";
-import { NOTE_ACCURACY } from "./subscribe-views.js";
+import { eventSignOff, NOTE_ACCURACY } from "./subscribe-views.js";
 
 const DEFAULT_TIME_ZONE = "America/Los_Angeles";
 const FeedId = z.uuid();
@@ -118,6 +118,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
       defaultTimeZone: DEFAULT_TIME_ZONE,
       reportUrl: (uid) => `${origin}/report/${encodeURIComponent(uid)}`,
       product: "Calantern",
+      signOff: eventSignOff(feed.name),
     });
     if (warnings.length > 0) c.get("log").warn("feed_build_warnings", { feed_id: feed.id, count: warnings.length });
 

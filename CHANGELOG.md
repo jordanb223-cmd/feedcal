@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-11-22
+
+### Added
+- Every event in a Calantern calendar now ends with a short line saying it was added by Calantern, for which calendar, and to check important details with the organizer. Your calendar app shows it after its next refresh.
+
 ## [0.8.2] - 2026-11-22
 
 ### Added

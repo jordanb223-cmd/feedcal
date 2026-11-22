@@ -40,6 +40,8 @@ export interface BuildOptions {
   reportUrl?: (uid: string) => string;
   /** Product name and version for PRODID. */
   product?: string;
+  /** D64: a closing line for every event's description, e.g. who added it and a caution. */
+  signOff?: string;
   /** "Now", for the time-zone window below; defaults to the clock (tests pass a fixed value). */
   now?: number;
 }
@@ -119,6 +121,7 @@ function eventLines(e: CalendarEvent, tz: string, opts: BuildOptions, warnings: 
     e.description ?? "",
     e.source ? `Source: forwarded email from ${e.source}` : "",
     opts.reportUrl ? `Report a problem: ${opts.reportUrl(wellFormed(e.uid))}` : "",
+    opts.signOff ? `— ${opts.signOff}` : "",
   ]
     .filter((s) => s.trim() !== "")
     .join("\n\n");
