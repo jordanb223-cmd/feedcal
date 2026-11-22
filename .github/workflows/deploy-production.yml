@@ -54,4 +54,8 @@ jobs:
       - name: Keep the pre-deploy backup for 90 days
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with: { name: "backup-predeploy-${{ github.ref_name }}-${{ github.run_id }}", path: backups-predeploy/, retention-days: 90, if-no-files-found: error }
+      - name: Tell the database a backup was stored
+        env:
+          BACKUP_DB_URL: ${{ secrets.BACKUP_DB_URL }}
+        run: scripts/backup-heartbeat.sh "$BACKUP_DB_URL" predeploy "$(ls backups-predeploy/*.enc | head -1)"
       - run: .github/scripts/deploy.sh

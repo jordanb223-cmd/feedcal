@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-11-22
+
+### Fixed
+- Backups now run four times a day, and the admins get an email if none has arrived in 30 hours.
+
 ## [0.8.3] - 2026-11-22
 
 ### Added

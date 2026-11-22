@@ -570,3 +570,15 @@ What was checked, against what, and what changed:
 - **Effect on subscribers.** Each changed event's description changes, so calendar apps show the line after their next refresh (hours, per app). Titles are unchanged.
 - **Tests.** `calendar.test.ts` (last line of every event, with and without notes; odd names; parsed back by ical.js; absent when not asked for, so golden files are unchanged); `feed.test.ts` (the served feed carries it with the calendar's name).
 
+## D65 — Backups four times a day, and an alarm when they stop (2026-11-22)
+
+- **Why.** The daily Backup workflow (09:20 UTC) never ran on schedule: by 12:03 UTC on 2026-11-22 GitHub showed 0 scheduled backup runs, and the 15-minute uptime check had run on schedule 3 times in about 11 hours. GitHub's docs: the schedule "can be delayed during periods of high loads… some queued jobs may be dropped", and the start of the hour is busiest. Backups made by hand and before each deploy worked.
+- **What.**
+  - `backup.yml` runs at 03:47, 09:47, 15:47 and 21:47 UTC. Each copy is kept 7 days; the first Sunday copy (checked by name through the Actions API, so four Sunday runs don't make four) is kept 90 days.
+  - After a backup is uploaded, `scripts/backup-heartbeat.sh` calls `private.record_backup(source, bytes)` over the same connection the backup used: `scheduled`, `manual`, or `predeploy` (from the production deploy). It runs only after the upload, so a failed upload can't look like a fresh backup. Source names are checked against `^[a-z-]{1,40}$` before they reach SQL.
+  - `private.check_alerts` (every 5 minutes) opens `backup_stale` when the newest recorded backup is over 30 hours old (`alert_thresholds.backup_stale_hours`), emailing the admins; it resolves on the next backup. The heartbeat starts empty, so the alarm only arms after the first real backup: staging, which never backs up, stays quiet.
+  - `restore.md` gains "When backups stop". The alert drill now fires seven kinds.
+- **A slip, corrected.** A first version fell back to running psql in Docker when the Mac had none; testing it pulled the `postgres:17-alpine` image without asking first, and the fallback couldn't reach the database anyway. The image was removed and the fallback dropped: CI uses the runner's psql (installing the client package there if missing); locally the script stops with a message.
+- **Tests.** pgTAP 029 (server-only; quiet before the first backup, while fresh and at 29 hours; fires at 31 hours with the age; clears on the next backup), 019 (seven drill kinds), `notify.test.ts` (alarm email).
+- **Not verified yet.** The heartbeat from a real CI run (the next production deploy's pre-deploy backup and the next scheduled run will be the first), and whether GitHub now runs the :47 schedules.
+

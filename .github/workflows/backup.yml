@@ -1,15 +1,19 @@
 name: Backup
-# Phase 16 (D37): daily encrypted logical backups, kept apart from Supabase (GitHub artifacts).
-# Daily copies are kept 7 days; Sunday's copy is kept 90 days. Does nothing until the owner adds
+# Phase 16 (D37): encrypted logical backups, kept apart from Supabase (GitHub artifacts).
+# D65: four times a day at :47, because GitHub drops scheduled runs under load (and advises
+# against the top of the hour). Each copy is kept 7 days; the first Sunday copy is kept 90 days.
+# After the upload, a heartbeat goes to the database; the alert check emails admins after 30
+# hours without one. Does nothing until the owner adds
 # the BACKUP_DB_URL and BACKUP_PASSPHRASE secrets (SETUP §13). The repository is public, so the
 # artifact is encrypted; without the passphrase it is unreadable.
 on:
   schedule:
-    - cron: "20 9 * * *"
+    - cron: "47 3,9,15,21 * * *"
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read   # to see whether this Sunday's 90-day copy already exists
 
 concurrency:
   group: backup
@@ -46,9 +50,20 @@ jobs:
         if: steps.ready.outputs.go == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with: { name: "backup-daily-${{ github.run_id }}", path: backups/, retention-days: 7, if-no-files-found: error }
-      - name: Keep Sunday's copy for 90 days
+      - name: Is this the first copy kept for 90 days this Sunday?
         if: steps.ready.outputs.go == 'true' && github.event_name == 'schedule'
-        run: echo "dow=$(date -u +%u)" >> "$GITHUB_ENV"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$(date -u +%u)" = "7" ]; then
+            day="$(date -u +%F)"
+            n="$(gh api "repos/$REPO/actions/artifacts?name=backup-weekly-$day&per_page=1" --jq '.total_count')"
+            if [ "$n" = "0" ]; then echo "weekly=$day" >> "$GITHUB_ENV"; fi
+          fi
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: steps.ready.outputs.go == 'true' && env.dow == '7'
-        with: { name: "backup-weekly-${{ github.run_id }}", path: backups/, retention-days: 90, if-no-files-found: error }
+        if: steps.ready.outputs.go == 'true' && env.weekly != ''
+        with: { name: "backup-weekly-${{ env.weekly }}", path: backups/, retention-days: 90, if-no-files-found: error }
+      - name: Tell the database a backup was stored
+        if: steps.ready.outputs.go == 'true'
+        run: scripts/backup-heartbeat.sh "$BACKUP_DB_URL" "${{ github.event_name == 'schedule' && 'scheduled' || 'manual' }}" "$(ls backups/*.enc | head -1)"

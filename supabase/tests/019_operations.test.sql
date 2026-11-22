@@ -25,11 +25,11 @@ select throws_ok($$ select public.admin_ops() $$, '42501', null, 'or see the ope
 reset role;
 select pg_temp.as_user('11111111-1111-4111-8111-111111111111', 'aal2');
 set local role authenticated;
-select is(jsonb_array_length(public.admin_alert_drill() -> 'opened'), 6, 'the drill fires every alert once');
+select is(jsonb_array_length(public.admin_alert_drill() -> 'opened'), 7, 'the drill fires every alert once');
 reset role;
 select is((select array_agg(kind order by kind) from private.alerts where drill),
-  array['abuse_spike', 'ai_spend_daily', 'ai_throttle', 'email_failures', 'purge_stuck', 'queue_backlog'], 'all six kinds');
-select is((select count(*)::int from private.email_outbox where kind = 'ops_alert' and payload ->> 'drill' = 'true'), 6, 'each emails the admin, marked as a drill');
+  array['abuse_spike', 'ai_spend_daily', 'ai_throttle', 'backup_stale', 'email_failures', 'purge_stuck', 'queue_backlog'], 'all seven kinds (D65 added backup_stale)');
+select is((select count(*)::int from private.email_outbox where kind = 'ops_alert' and payload ->> 'drill' = 'true'), 7, 'each emails the admin, marked as a drill');
 select is((select count(*)::int from private.alerts where resolved_at is null), 0, 'and with nothing really wrong, they all resolve');
 select is((select action from public.admin_audit order by id desc limit 1), 'alert_drill', 'the drill is audited');
 
