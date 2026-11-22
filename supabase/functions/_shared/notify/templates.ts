@@ -80,18 +80,18 @@ export function render(kind: Kind, p: Record<string, unknown>, site: string, uns
   if (kind === "milestone") {
     const link = `${site}/feeds/${p.feed_id}/milestones/${p.milestone}`;
     const subject = `${p.milestone} calendars follow ${p.feed_name}`;
-    const body = `Thank you. At least ${p.milestone} calendars now follow ${p.feed_name}. That's a lot of families who don't have to copy dates by hand.\n\nA thank-you card to share: ${link}`;
-    const html = `<p>Thank you. At least <strong>${esc(p.milestone)}</strong> calendars now follow <strong>${esc(p.feed_name)}</strong>. That's a lot of families who don't have to copy dates by hand.</p><p><a href="${esc(link)}">See the thank-you card</a></p>`;
+    const body = `Thank you. About ${p.milestone} calendars now follow ${p.feed_name}. That's a lot of families who don't have to copy dates by hand.\n\nA thank-you card to share: ${link}`;
+    const html = `<p>Thank you. About <strong>${esc(p.milestone)}</strong> calendars now follow <strong>${esc(p.feed_name)}</strong>. That's a lot of families who don't have to copy dates by hand.</p><p><a href="${esc(link)}">See the thank-you card</a></p>`;
     return { subject, ...wrap(site, unsubscribe, "You get this when a feed you own reaches 10, 50 or 100 followers.", body, html) };
   }
   // weekly_digest
   const feeds = (p.feeds as Record<string, number | string>[] | undefined) ?? [];
   const trend = (a: number, b: number) => (a > b ? `up from ${b}` : a < b ? `down from ${b}` : "same as last week");
   const lines = feeds.map((f) =>
-    `${f.name}\n  At least ${f.subscribers} calendars follow it (${trend(Number(f.subscribers), Number(f.subscribers_last_week))}); ${f.taps} subscribe taps this week.\n  ${f.events_added} events added. ${f.needs_review} to review. ${f.reports} reports.\n  ${site}/feeds/${f.id}`);
+    `${f.name}\n  About ${f.subscribers} calendars follow it (${trend(Number(f.subscribers), Number(f.subscribers_last_week))}); ${f.taps} subscribe taps this week.\n  ${f.events_added} events added. ${f.needs_review} to review. ${f.reports} reports.\n  ${site}/feeds/${f.id}`);
   const review = feeds.reduce((n, f) => n + Number(f.needs_review), 0);
   const subject = review > 0 ? `Your Feedcal week: ${review} to review` : "Your Feedcal week";
-  const body = `Here's your week.\n\n${lines.join("\n\n") || "You don't have any feeds yet."}\n\n"At least" because calendar servers like Google check once for all their users.`;
-  const html = `<p>Here's your week.</p>${feeds.map((f) => `<p><a href="${esc(site)}/feeds/${esc(f.id)}"><strong>${esc(f.name)}</strong></a><br>At least ${esc(f.subscribers)} calendars follow it (${esc(trend(Number(f.subscribers), Number(f.subscribers_last_week)))}); ${esc(f.taps)} subscribe taps this week.<br>${esc(f.events_added)} events added · <strong>${esc(f.needs_review)} to review</strong> · ${esc(f.reports)} reports</p>`).join("") || "<p>You don't have any feeds yet.</p>"}<p style="color:#4f4f4b">"At least" because calendar servers like Google check once for all their users.</p>`;
+  const body = `Here's your week.\n\n${lines.join("\n\n") || "You don't have any feeds yet."}\n\n"About" because a phone that switches networks can count twice, and Google and Outlook count once for all their users.`;
+  const html = `<p>Here's your week.</p>${feeds.map((f) => `<p><a href="${esc(site)}/feeds/${esc(f.id)}"><strong>${esc(f.name)}</strong></a><br>About ${esc(f.subscribers)} calendars follow it (${esc(trend(Number(f.subscribers), Number(f.subscribers_last_week)))}); ${esc(f.taps)} subscribe taps this week.<br>${esc(f.events_added)} events added · <strong>${esc(f.needs_review)} to review</strong> · ${esc(f.reports)} reports</p>`).join("") || "<p>You don't have any feeds yet.</p>"}<p style="color:#4f4f4b">"About" because a phone that switches networks can count twice, and Google and Outlook count once for all their users.</p>`;
   return { subject, ...wrap(site, unsubscribe, "You get this every Monday because you run a Feedcal feed.", body, html) };
 }

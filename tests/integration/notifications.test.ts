@@ -85,7 +85,7 @@ describe.skipIf(!enabled)("notifications, end to end with real delivery (Mailpit
     expect(mail).toBeTruthy();
     const full = (await (await fetch(`${MAILPIT}/api/v1/message/${mail?.ID}`)).json()) as { Text: string };
     expect(full.Text).toContain("Sutterville Kindergarten");
-    expect(full.Text).toMatch(/At least \d+ calendars follow it \((up from|down from|same as last week)/);
+    expect(full.Text).toMatch(/About \d+ calendars follow it \((up from|down from|same as last week)/);
     expect(full.Text).toMatch(/\d+ events added\. \d+ to review\. \d+ reports\./);
   });
 });

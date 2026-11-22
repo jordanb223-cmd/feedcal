@@ -72,7 +72,7 @@ export function dashboardPage(opts: { csrf: string; feeds: DashboardFeed[]; done
     : html`<ul class="events">${opts.feeds.map((f) => html`<li>
       <a href="/feeds/${f.id}"><strong dir="auto">${f.name}</strong></a>
       ${f.reviewCount > 0 ? html` <span class="error" style="padding:.1rem .5rem">${f.reviewCount} to review</span>` : ""}
-      <span class="when">${f.subscribers === null ? "" : `At least ${f.subscribers} ${f.subscribers === 1 ? "calendar follows" : "calendars follow"} · `}updated ${new Date(f.lastUpdated).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} · ${f.visibility}</span>
+      <span class="when">${f.subscribers === null ? "" : `≈ ${f.subscribers} ${f.subscribers === 1 ? "calendar follows" : "calendars follow"} · `}updated ${new Date(f.lastUpdated).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} · ${f.visibility}</span>
     </li>`)}</ul>`}
   <p><a class="button" href="/feeds/new">New feed</a></p>
   <p><a href="/account">Your account</a></p>

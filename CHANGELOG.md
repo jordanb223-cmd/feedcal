@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.6.5] - 2026-11-21
+
+### Changed
+- The follower count now reads "≈ N" instead of "at least N", with a short note on why it's approximate. Emails say "about".
+
 ## [0.6.4] - 2026-11-21
 
 ### Fixed

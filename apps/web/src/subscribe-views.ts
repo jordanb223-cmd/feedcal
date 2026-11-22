@@ -89,8 +89,8 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
       <input class="copy" id="feed-link" readonly spellcheck="false" value="${opts.links.https}"></p>
     <p><button type="button" class="secondary" data-copy="feed-link" data-count="/c/${encodeURIComponent(feed.slug)}/copied">Copy link</button></p>
   </details>
-  <p class="muted">${n > 0 ? html`At least ${n} ${n === 1 ? "calendar follows" : "calendars follow"} this. ` : ""}Updated ${formatUpdated(feed.last_updated_at)}.</p>
-  ${n > 0 ? html`<p class="muted" style="font-size:.875rem">How we count: calendar apps that checked for updates in the last 7 days. Google checks once for all its users, so the real number is often higher.</p>` : ""}
+  <p class="muted">${n > 0 ? html`≈ ${n} ${n === 1 ? "calendar follows" : "calendars follow"} this. ` : ""}Updated ${formatUpdated(feed.last_updated_at)}.</p>
+  ${n > 0 ? html`<p class="muted" style="font-size:.875rem">How we count: ≈ because each calendar app counts once on its busiest recent day: a phone that switches networks can count twice, and Google and Outlook count once for all their users.</p>` : ""}
 </div>
 <div class="card">
   <h2>Coming up</h2>
@@ -157,7 +157,7 @@ export function shareKitPage(opts: {
 ${opts.stats
   ? html`<div class="card">
   <h2>Who's following</h2>
-  <p>At least ${opts.stats.subscribers_at_least} ${opts.stats.subscribers_at_least === 1 ? "calendar" : "calendars"} checked this feed in the last 7 days. Subscribe buttons were tapped ${clicks} ${clicks === 1 ? "time" : "times"} in the last 30 days.</p>
+  <p>≈ ${opts.stats.subscribers_at_least} ${opts.stats.subscribers_at_least === 1 ? "calendar" : "calendars"} checked this feed in the last 7 days. Subscribe buttons were tapped ${clicks} ${clicks === 1 ? "time" : "times"} in the last 30 days.</p>
   <p class="muted" style="font-size:.875rem">Google checks once for all its users, so the real number is often higher.</p>
 </div>`
   : ""}

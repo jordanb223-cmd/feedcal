@@ -65,7 +65,7 @@ describe("GET /c/<slug>", () => {
     const body = await res.text();
     expect(body).toContain('<h1 dir="auto">Sutterville Kindergarten</h1>');
     expect(body).toContain(`Kept up to date by <span dir="auto">${esc("Alice O'Brien")}</span></p>`);
-    expect(body).toContain("At least 43 calendars follow this.");
+    expect(body).toContain("≈ 43 calendars follow this.");
     expect(body).toContain("How we count");
     expect((body.match(/<span class="what"><strong dir="auto">Event/g) ?? []).length).toBe(5);
     // Look C (D46): a date column per event, the first marked as next, and the kind · ZIP line.
@@ -133,7 +133,7 @@ describe("GET /c/<slug>", () => {
     const { request } = setup(() => ({ data: page("public", 0, 0), error: null }));
     const body = await (await request("/c/sutterville-kindergarten")).text();
     expect(body).toContain("No upcoming events yet");
-    expect(body).not.toContain("At least 0");
+    expect(body).not.toContain("≈ 0");
   });
 
   it("private or unknown feeds are a friendly 404", async () => {
@@ -197,7 +197,7 @@ describe("share kit", () => {
     expect(body).toContain(`value="${BASE}/f/${TOKEN}.ics"`);
     expect(body).toMatch(/<svg[^>]*>/);
     expect(body).toContain(`Get Room 12 in your phone&#39;s calendar. It updates on its own: ${BASE}/c/room-12-ab12cd34`);
-    expect(body).toContain("At least 12 calendars checked this feed");
+    expect(body).toContain("≈ 12 calendars checked this feed");
     expect(body).toContain("tapped 5 times");
     expect(body).toContain(`action="/feeds/${FEED_ID}/rotate-token"`);
   });

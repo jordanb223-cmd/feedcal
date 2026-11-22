@@ -15,12 +15,12 @@ Deno.test("report email: says what and where, escapes the subscriber's text, has
   assert(r.text.includes(`Stop these emails: ${UNSUB}`) && r.html.includes("Stop these emails"));
 });
 
-Deno.test("weekly digest: trends, review count in the subject, the 'at least' explanation", () => {
+Deno.test("weekly digest: trends, review count in the subject, the 'about' explanation", () => {
   const r = render("weekly_digest", { feeds: [{ id: "f1", name: "Room 12", subscribers: 14, subscribers_last_week: 9, taps: 3, events_added: 4, needs_review: 2, reports: 0 }] }, SITE, UNSUB);
   assertEquals(r.subject, "Your Feedcal week: 2 to review");
-  assert(r.text.includes("At least 14 calendars follow it (up from 9); 3 subscribe taps this week."));
+  assert(r.text.includes("About 14 calendars follow it (up from 9); 3 subscribe taps this week."));
   assert(r.text.includes("4 events added. 2 to review. 0 reports."));
-  assert(r.text.includes("calendar servers like Google check once"));
+  assert(r.text.includes("Google and Outlook count once for all their users"));
 });
 
 Deno.test("stale nudge and milestone wording", () => {
