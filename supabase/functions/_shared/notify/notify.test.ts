@@ -58,7 +58,9 @@ Deno.test("ops alert email (D38): says what and where to look, marks drills, has
 Deno.test("gmail reconnect email (D39): names the feed, links to reconnect, no unsubscribe", () => {
   const soon = render("gmail_reconnect", { feed_id: "f1", feed_name: "Room F", expired: false }, "https://feedcal.test", "x");
   assert(soon.subject === "Reconnect Gmail for Room F by tomorrow");
-  assert(soon.text.includes("https://feedcal.test/feeds/f1/gmail"));
+  // The exact link, as its own word, not just somewhere in the text (D59).
+  const links = soon.text.match(/https?:\/\/\S+/g) ?? [];
+  assertEquals(links.filter((l) => l.includes("/gmail")), ["https://feedcal.test/feeds/f1/gmail"]);
   const gone = render("gmail_reconnect", { feed_id: "f1", feed_name: "Room F", expired: true }, "https://feedcal.test", "x");
   assert(gone.subject === "Reconnect Gmail for Room F" && gone.text.includes("won't reach the calendar"));
   assert(NO_UNSUBSCRIBE.has("gmail_reconnect"));
