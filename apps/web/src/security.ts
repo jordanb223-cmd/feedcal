@@ -18,9 +18,12 @@ export function originOf(c: Context): string {
 export function safeNext(next: string | undefined | null, fallback = "/account"): string {
   if (!next || next.length > 512) return fallback;
   if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return fallback;
+  // Printable ASCII only (D59). Control characters could split headers; anything above 0x7E
+  // can't go in a Location header at all (the redirect would fail with an error page).
+  // Our own paths are always ASCII, so nothing real is lost.
   for (let i = 0; i < next.length; i++) {
     const code = next.charCodeAt(i);
-    if (code < 0x20 || code === 0x7f) return fallback; // control characters
+    if (code < 0x21 || code > 0x7e) return fallback;
   }
   return next;
 }

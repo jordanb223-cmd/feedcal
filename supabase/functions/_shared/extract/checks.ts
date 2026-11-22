@@ -7,7 +7,9 @@ import { dateGate } from "./dates.ts";
 /** Whitespace, curly quotes, dashes and case normalised, so a faithful quote always matches. */
 export function normalise(text: string): string {
   return text
+    .replace(/\p{Cf}/gu, "") // invisible characters, removed before the model sees the text too (D59)
     .normalize("NFKC")
+    .replace(/‹/g, "<") // the prompt guard turns a fake tag's "<" into "‹" (D59); quotes may include it
     .replace(/[‘’‚‛′]/g, "'")
     .replace(/[“”„‟″]/g, '"')
     .replace(/[‐-―−]/g, "-")

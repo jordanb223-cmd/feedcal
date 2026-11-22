@@ -75,6 +75,39 @@ describe("safeNext (redirect allowlist)", () => {
   });
 });
 
+describe("safeNext against generated redirect tricks (D59)", () => {
+  const SITE = "https://feedcal-web.pages.dev";
+  const PREFIXES = ["", "/", "//", "///", "////", "/\\", "\\/", "\\\\", "/\t/", "/\n/", "/\r/", "/ /", " //", "/%2F", "/%2f/", "/%5C", "/%09/",
+    "/.//", "/./", "/../", "/;/", "/?/", "/#/", "　//", "/　/", "/ /", "/ /", "/\u0085/", "/﻿/", "/​/", "／／", "/／",
+    "⁄⁄", "＼＼", "/\u0000/", "/\u007f/"];
+  const SCHEMES = ["", "https:", "http:", "HTTPS:", "https:/", "https:\\\\", "javascript:", "JaVaScRiPt:", "jav\tascript:", "data:", "vbscript:", " https:", "\u0000https:"];
+  const HOSTS = ["evil.example", "evil.example:443", "user@evil.example", "user:pw@evil.example", "evil.example%2F", "127.0.0.1", "[::1]",
+    "evil。example", "ｅｖｉｌ.example", "evil.example\\@feedcal-web.pages.dev", "feedcal-web.pages.dev.evil.example"];
+  const TAILS = ["", "/x", "?a=1", "#h"];
+
+  it("no generated input sends anyone off-site, and every result is a valid Location header", () => {
+    let count = 0;
+    const offsite: string[] = [];
+    const unusable: string[] = [];
+    for (const scheme of SCHEMES) for (const prefix of PREFIXES) for (const host of HOSTS) for (const tail of TAILS) {
+      const input = scheme + prefix + host + tail;
+      const out = safeNext(input);
+      count++;
+      if (new URL(out, SITE).origin !== SITE) offsite.push(JSON.stringify(input));
+      try { new Headers({ location: out }); } catch { unusable.push(JSON.stringify(input)); }
+    }
+    expect(count).toBeGreaterThan(20000);
+    expect(offsite).toEqual([]);
+    expect(unusable).toEqual([]);
+  });
+
+  it("keeps our own paths exactly", () => {
+    for (const path of ["/account", "/feeds/new", "/feeds/0b9e2c1a-0000-4000-8000-000000000001/settings?tab=more#senders", "/a/b%20c", "/directory?q=room%20f"]) {
+      expect(safeNext(path)).toBe(path);
+    }
+  });
+});
+
 describe("origin checks", () => {
   it("blocks a POST from another site", async () => {
     const { request, auth } = setup();

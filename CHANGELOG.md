@@ -7,6 +7,15 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-11-21
+
+### Fixed
+- An email from a sender you haven't approved can no longer add a location to an event that's already on your calendar.
+- A sign-in link with unusual characters now takes you to your account instead of an error page.
+
+### Changed
+- Stronger protection against emails written to trick the event reader.
+
 ## [0.7.2] - 2026-11-21
 
 ### Changed
