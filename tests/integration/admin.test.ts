@@ -2,7 +2,7 @@
 // with an audit record. The admin really enrols a TOTP factor (local Supabase Auth) and passes the
 // second step; the TOTP code is computed here from the enrolment secret (RFC 6238).
 import { createHmac } from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { localStatus } from "./local-stack.js";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@feedcal/shared";
@@ -35,7 +35,7 @@ describe.skipIf(!enabled)("moderation, end to end: report → one admin click (w
   let feedId = "";
 
   beforeAll(async () => {
-    const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+    const s = localStatus();
     const url = s.API_URL ?? "";
     db = createClient<Database>(url, s.SERVICE_ROLE_KEY ?? "", { auth: { persistSession: false } });
     // Start clean: no leftover factors for Alice; make her an admin.

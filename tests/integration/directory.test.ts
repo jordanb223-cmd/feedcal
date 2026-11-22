@@ -1,7 +1,7 @@
 // Phase 13 "passes when": "95818" or "Land Park soccer" returns sensible ranked results in under
 // 300 ms. 1,000 synthetic public feeds (fake 99xxx ZIPs) are added, searched through the real app
 // and the anon key, then removed.
-import { execFileSync } from "node:child_process";
+import { localStatus } from "./local-stack.js";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@feedcal/shared";
@@ -17,7 +17,7 @@ describe.skipIf(!enabled)("directory performance and ranking (local stack)", { t
   const tag = `perf${Date.now()}`;
 
   beforeAll(async () => {
-    const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+    const s = localStatus();
     db = createClient<Database>(s.API_URL ?? "", s.SERVICE_ROLE_KEY ?? "", { auth: { persistSession: false } });
     const zips = Array.from({ length: 40 }, (_, i) => ({ zip: `99${String(800 + i)}`, location: `SRID=4326;POINT(${-121.5 + (i % 8) * 0.03} ${38.55 + Math.floor(i / 8) * 0.03})`, city: "Testville", state: "CA" }));
     await db.from("zip_codes").upsert(zips as never, { onConflict: "zip" });

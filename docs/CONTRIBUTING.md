@@ -37,6 +37,21 @@ curl -s https://api.github.com/repos/jordanb223-cmd/feedcal/commits | grep -o '"
 - `staging`: no reviewers; restrict to `main`.
 - `production`: required reviewer = repo owner; restrict to tags `v*`.
 
+## Safety rails (D57)
+
+Each rule below has a control that enforces it, and a safe command to use instead.
+
+| Rule | What enforces it | Safe command |
+|---|---|---|
+| Tests never touch a hosted database | `tests/integration/local-stack.ts` stops the run unless the API and database hosts are `127.0.0.1`/`localhost` | `npm run test:integration` |
+| `db:reset` only wipes the local database | `scripts/db-reset.mjs` refuses `--linked`, `--db-url`, `--project-ref` | `npm run db:reset` |
+| Migrations that delete data need a person's review | `.github/scripts/migration-guard.sh` (run by the deploy) refuses any new migration with `drop table/schema/column`, `truncate` or a run-time `delete from` unless it has the line `-- destructive: reviewed` | add the line in the PR after checking it |
+| Hosted databases and sites change only through the deploy | `.claude/settings.json` denies agents `supabase db push`, `supabase link`, `db reset --linked/--db-url`, `wrangler pages deploy`, project deletes; production needs the owner's approval (environment protection above) | tag `vX.Y.Z` and approve the run |
+| No force-push, repo deletion, or secret changes from an agent | `.claude/settings.json` deny rules; branch protection on `main` | `gh pr create` / `gh pr merge --squash` |
+| Agents don't read local secrets files | `.claude/settings.json` denies reading `.dev.vars`, `supabase/functions/.env`, `.env*` | use `.dev.vars.example` |
+
+Deny rules match command prefixes, so a reworded command (for example inside `bash -c`) can slip past them. The scripts and GitHub settings are the backstop.
+
 ## Rules for every screen and form
 
 - **Empty state.** Every list says what it is when it's empty, and what to do next ("You don't have any feeds yet").

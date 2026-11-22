@@ -2,7 +2,7 @@
 // SQL and the pgmq queue. Only Cloudflare itself is simulated (we call handleEmail directly and
 // add the Authentication-Results header Cloudflare would add).
 //   npm run test:integration   (needs supabase/functions/.env with INGEST_HMAC_SECRET; see SETUP)
-import { execFileSync } from "node:child_process";
+import { localStatus } from "./local-stack.js";
 import { readFileSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@feedcal/shared";
@@ -15,7 +15,7 @@ const TO = "feed-aliceschoolfeed23456@in.feedcal.test";
 const CF = "Authentication-Results: mx.cloudflare.net; spf=pass; dkim=pass; dmarc=pass\r\n";
 
 function localStack() {
-  const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+  const s = localStatus();
   const env = readFileSync(new URL("../../supabase/functions/.env", import.meta.url), "utf8");
   const secret = /^INGEST_HMAC_SECRET=(.+)$/m.exec(env)?.[1]?.trim() ?? "";
   if (!s.API_URL || !s.SERVICE_ROLE_KEY || !secret) throw new Error("Local stack or supabase/functions/.env missing");

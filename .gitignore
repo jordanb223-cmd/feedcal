@@ -11,3 +11,5 @@ supabase/.temp
 coverage/
 .DS_Store
 dist-types/
+.claude/settings.local.json
+.claude/launch.json

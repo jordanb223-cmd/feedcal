@@ -489,3 +489,15 @@ What was checked, against what, and what changed:
 - **What changed (`landing.ts`).** Label "Free for you, your family and friends"; headline and page title "Events that add themselves"; the intro now opens "Stop adding events one by one." and names school, team or club emails; step 3 is "Share it" (your own phone, a link, or the printed QR code); the search description matches. Steps 1–2, "Got a flyer?" and the works-with line are unchanged.
 - **Kept.** D55's "your class calendar, lit up" stays as the story behind the name; it's no longer on the page.
 
+## D57 — Safety rails that don't depend on an agent following prose (2026-11-21)
+
+- **Why.** The owner asked for an audit of the repo and dev setup for ways an AI agent (or a slip) could do lasting damage, and for fixes inside the repo. Before this, the project's rules lived only in prose; the tests were local only because each one happened to call `supabase status`.
+- **What changed.**
+  - `tests/integration/local-stack.ts`: the one place integration and load tests get addresses and keys; refuses non-local hosts and prints only the host, never a URL (they hold passwords). Unit-tested in `tests/unit/local-stack.test.ts`.
+  - `scripts/db-reset.mjs` behind `npm run db:reset`: refuses `--linked`, `--db-url`, `--project-ref`, and says it's wiping local data.
+  - `.github/scripts/migration-guard.sh`, run by `deploy.sh` before `db push`: for each migration the target hasn't applied, flags drop table/schema/database/column, truncate and delete from in code that runs at migration time (comments and function bodies are ignored; `do` blocks are kept). Each flag prints a WARNING naming the file and environment; the push is refused unless the file has `-- destructive: reviewed`. If the applied list can't be read, the deploy stops. Of the 30 existing migrations, 2 would be flagged (both real `drop table`s, both already applied). Unit-tested in `tests/unit/migration-guard.test.ts`.
+  - `deploy.sh` prints a warning before applying migrations.
+  - `.claude/settings.json`: deny rules for agents (force-push, hosted DB push/link/reset, Pages deploy, project and repo deletion, GitHub secrets and DELETE/PUT API calls, reading local secrets files). Prefix matching only; the scripts and GitHub protections are the backstop.
+  - `docs/CONTRIBUTING.md` "Safety rails": each rule, its control, and the safe command.
+- **Not changed (outside the repo; owner's manual steps):** GitHub token scopes, where backups are copied, Supabase token scope, plaintext keys in the shell profile and MCP configs, MCP version pins, Claude user settings and auto mode.
+

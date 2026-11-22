@@ -3,7 +3,7 @@
 // often it's delivered, and a forged one is refused.
 //   npm run test:integration   (needs BMC_WEBHOOK_SECRET in supabase/functions/.env; see SETUP §12)
 import { createHmac } from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { localStatus } from "./local-stack.js";
 import { readFileSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -22,7 +22,7 @@ describe.skipIf(!enabled)("Buy Me a Coffee webhook, end to end", { timeout: 60_0
   const send = (b: string, sig: string) => fetch(`${url}/functions/v1/bmc-webhook`, { method: "POST", body: b, headers: { "content-type": "application/json", "x-signature-sha256": sig } });
 
   beforeAll(() => {
-    const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+    const s = localStatus();
     url = s.API_URL ?? "";
     const env = readFileSync(new URL("../../supabase/functions/.env", import.meta.url), "utf8");
     secret = /^BMC_WEBHOOK_SECRET=(.+)$/m.exec(env)?.[1]?.trim() ?? "";
