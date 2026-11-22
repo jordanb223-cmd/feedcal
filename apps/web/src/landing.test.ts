@@ -14,13 +14,14 @@ describe("home page (D55)", () => {
     const res = await app(false).request("https://calantern.test/", {}, env);
     expect(res.status).toBe(200);
     const html = await res.text();
-    expect(html).toContain("Your class calendar, lit up.");
+    expect(html).toContain("Events that add themselves.");
+    expect(html).toContain("Stop adding events one by one.");
     expect(html).toContain('href="/login?next=/feeds/new">Make a calendar</a>');
     expect(html).toContain('href="/directory">Find a calendar</a>');
     expect((html.match(/<span class="n" aria-hidden="true">/g) ?? []).length).toBe(3);
     expect(html).toContain("Got a flyer?");
-    expect(html).toContain("<title>Your class calendar, lit up · Calantern</title>");
-    expect(html).toContain('<meta name="description" content="Calantern turns');
+    expect(html).toContain("<title>Events that add themselves · Calantern</title>");
+    expect(html).toContain('<meta name="description" content="Calantern reads');
     expect(html).not.toContain("&lt;meta"); // the description is a tag, not visible text
   });
   it("signed-in organizers go straight to their account", async () => {

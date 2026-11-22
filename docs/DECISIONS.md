@@ -482,3 +482,10 @@ What was checked, against what, and what changed:
 - **What changed.** Every user-visible "Feedcal" (104 places: header, titles, buttons, messages, Gmail pages, privacy, terms, costs, flyer, organizer emails) now says Calantern. **Kept on purpose:** event UIDs (`…@feedcal.app`; changing them would duplicate every event in subscribers' calendars), internal package and cookie names, the repository, the web address (`feedcal-web.pages.dev` until a domain is bought), and code comments.
 - **Outside settings changed (owner asked):** Supabase secret `EMAIL_FROM` → "Calantern <onboarding@resend.dev>" (confirmed by its SHA-256 digest); Google Auth Platform branding app name "FeedCal" → "Calantern" in project `feedcal-515418`, which holds both the sign-in and the Gmail OAuth clients (an earlier note said Gmail used a separate project; it doesn't).
 - **Home page.** Visitors at `/` get a page (`landing.ts`): "Your class calendar, lit up.", Make a calendar / Find a calendar, three steps (name it, connect your email, print the QR code), "Got a flyer?" for parents, and a works-with / free / no ads / no selling data line (matching the costs page). Signed-in organizers still go to their account.
+
+## D56 — The home page leads with the time saved, for anyone (2026-11-21)
+
+- **Why.** The owner asked that the home page say what Calantern is for: events keep getting added on their own, so nobody types them in one by one, and it works for yourself or for friends and family, not only for a class.
+- **What changed (`landing.ts`).** Label "Free for you, your family and friends"; headline and page title "Events that add themselves"; the intro now opens "Stop adding events one by one." and names school, team or club emails; step 3 is "Share it" (your own phone, a link, or the printed QR code); the search description matches. Steps 1–2, "Got a flyer?" and the works-with line are unchanged.
+- **Kept.** D55's "your class calendar, lit up" stays as the story behind the name; it's no longer on the page.
+
