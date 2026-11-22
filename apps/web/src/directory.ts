@@ -48,7 +48,7 @@ ${opts.searched
     : html`<ul class="events">${opts.rows.map((r) => html`<li>
       <a href="/c/${r.slug}"><strong dir="auto">${r.name}</strong></a>${r.verified ? html` <span title="Verified organizer">✓</span>` : ""}
       <span class="when">${[r.category, r.city ? `${r.city}${r.state ? `, ${r.state}` : ""}` : null, r.distance_miles === null ? null : `${r.distance_miles} mi`,
-        r.subscribers > 0 ? `at least ${r.subscribers} following` : null, r.imported_source_name ? `from ${r.imported_source_name}` : null].filter(Boolean).join(" · ")}</span>
+        r.imported_source_name ? `from ${r.imported_source_name}` : null].filter(Boolean).join(" · ")}</span>
       ${r.may_be_out_of_date ? html`<span class="when">May be out of date</span>` : ""}
       ${r.description ? html`<span class="when" dir="auto">${r.description.slice(0, 160)}</span>` : ""}
     </li>`)}</ul>`}
