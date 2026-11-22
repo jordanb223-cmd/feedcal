@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-11-21
+
+### Changed
+- The home page now leads with what Calantern saves you: events that add themselves, so you stop adding them one by one. It speaks to anyone keeping themselves, friends or family up to date, not only schools and teams.
+
 ## [0.7.0] - 2026-11-21
 
 ### Changed
