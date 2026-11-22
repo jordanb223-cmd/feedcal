@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.6.4] - 2026-11-21
+
+### Fixed
+- "At least N calendars follow this" counts only real calendar apps (Apple Calendar, Google Calendar, Outlook). Opening the link in a web browser, or a search engine crawling it, no longer counts as a follower.
+
 ## [0.6.3] - 2026-11-21
 
 ### Security

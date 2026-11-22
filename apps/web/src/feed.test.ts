@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.js";
-import { userAgentFamily } from "./feed.js";
+import { unrecognisedProduct, userAgentFamily } from "./feed.js";
 import type { Bindings } from "./env.js";
 import type { Supa } from "./types.js";
 
@@ -144,7 +144,14 @@ describe("userAgentFamily", () => {
     ["iOS/18.1 (22B83) dataaccessd/1.0", "apple"],
     ["macOS/15.1 (24B83) CalendarAgent/1000", "apple"],
     ["Microsoft Outlook 16.0", "outlook"],
+    ["Microsoft Office/16.0 (Windows NT 10.0; Microsoft Outlook 16.0.17928; Pro)", "outlook"],
     ["curl/8.7.1", "other"],
+    // D52: browsers and crawlers opening the link are not subscribers.
+    ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15", "other"],
+    ["Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1", "other"],
+    ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36", "other"],
+    ["Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", "other"],
+    ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0", "other"],
     [undefined, "other"],
   ])("%s -> %s", (ua, family) => {
     expect(userAgentFamily(ua)).toBe(family);
@@ -159,5 +166,14 @@ describe("report link", () => {
     const body = await res.text();
     expect(body).toContain("Report a problem");
     expect(body).toContain('name="kind" value="wrong_details"');
+  });
+});
+
+describe("unrecognisedProduct (D52)", () => {
+  it("keeps only the first product name, nothing personal", () => {
+    expect(unrecognisedProduct("Thunderbird/128.0 (Macintosh; me@example.com)")).toBe("Thunderbird/128.0");
+    expect(unrecognisedProduct("  Weird<script>App/1 x")).toBe("WeirdscriptApp/1");
+    expect(unrecognisedProduct(undefined)).toBe("none");
+    expect(unrecognisedProduct("A".repeat(100)).length).toBe(40);
   });
 });
