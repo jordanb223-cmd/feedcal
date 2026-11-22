@@ -7,6 +7,14 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-21
+
+### Added
+- Copy events from a calendar link you already have (like a school's Google Calendar link) into your Feedcal calendar. It's under "More ways to add events" and in Settings. By default Feedcal copies them once and you keep them up to date; you can tick a box to keep checking the link every day.
+
+### Fixed
+- "At least N calendars follow this" no longer counts the same phone once per day, or checks that aren't calendar apps. It now shows the busiest single day, so the number is never higher than the truth.
+
 ## [0.5.0] - 2026-11-21
 
 ### Changed

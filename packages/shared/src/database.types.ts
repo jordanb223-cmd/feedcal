@@ -281,14 +281,14 @@ isOneToOne: false
                   ]
                 },"feeds": {
                   Row: {
-                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"delete_requested_at": string | null,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"hidden_at": string | null,"hidden_reason": string | null,"id": string,"import_url": string | null,"imported_at": string | null,"imported_source_name": string | null,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"stale_nudged_at": string | null,"timezone": string,"verified": boolean,"visibility": string,"zip_code": string | null
+                    "auto_publish_threshold": number | null,"category": string | null,"created_at": string,"delete_requested_at": string | null,"description": string | null,"feed_token_hash": string,"feed_token_secret_id": string,"hidden_at": string | null,"hidden_reason": string | null,"id": string,"import_mode": string,"import_url": string | null,"imported_at": string | null,"imported_source_name": string | null,"intake_address": string,"last_updated_at": string,"location": unknown,"name": string,"owner_id": string,"search": unknown,"slug": string,"stale_nudged_at": string | null,"timezone": string,"verified": boolean,"visibility": string,"zip_code": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"hidden_at"?: string | null,"hidden_reason"?: string | null,"id"?: string,"import_url"?: string | null,"imported_at"?: string | null,"imported_source_name"?: string | null,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"stale_nudged_at"?: string | null,"timezone"?: string,"verified"?: boolean,"visibility"?: string,"zip_code"?: string | null
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash": string,"feed_token_secret_id": string,"hidden_at"?: string | null,"hidden_reason"?: string | null,"id"?: string,"import_mode"?: string,"import_url"?: string | null,"imported_at"?: string | null,"imported_source_name"?: string | null,"intake_address": string,"last_updated_at"?: string,"location"?: unknown,"name": string,"owner_id"?: string,"search"?: never,"slug": string,"stale_nudged_at"?: string | null,"timezone"?: string,"verified"?: boolean,"visibility"?: string,"zip_code"?: string | null
                   }
                   Update: {
-                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"hidden_at"?: string | null,"hidden_reason"?: string | null,"id"?: string,"import_url"?: string | null,"imported_at"?: string | null,"imported_source_name"?: string | null,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"stale_nudged_at"?: string | null,"timezone"?: string,"verified"?: boolean,"visibility"?: string,"zip_code"?: string | null
+                    "auto_publish_threshold"?: number | null,"category"?: string | null,"created_at"?: string,"delete_requested_at"?: string | null,"description"?: string | null,"feed_token_hash"?: string,"feed_token_secret_id"?: string,"hidden_at"?: string | null,"hidden_reason"?: string | null,"id"?: string,"import_mode"?: string,"import_url"?: string | null,"imported_at"?: string | null,"imported_source_name"?: string | null,"intake_address"?: string,"last_updated_at"?: string,"location"?: unknown,"name"?: string,"owner_id"?: string,"search"?: never,"slug"?: string,"stale_nudged_at"?: string | null,"timezone"?: string,"verified"?: boolean,"visibility"?: string,"zip_code"?: string | null
                   }
                   Relationships: [
                     {
@@ -666,6 +666,15 @@ isOneToOne: false
                            },
 "feed_calendar_guarded":
 { Args: { "p_client_ip"?: string,"p_token": string,"p_ua_family"?: string,"p_user_agent"?: string }; Returns: Json
+                           },
+"feed_import_set":
+{ Args: { "p_feed_id": string,"p_keep_updating"?: boolean,"p_url": string }; Returns: string
+                           },
+"feed_import_status":
+{ Args: { "p_feed_id": string }; Returns: Json
+                           },
+"feed_import_stop":
+{ Args: { "p_feed_id": string }; Returns: boolean
                            },
 "feed_subscribe_stats":
 { Args: { "p_feed_id": string }; Returns: Json

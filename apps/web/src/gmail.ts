@@ -9,6 +9,7 @@ import { feedNav } from "./nav.js";
 import { csrfToken, csrfValid } from "./security.js";
 import type { AppEnv } from "./types.js";
 import { layout, messagePage } from "./views.js";
+import { importForm } from "./imports.js";
 
 const FeedId = z.uuid();
 const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
@@ -167,7 +168,12 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
         <p class="muted">Works with any email app. Feedcal gives this calendar its own address to forward to.</p>
         <a class="button ${gmailOn ? "secondary " : ""}wide" href="/feeds/${o.id}/email?done=created">Get the forwarding address</a>
       </div>
-      <p class="muted" style="margin:1rem 0 0">Or <a href="/feeds/${o.id}/events/new">add events by hand</a>.</p>
+      <details class="more"><summary>More ways to add events</summary>
+        <p><a href="/feeds/${o.id}/events/new">Add events by hand</a></p>
+        <h3 style="margin:1rem 0 .25rem;font-size:1rem">Copy events from a calendar link</h3>
+        <p class="muted" style="font-size:.875rem">Already have a school or team calendar link? Feedcal copies its events into this calendar, alongside the ones from email.</p>
+        ${importForm(o.id, t, "setup")}
+      </details>
     </div>`));
   });
 
