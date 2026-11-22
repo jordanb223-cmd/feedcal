@@ -179,16 +179,32 @@ export function parseLooseDate(value: string | null, fallbackOffset: number): st
   return null;
 }
 
-/** "Name <a@b>", "a@b", "Name a@b" → {address, name}. */
+/** "Name <a@b>", "a@b", "Name a@b" → {address, name}.
+ *  D60: linear time. The old fallback regex backtracked cubically on a line of "@"s (3,000 took
+ *  3.7 s), so a crafted forwarded email could stall the email pipeline. The line is capped and
+ *  scanned with indexOf; regexes only test short, already-split pieces. */
+const MAX_SENDER_LINE = 1000;
+const BARE_SEPARATORS = /[\s<>"(),;:]+/;
+function looksLikeAddress(token: string): boolean {
+  const at = token.indexOf("@");
+  const dot = token.lastIndexOf(".");
+  return at > 0 && dot > at + 1 && /^[a-z]{2,63}$/i.test(token.slice(dot + 1));
+}
 export function parseSender(value: string | null): { address: string; name: string | null } | null {
   if (!value) return null;
-  const angled = /^(.*?)<([^<>\s]+@[^<>\s]+)>/.exec(value);
-  if (angled) {
-    const name = angled[1]!.replace(/["']/g, "").trim();
-    return { address: angled[2]!.toLowerCase(), name: name || null };
+  const line = value.slice(0, MAX_SENDER_LINE);
+  for (let lt = line.indexOf("<"); lt >= 0; lt = line.indexOf("<", lt + 1)) {
+    const gt = line.indexOf(">", lt + 1);
+    if (gt < 0) break;
+    const inside = line.slice(lt + 1, gt);
+    const at = inside.indexOf("@");
+    if (at > 0 && at < inside.length - 1 && !/[<>\s]/.test(inside)) {
+      const name = line.slice(0, lt).replace(/["']/g, "").trim();
+      return { address: inside.toLowerCase(), name: name || null };
+    }
   }
-  const bare = /([^\s<>"(),;:]+@[^\s<>"(),;:]+\.[a-z]{2,})/i.exec(value);
-  if (!bare) return null;
-  const name = value.replace(bare[0], "").replace(/[\[\]()"<>]/g, "").trim();
-  return { address: bare[1]!.toLowerCase(), name: name || null };
+  const token = line.split(BARE_SEPARATORS).find(looksLikeAddress);
+  if (!token) return null;
+  const name = line.replace(token, "").replace(/[\[\]()"<>]/g, "").trim();
+  return { address: token.toLowerCase(), name: name || null };
 }

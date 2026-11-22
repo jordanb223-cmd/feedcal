@@ -9,7 +9,7 @@ import { offsetMinutes } from "./time.js";
 import { vtimezone } from "./vtimezone.js";
 
 const GOLDEN = join(dirname(fileURLToPath(import.meta.url)), "golden");
-const opts = { defaultTimeZone: "America/Los_Angeles", reportUrl: (uid: string) => `https://feedcal.example/report/${uid}`, product: "Feedcal test" };
+const opts = { defaultTimeZone: "America/Los_Angeles", reportUrl: (uid: string) => `https://feedcal.example/report/${uid}`, product: "Feedcal test", now: Date.parse("2026-11-01T00:00:00Z") };
 const base = { createdAt: "2026-11-01T12:00:00Z", updatedAt: "2026-11-02T12:00:00Z", sequence: 0, status: "confirmed" as const, allDay: false };
 
 const CASES: Record<string, { feed: { name: string; description?: string }; events: CalendarEvent[] }> = {
