@@ -9,6 +9,7 @@ import { feedNav } from "./nav.js";
 import { csrfToken, csrfValid } from "./security.js";
 import type { AppEnv } from "./types.js";
 import { layout, messagePage } from "./views.js";
+import { uploadLink } from "./uploads.js";
 import { importForm } from "./imports.js";
 
 const FeedId = z.uuid();
@@ -170,6 +171,7 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
       </div>
       <details class="more"><summary>More ways to add events</summary>
         <p><a href="/feeds/${o.id}/events/new">Add events by hand</a></p>
+        ${uploadLink(o.id)}
         <h3 style="margin:1rem 0 .25rem;font-size:1rem">Copy events from a calendar link</h3>
         <p class="muted" style="font-size:.875rem">Already have a school or team calendar link? Calantern copies its events into this calendar, alongside the ones from email.</p>
         ${importForm(o.id, t, "setup")}

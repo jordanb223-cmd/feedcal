@@ -132,6 +132,10 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 
 **zip_codes.** Zip code to point, loaded in Phase 13.
 
+**messages.uploaded_by (D61).** Set when the message is a file an organizer uploaded on the website rather than an email: no sender, `status` starts at `parsed`, `original_subject` is the file name, one `chosen` attachment. Counts as a trusted sender while that person is still an editor of the feed.
+
+**private.upload_tickets (D61).** One per upload attempt: feed, user, cleaned file name, type, declared size (≤ 10 MB), and the storage spot the server chose (`<feed>/upload-<ticket>/file.<ext>` in `attachments`). Valid 15 minutes, works once. Unfinished ones are trashed hourly; all are dropped after 2 days. The daily limit (20 per person) counts them.
+
 Status changes on `events`, `messages`, `attachments` and `reports` are limited to the moves in docs/STATE-MACHINES.md (enforced by a trigger).
 
 ## Functions
@@ -180,6 +184,7 @@ Status changes on `events`, `messages`, `attachments` and `reports` are limited 
 | `request_account_deletion()` / `cancel_account_deletion()` | signed-in user, for themselves | Sets or clears `profiles.deleted_at`. Returns the deletion date (14 days out). |
 | `due_account_deletions()` | service role | Lists accounts whose 14 days have passed. |
 | `purge_account_data(p_user_id)` | service role | Hands each owned feed to its longest-standing editor, or deletes it if there is none. Removes the user from all feeds, replaces `user:<id>` revision actors with `system`, and wipes the display name. Safe to run twice. |
+| `upload_start(p_user, p_feed, p_filename, p_mime, p_bytes)` / `upload_ticket(p_user, p_ticket)` / `upload_finish(p_user, p_ticket, p_bytes, p_sha256)` | service role (the `upload-file` function, after checking the session) | D61. Start checks membership, type, extension, size and the daily limit and returns the storage spot; finish records the message and attachment once and queues triage. |
 | `private.*` | used inside policies and triggers | Not exposed by the API (the `private` schema isn't in the API's exposed schemas). |
 
 Tokens are 43 characters, URL-safe base64 of 32 random bytes from `pgcrypto`. The hash is Postgres's built-in `sha256()` of the UTF-8 token.

@@ -6,6 +6,7 @@
 //   Stage 4  images and scanned pages last: a vision model transcribes them, if configured
 // Pure apart from the injected readFile / transcriber / quota, so every rule is unit-tested.
 import { PDFDocument } from "npm:pdf-lib@1.17.1";
+import { bytesMatchType, DOCX_MIME, docxPages } from "./docx.ts";
 import { extractText, getDocumentProxy } from "npm:unpdf@2.1.0";
 import { isNever, preferredMatch, readRule } from "./rule.ts";
 import { KEEP_THRESHOLD, scorePage, type PageScore } from "./score.ts";
@@ -129,7 +130,7 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
   const readable: Candidate[] = [];
   for (const c of candidates) {
     const { att } = c;
-    const known = att.mime === "application/pdf" || TEXT_TYPES.has(att.mime) || IMAGE_TYPES.has(att.mime);
+    const known = att.mime === "application/pdf" || att.mime === DOCX_MIME || TEXT_TYPES.has(att.mime) || IMAGE_TYPES.has(att.mime); // D61: + Word
     if (!known) { results.set(att.id, skip(att, 1, "unsupported_type")); continue; }
     if (!att.storage_path) { results.set(att.id, skip(att, 1, "no_file")); continue; }
     if (att.bytes > MAX_BYTES && !rule.allowLarge) { results.set(att.id, skip(att, 1, "too_large")); continue; }
@@ -148,12 +149,17 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
     let pages: string[];
     try {
       const bytes = await deps.readFile(att.storage_path!);
-      const refusal = TEXT_TYPES.has(att.mime) ? null : pdfRefusal(bytes);
+      // D61: a file must really be what its label says (an upload's label comes from a browser).
+      if (!bytesMatchType(att.mime, bytes)) {
+        results.set(att.id, { id: att.id, status: "failed", pages: [], pages_total: null, triage: { stage: 2, reason: "type_mismatch" } });
+        continue;
+      }
+      const refusal = att.mime === "application/pdf" ? pdfRefusal(bytes) : null;
       if (refusal) {
         results.set(att.id, { id: att.id, status: "failed", pages: [], pages_total: null, triage: { stage: 2, reason: refusal } });
         continue;
       }
-      pages = TEXT_TYPES.has(att.mime) ? [new TextDecoder().decode(bytes).slice(0, 50_000)] : await pdfPages(bytes);
+      pages = TEXT_TYPES.has(att.mime) ? [new TextDecoder().decode(bytes).slice(0, 50_000)] : att.mime === DOCX_MIME ? await docxPages(bytes) : await pdfPages(bytes);
     } catch (e) {
       const reason = e instanceof Error && e.message === "timeout" ? "too_slow" : "unreadable";
       results.set(att.id, { id: att.id, status: "failed", pages: [], pages_total: null, triage: { stage: 2, reason } });
@@ -210,6 +216,10 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
     if (allowed === 0) { results.set(att.id, { id: att.id, status: "pending", pages: [], pages_total: v.total, triage: { stage: 4, reason: "daily_vision_limit" } }); continue; }
     try {
       const bytes = await deps.readFile(att.storage_path!);
+      if (IMAGE_TYPES.has(att.mime) && !bytesMatchType(att.mime, bytes)) {
+        results.set(att.id, { id: att.id, status: "failed", pages: [], pages_total: v.total, triage: { stage: 4, reason: "type_mismatch" } });
+        continue;
+      }
       const kept: KeptPage[] = [];
       let input = 0;
       let output = 0;
