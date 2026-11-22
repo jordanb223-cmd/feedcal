@@ -106,6 +106,22 @@ describe("Gmail page (D39)", () => {
     expect(html).toContain("Disconnect Gmail");
   });
 
+  it("disconnecting needs the tick box; without it nothing is deleted", async () => {
+    const t = app({ connected: true, status: "active", sender_email: "office@school.example", interval_days: 7 });
+    const page = await (await t.get(`/feeds/${ID}/gmail`)).text();
+    expect(page).toMatch(/name="confirm" value="yes" required/);
+    const res = await t.post(`/feeds/${ID}/gmail/disconnect`, {});
+    expect(res.status).toBe(400);
+    expect(t.calls.some((c) => c.fn === "gmail_disconnect")).toBe(false);
+    await t.post(`/feeds/${ID}/gmail/disconnect`, { confirm: "yes" });
+    expect(t.calls.some((c) => c.fn === "gmail_disconnect")).toBe(true);
+  });
+
+  it("the example search box is styled like every other field", async () => {
+    const html = await (await app({ connected: true, status: "choose_example", candidates: [] }).get(`/feeds/${ID}/gmail`)).text();
+    expect(html).toMatch(/<input class="copy" id="words"/);
+  });
+
   it("someone who isn't the owner can't see or change it", async () => {
     const res = await app(null, { owner: false }).get(`/feeds/${ID}/gmail`);
     expect(res.status).toBe(403);

@@ -5,6 +5,19 @@ import type { Context, Hono } from "hono";
 import type { AppEnv } from "./types.js";
 
 export const APP_CSS = `
+.skip{position:absolute;left:1rem;top:-3rem;background:#1d1d1b;color:#fff;padding:.5rem 1rem;border-radius:8px;z-index:10}
+.skip:focus{top:1rem}
+main{overflow-wrap:anywhere}
+button,.button,summary,label.check,.choice label{touch-action:manipulation}
+button,.button{transition:background-color .15s ease,border-color .15s ease,transform .1s ease}
+button:hover,.button:hover{background:#174a31;border-color:#174a31}
+button.secondary:hover,a.button.secondary:hover{background:#eef5f1;border-color:#174a31;color:#174a31}
+button.danger:hover{background:#6e1616;border-color:#6e1616}
+button:active,.button:active{transform:scale(.97)}
+.choice label{transition:border-color .15s ease,background-color .15s ease}
+.choice label:hover{border-color:#6b6b66}
+a:hover{text-decoration-thickness:2px}
+@media (prefers-reduced-motion:reduce){button,.button,.choice label{transition:none}button:active,.button:active{transform:none}}
 .choice{border:0;padding:0;margin:0 0 .5rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
 .choice legend{font-weight:600;margin-bottom:.5rem}
 .choice label{display:flex;gap:.5rem;align-items:flex-start;border:2px solid #d8d8d3;border-radius:12px;padding:1rem;cursor:pointer;background:#fff}

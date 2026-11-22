@@ -74,7 +74,7 @@ describe.skipIf(!enabled)("a stranger, against the real local stack", () => {
     const csrf = /name="csrf" value="([^"]+)"/.exec(await page.text())?.[1] ?? "";
     const res = await bob(`/feeds/${ALICE_FEED}/rotate-token`, {
       method: "POST",
-      body: new URLSearchParams({ csrf }),
+      body: new URLSearchParams({ csrf, confirm: "yes" }), // ticked, so the ownership check is what refuses (D45)
       headers: { "content-type": "application/x-www-form-urlencoded", cookie: `feedcal_csrf=${cookie}`, origin: BASE },
     });
     expect([403, 404]).toContain(res.status);

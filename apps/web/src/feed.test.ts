@@ -123,9 +123,12 @@ describe("link rotation", () => {
 
   it("rotation redirects to the share kit (so a refresh can't rotate twice); a non-owner is refused", async () => {
     const csrf = "c".repeat(43);
-    const post = (s: ReturnType<typeof setup>) =>
-      s.request(`/feeds/${FEED_ID}/rotate-token`, { method: "POST", body: new URLSearchParams({ csrf }), headers: { origin: BASE, cookie: `feedcal_csrf=${csrf}`, "content-type": "application/x-www-form-urlencoded" } });
+    const post = (s: ReturnType<typeof setup>, confirm = "yes") =>
+      s.request(`/feeds/${FEED_ID}/rotate-token`, { method: "POST", body: new URLSearchParams({ csrf, confirm }), headers: { origin: BASE, cookie: `feedcal_csrf=${csrf}`, "content-type": "application/x-www-form-urlencoded" } });
     const owner = setup(() => ({ data: "N".repeat(43), error: null }), { sub: "u1" });
+    const unticked = await post(owner, "");
+    expect(unticked.status).toBe(400); // every subscriber would need the new link: the tick box is required
+    expect(owner.rpc).not.toHaveBeenCalledWith("rotate_feed_token", expect.anything());
     const ok = await post(owner);
     expect(ok.status).toBe(303);
     expect(ok.headers.get("location")).toBe(`/feeds/${FEED_ID}/share?rotated=1`);

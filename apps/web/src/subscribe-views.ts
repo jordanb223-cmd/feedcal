@@ -73,7 +73,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
     feed.name,
     html`<div class="card">
   <h1 dir="auto">${feed.name}${feed.verified ? html` <span title="Verified organizer" style="font-size:1rem">✓ Verified</span>` : ""}</h1>
-  ${feed.may_be_out_of_date ? html`<p class="error">This calendar hasn't been updated in over 90 days, so it may be out of date.</p>` : ""}
+  ${feed.may_be_out_of_date ? html`<p class="error" role="alert">This calendar hasn't been updated in over 90 days, so it may be out of date.</p>` : ""}
   ${feed.organizer_name ? html`<p class="muted">Kept up to date by <span dir="auto">${feed.organizer_name}</span>${feed.area ? html` · <span dir="auto">${feed.area}</span>` : feed.zip_code ? html` · ${feed.zip_code}` : ""}</p>` : ""}
   ${feed.description ? html`<p dir="auto">${feed.description}</p>` : ""}
   <p><a class="button wide" href="${go(primary.target)}">${primary.label}</a></p>
@@ -85,7 +85,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
     <p><a class="button secondary wide" href="${go("outlook")}">Outlook.com</a></p>
     <p><a class="button secondary wide" href="${go("office365")}">Outlook for work or school (Microsoft 365)</a></p>
     <p><label for="feed-link">Calendar link for any other app</label>
-      <input class="copy" id="feed-link" readonly value="${opts.links.https}"></p>
+      <input class="copy" id="feed-link" readonly spellcheck="false" value="${opts.links.https}"></p>
     <p><button type="button" class="secondary" data-copy="feed-link" data-count="/c/${encodeURIComponent(feed.slug)}/copied">Copy link</button></p>
   </details>
   <p class="muted">${n > 0 ? html`At least ${n} ${n === 1 ? "calendar follows" : "calendars follow"} this. ` : ""}Updated ${formatUpdated(feed.last_updated_at)}.</p>
@@ -124,10 +124,10 @@ export function shareKitPage(opts: {
   ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}
   ${opts.pageUrl
     ? html`<p>Send people this page. It has a one-tap subscribe button for their phone.</p>
-  <p><label for="page-link">Page link</label><input class="copy" id="page-link" readonly value="${opts.pageUrl}"></p>
+  <p><label for="page-link">Page link</label><input class="copy" id="page-link" readonly spellcheck="false" value="${opts.pageUrl}"></p>
   <p><button type="button" class="secondary" data-copy="page-link">Copy page link</button></p>`
     : html`<p>This feed is private, so it has no public page. Share the calendar link directly with the people who should see it.</p>`}
-  <p><label for="feed-url">Calendar link (for calendar apps)</label><input class="copy" id="feed-url" readonly value="${opts.feedUrl}"></p>
+  <p><label for="feed-url">Calendar link (for calendar apps)</label><input class="copy" id="feed-url" readonly spellcheck="false" value="${opts.feedUrl}"></p>
   <p><button type="button" class="secondary" data-copy="feed-url">Copy calendar link</button></p>
 </div>
 <div class="card">
@@ -153,6 +153,7 @@ ${opts.stats
   <p>If the link reached the wrong people, make a new one. The old link stops working right away, and current subscribers will need the new one.</p>
   <form method="post" action="/feeds/${opts.feedId}/rotate-token">
     <input type="hidden" name="csrf" value="${opts.csrf}">
+    <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand current subscribers will stop getting updates until they use the new link</label></p>
     <button type="submit" class="danger">Make a new link</button>
   </form>
 </div>`,

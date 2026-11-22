@@ -108,9 +108,9 @@ export function emailSetupPage(opts: {
   ${opts.notice ? html`<p role="status">${EMAIL_NOTICES[opts.notice]}</p>` : ""}
   <p>Forward school or team emails to this address. Feedcal reads them and finds the events.</p>
   ${opts.address
-    ? html`<p><label for="intake">This calendar's email address</label><input class="copy" id="intake" readonly value="${opts.address}"></p>
+    ? html`<p><label for="intake">This calendar's email address</label><input class="copy" id="intake" readonly spellcheck="false" value="${opts.address}"></p>
   <p><button type="button" class="secondary" data-copy="intake">Copy address</button></p>`
-    : html`<p class="error">Email forwarding isn't switched on for this site yet, so this address doesn't receive mail. Your calendar's address will be <code>${opts.localPart}@…</code> once it is.</p>`}
+    : html`<p class="error" role="alert">Email forwarding isn't switched on for this site yet, so this address doesn't receive mail. Your calendar's address will be <code>${opts.localPart}@…</code> once it is.</p>`}
 </div>
 ${opts.confirmation
   ? html`<div class="card">
@@ -214,7 +214,9 @@ ${opts.isOwner
   ? html`<div class="card">
   <h2>Getting spam at this address?</h2>
   <p>Get a new address. The old one stops working right away, so you'll need to update your forwarding.</p>
-  <form method="post" action="/feeds/${opts.feedId}/rotate-intake">${csrf}<button type="submit" class="danger">Get a new address</button></form>
+  <form method="post" action="/feeds/${opts.feedId}/rotate-intake">${csrf}
+    <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand the old address stops working right away</label></p>
+    <button type="submit" class="danger">Get a new address</button></form>
 </div>`
   : ""}
 <p><a href="/account">Back to your account</a></p>`,
