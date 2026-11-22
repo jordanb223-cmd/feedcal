@@ -19,6 +19,7 @@ describe("footer and cookies (D62)", () => {
     const footer = html.slice(html.indexOf("<footer"));
     expect(html.indexOf("<footer")).toBeGreaterThan(-1);
     expect(footer).toContain(`<p style="margin:0 0 .5rem">${shown}</p>`);
+    expect(footer).toContain('<a href="/contact">Contact</a>');
   });
   it("the privacy page lists the cookies and says there are no trackers", async () => {
     const html = await page("/privacy");

@@ -48,7 +48,7 @@ ${head}
 <script src="${ASSET_PATHS.js}" defer></script>
 </head>
 <body><a class="skip" href="#main">Skip to content</a><main id="main">${siteHeader(audience)}${body}
-<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><p style="margin:0 0 .5rem">${FOOTER_DISCLAIMER}</p><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/privacy">Privacy</a> · <a href="/about/costs">Support Calantern</a></footer></main></body>
+<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><p style="margin:0 0 .5rem">${FOOTER_DISCLAIMER}</p><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/privacy">Privacy</a> · <a href="/contact">Contact</a> · <a href="/about/costs">Support Calantern</a></footer></main></body>
 </html>`;
 }
 

@@ -62,6 +62,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li><strong>Your account:</strong> your email address and, if you add one, your name.</li>
     <li><strong>Your calendars:</strong> their events, the senders you trust, and your settings.</li>
     <li><strong>Forwarded emails, their attachments, and files you upload:</strong> so we can find events and show you where each one came from.</li>
+    <li><strong>Messages you send us</strong> through the contact form, and your email address if you add one, so we can read and answer them.</li>
     <li><strong>No card details:</strong> if you donate, Buy Me a Coffee takes the payment; we never see your card.</li>
     <li><strong>Counts, not people:</strong> how many calendar apps check a feed, and how many times subscribe buttons are tapped. We store a scrambled code instead of an address, and the code can't be traced back after 2 days.</li>
   </ul>
@@ -77,6 +78,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
   </ul>
   <h2>How long we keep it</h2>
   <ul>
+    <li>Contact form messages: 90 days.</li>
     <li>Forwarded emails, their attachments, and uploaded files: 30 days. An upload that's started but never finished is deleted within about 2 hours.</li>
     <li>Cancelled events: 30 days in calendars, so phones remove them.</li>
     <li>The "Undo" record after a change: 1 day.</li>
@@ -102,5 +104,6 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li>Delete your account any time from <a href="/account">your account page</a>.</li>
     <li>Turn off any email from us with the link at the bottom of it.</li>
   </ul>
+  <p>Questions, bug reports or privacy requests: use the <a href="/contact">contact form</a>.</p>
 </div>`, seoHead(c, "Privacy", "What Calantern keeps, how long it keeps it, who processes it, and how to download or delete your data."))));
 }
