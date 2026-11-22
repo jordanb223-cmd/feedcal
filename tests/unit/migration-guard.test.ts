@@ -16,17 +16,18 @@ function run(files: Record<string, string>, applied: string[] = []) {
 describe("migration guard (D57)", () => {
   it("passes ordinary changes and code that only deletes when it is later called", () => {
     const r = run({
-      "20300101000000_add.sql": "alter table public.feeds add column x int;\n-- this comment mentions drop table t\n",
+      "20300101000000_add.sql": "alter table public.feeds add column x int;\nalter table public.feeds alter column x set default 1;\n-- this comment mentions drop table t\n",
       "20300101000100_fn.sql": "create function private.purge() returns void language sql as $$ delete from public.events where false $$;\ndrop function if exists private.old();\n",
     });
     expect(r.code).toBe(0);
     expect(r.out).toContain("flagged as deleting data: 0");
   });
   it("refuses an unreviewed drop, truncate or do-block delete, naming file and environment", () => {
-    for (const sql of ["drop table public.events;", "TRUNCATE public.feeds;", "alter table t drop column c;", "do $$ begin delete from public.events; end $$;"]) {
+    for (const sql of ["drop table public.events;", "TRUNCATE public.feeds;", "alter table t drop column c;", "do $$ begin delete from public.events; end $$;",
+      "alter table t alter column c type int;", "alter table t alter column c set data type text;", "drop extension pgmq cascade;", "drop materialized view v;", "drop sequence s;"]) {
       const r = run({ "20300101000200_bad.sql": sql });
       expect(r.code, sql).toBe(1);
-      expect(r.out).toContain("WARNING: 20300101000200_bad.sql DELETES data or tables in the production database");
+      expect(r.out).toContain("WARNING: 20300101000200_bad.sql DELETES or rewrites data in the production database");
       expect(r.out).toContain("REFUSING to push to production");
     }
   });

@@ -40,4 +40,18 @@ jobs:
         with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
       - run: npm run lint && npm run typecheck && npm test
+      # D58: Supabase's free plan keeps no backups of its own, so take one right before any change.
+      # If it can't be taken, production isn't touched. Restore with scripts/restore-drill.sh.
+      - name: Back up production before changing it
+        env:
+          BACKUP_DB_URL: ${{ secrets.BACKUP_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$BACKUP_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::BACKUP_DB_URL or BACKUP_PASSPHRASE isn't set. Refusing to change production without a fresh backup."; exit 1
+          fi
+          scripts/backup.sh backups-predeploy "$BACKUP_DB_URL"
+      - name: Keep the pre-deploy backup for 90 days
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with: { name: "backup-predeploy-${{ github.ref_name }}-${{ github.run_id }}", path: backups-predeploy/, retention-days: 90, if-no-files-found: error }
       - run: .github/scripts/deploy.sh

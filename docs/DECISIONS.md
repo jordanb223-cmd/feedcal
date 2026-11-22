@@ -501,3 +501,14 @@ What was checked, against what, and what changed:
   - `docs/CONTRIBUTING.md` "Safety rails": each rule, its control, and the safe command.
 - **Not changed (outside the repo; owner's manual steps):** GitHub token scopes, where backups are copied, Supabase token scope, plaintext keys in the shell profile and MCP configs, MCP version pins, Claude user settings and auto mode.
 
+## D58 — Back up production right before every deploy; flag destructive migrations on the PR (2026-11-21)
+
+- **Why.** Arguing D57 against itself: the migration guard is pattern matching, and its `-- destructive: reviewed` line is a self-declaration anyone (including an agent) can add. Recovery beats detection. Supabase's backups page says it backs up "Pro, Team, and Enterprise Plan projects" and tells free projects to export their own data, so the daily `Backup` workflow (D37) is the only copy.
+- **What changed.**
+  - `deploy-production.yml` runs `scripts/backup.sh` against `BACKUP_DB_URL` before `deploy.sh`, uploads it as `backup-predeploy-<tag>-<run>` (90 days), and stops if either secret is missing or the dump fails.
+  - CI runs `migration-guard.sh` on every pull request, comparing against the base branch, so a destructive migration fails a required check where the SQL is visible, before the deploy approval.
+  - The guard also flags drop sequence / extension / materialized view and column type changes.
+  - `.claude/settings.json` uses wildcards (`git push * --force*`, `gh pr merge * --admin*`, `gh workflow run*`, `git push * --delete *`, `+refspec`), since Claude Code matches `*` anywhere. A trailing `:*` is the old "anything" form, so `git push * :*` would have blocked every push; it isn't used.
+- **Outside the repo (same day, owner asked):** user-level `ask` rules for posting, messaging and spending tools (X, Gmail send/reply/forward, iMessage, Higgsfield ads/GPU/publish) and for force-push, repo deletion, admin merges and secrets; MCP servers pinned (blender-mcp 2.0.0, mcp-youtube 0.2.0 with mcp 1.30.0, which also fixes its startup crash under mcp 2.x; mcp-remote 0.16.7).
+- **Known gaps.** `bash -c`, programs called by full path, `git push origin :branch`, and sessions started outside this folder aren't covered by the deny rules; backups and code still sit behind one GitHub account (owner's manual step: a fine-grained token, and an occasional download of the weekly backup).
+
