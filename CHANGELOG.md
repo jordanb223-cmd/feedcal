@@ -7,6 +7,12 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-11-22
+
+### Added
+- A short note at the foot of every page: Calantern fills calendars in automatically, can make mistakes, and isn't run by any school or team.
+- The privacy page now explains exactly which cookies Calantern uses (only ones it needs, deleted when you close your browser) and that there are no trackers, ads or analytics.
+
 ## [0.8.0] - 2026-11-21
 
 ### Added

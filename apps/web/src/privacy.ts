@@ -88,6 +88,14 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
   </ul>
   <h2>Who processes it</h2>
   <p>Supabase (database), Cloudflare (website and email receiving), Anthropic (the AI that reads forwarded emails), and Resend (emails we send). If you donate, Buy Me a Coffee handles the payment. See <a href="/about/costs">what Calantern costs</a>.</p>
+  <h2 id="cookies">Cookies and trackers</h2>
+  <p>Calantern only uses the cookies it needs to work:</p>
+  <ul>
+    <li><strong>A security cookie</strong> on pages with forms, so other websites can't send forms in your name.</li>
+    <li><strong>Sign-in cookies</strong> once you sign in, so you stay signed in as you move between pages.</li>
+  </ul>
+  <p>All of them are deleted when you close your browser, can't be read by scripts on the page, and are only sent over a secure connection. Calendar pages, the directory, and the calendar link your calendar app checks set no cookies at all.</p>
+  <p><strong>No trackers, ads or analytics.</strong> While you use Calantern, your browser loads nothing from other companies: no ad networks, social media buttons or tracking scripts. The site's security settings tell browsers to refuse them. If you choose "Sign in with Google", you go to Google's own page for that step.</p>
   <h2>Your choices</h2>
   <ul>
     <li><a href="/account/export">Download everything we hold about you</a> (a JSON file), or each calendar as a calendar file from your account page.</li>

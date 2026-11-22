@@ -1,5 +1,8 @@
 import { html } from "hono/html";
 import { ASSET_PATHS } from "./assets.js";
+
+/** D62: shown at the foot of every page (calendar pages also carry the longer notes). */
+export const FOOTER_DISCLAIMER = "Calantern fills calendars in automatically and can make mistakes. It isn't run by any school or team.";
 import type { HtmlEscapedString } from "hono/utils/html";
 
 type Html = HtmlEscapedString | Promise<HtmlEscapedString>;
@@ -45,7 +48,7 @@ ${head}
 <script src="${ASSET_PATHS.js}" defer></script>
 </head>
 <body><a class="skip" href="#main">Skip to content</a><main id="main">${siteHeader(audience)}${body}
-<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/privacy">Privacy</a> · <a href="/about/costs">Support Calantern</a></footer></main></body>
+<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><p style="margin:0 0 .5rem">${FOOTER_DISCLAIMER}</p><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/privacy">Privacy</a> · <a href="/about/costs">Support Calantern</a></footer></main></body>
 </html>`;
 }
 
