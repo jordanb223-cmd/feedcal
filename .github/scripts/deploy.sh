@@ -75,6 +75,23 @@ jq -n --arg q "$SETTINGS_SQL" '{query: $q}' | curl --fail --silent --show-error 
   -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "content-type: application/json" --data @- >/dev/null
 echo "::endgroup::"
 
+echo "::group::Server-only proof for database calls (D51)"
+# Created once inside Supabase Vault (random 256 bits), never typed or seen by a person. Read here,
+# masked in the log before anything else can print it, and given to the web app as a secret.
+run_sql() { jq -n --arg q "$1" '{query: $q}' | curl --fail --silent --show-error -X POST \
+  "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "content-type: application/json" --data @-; }
+run_sql "select vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'rpc_proxy_key')
+  where not exists (select 1 from vault.secrets where name = 'rpc_proxy_key');" >/dev/null
+PROXY_KEY="$(run_sql "select decrypted_secret as k from vault.decrypted_secrets where name = 'rpc_proxy_key';" \
+  | jq -r 'if type == "array" then (.[0].k // empty) else empty end')"
+if [ -z "$PROXY_KEY" ] || [ "${#PROXY_KEY}" -lt 32 ]; then echo "Could not create or read the proxy key." >&2; exit 1; fi
+echo "::add-mask::$PROXY_KEY"
+printf '%s' "$PROXY_KEY" | npx wrangler pages secret put RPC_PROXY_KEY --project-name "$PAGES_PROJECT" >/dev/null
+unset PROXY_KEY
+echo "Proxy key set on the web app."
+echo "::endgroup::"
+
 echo "::group::Web app"
 GITHUB_SHA="$DEPLOY_SHA" npm run build -w @feedcal/web
 npx wrangler pages deploy apps/web/dist --project-name "$PAGES_PROJECT" --branch main --commit-hash "$DEPLOY_SHA"

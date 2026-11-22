@@ -85,3 +85,14 @@ Deno.test("a big backlog is read a few at a time, and the run says there's more"
   assert(r.more, "and it reports more waiting");
   assertEquals(r.checkedAt.toISOString(), after.toISOString(), "the starting point stays, so none are skipped");
 });
+
+Deno.test("revokeToken sends the token in a form body, never in the URL (D51)", async () => {
+  const { revokeToken } = await import("./gmail.ts");
+  let seen: { url: string; init?: RequestInit } | null = null;
+  const ok = await revokeToken((async (url: string | URL | Request, init?: RequestInit) => { seen = { url: String(url), init }; return new Response("", { status: 200 }); }) as typeof fetch, "tok-secret-123");
+  if (!ok || !seen) throw new Error("expected a successful revoke");
+  const s = seen as { url: string; init?: RequestInit };
+  if (s.url !== "https://oauth2.googleapis.com/revoke") throw new Error(`token must not be in the URL: ${s.url}`);
+  if (String(s.init?.body) !== "token=tok-secret-123") throw new Error("token must be in the form body");
+  if ((s.init?.headers as Record<string, string>)["content-type"] !== "application/x-www-form-urlencoded") throw new Error("form content type");
+});

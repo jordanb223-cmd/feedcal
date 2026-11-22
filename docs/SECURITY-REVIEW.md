@@ -32,3 +32,15 @@ Not covered: the baseline scan is passive and unauthenticated, so pages behind s
 
 ## OWASP ASVS level 1 (Prompt F, item 41)
 Not done item by item. The table above touches the same areas, but only at a summary level. A full item-by-item ASVS 5.0 level 1 pass is still to do before public launch.
+
+## Post-launch check, 2026-11-21 (D51)
+
+Scope: production as deployed (v0.6.2) plus the code added after Phase 16 (Gmail, imports, setup flow). **Supabase Security Advisor (production): 0 errors.** Warnings are the intended SECURITY DEFINER RPC design (checks inside, pgTAP-covered); info items are deny-all private tables. Live headers present (CSP, HSTS, nosniff, frame denial, COOP, Permissions-Policy, `__Host-` cookie). `npm audit`: 0 known vulnerabilities.
+
+| Finding | Severity | Status |
+|---|---|---|
+| Public RPCs trusted a caller-supplied IP: follower count could be inflated; report/search/sign-in limits sidestepped | Medium | Fixed: server-only proof header (pgTAP 024, local end-to-end check) |
+| Gmail revoke sent the token in a URL | Low | Fixed: `gmail-revoke` Edge Function, form body |
+| HSTS max-age one day | Low | Fixed: one year |
+| Import links: DNS names pointing into private networks | Low | Narrowed: resolve-and-refuse before each hop (best effort) |
+| BMC webhook secret seen in chat | Low | Owner to roll |

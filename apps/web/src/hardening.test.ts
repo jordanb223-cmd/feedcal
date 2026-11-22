@@ -24,7 +24,7 @@ describe("security headers", () => {
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("base-uri 'none'");
     expect(csp).toContain("form-action 'self' https://ref.supabase.co https://accounts.google.com");
-    expect(res.headers.get("strict-transport-security")).toBe("max-age=86400; includeSubDomains");
+    expect(res.headers.get("strict-transport-security")).toBe("max-age=31536000; includeSubDomains");
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(res.headers.get("x-frame-options")).toBe("DENY");
     expect(res.headers.get("permissions-policy")).toContain("camera=()");
@@ -146,5 +146,15 @@ describe("privacy pages", () => {
   it("export needs sign-in", async () => {
     const res = await app()("https://feedcal.test/account/export");
     expect(res.status).toBe(303);
+  });
+});
+
+// D51: the web server proves itself to the database so visitor addresses can be trusted.
+describe("server-only proof for database calls (D51)", () => {
+  it("is sent only when configured, and never appears in a page", async () => {
+    const { proxyHeaders } = await import("./supabase.js");
+    const ctx = (env: Record<string, string>) => ({ env }) as unknown as Parameters<typeof proxyHeaders>[0];
+    expect(proxyHeaders(ctx({ RPC_PROXY_KEY: "k-123" }))).toEqual({ "x-feedcal-proxy": "k-123" });
+    expect(proxyHeaders(ctx({}))).toEqual({});
   });
 });

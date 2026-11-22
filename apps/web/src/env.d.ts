@@ -17,4 +17,6 @@ export interface Bindings {
   HSTS_MAX_AGE?: string;
   /** Google OAuth client id for the Gmail connection (public; D39). Unset: no "Connect Gmail". */
   GMAIL_CLIENT_ID?: string;
+  /** D51: server-only proof for database calls (set by the deploy from Vault). Never sent to browsers. */
+  RPC_PROXY_KEY?: string;
 }

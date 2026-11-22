@@ -22,7 +22,7 @@ select is(public.public_feed_page('sub-public')->'feed'->>'feed_token', current_
 select ok(public.public_feed_page(current_setting('test.unlisted'))->'feed'->>'feed_token' ~ '^[A-Za-z0-9_-]{43}$',
   'an unlisted page (exact slug) carries its token');
 select is(public.public_feed_page('sub-private'), null, 'a private feed still has no page and no token');
-select is(public.feed_calendar(public.public_feed_page('sub-public')->'feed'->>'feed_token')->'feed'->>'name', 'Public',
+select is(public.feed_calendar_guarded(public.public_feed_page('sub-public')->'feed'->>'feed_token')->'feed'->>'name', 'Public',
   'the token on the page opens the feed');
 
 select is(public.record_subscribe_click('sub-public', 'apple'), true, 'a click on a public page counts');
