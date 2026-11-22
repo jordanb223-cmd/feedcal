@@ -4,6 +4,7 @@
 import type { Context, Hono } from "hono";
 import { z } from "zod";
 import { currentUser, MESSAGES } from "./auth.js";
+import { ImportStatus, importNotice } from "./imports.js";
 import { CATEGORIES, dashboardPage, DONE, eventEditPage, feedHomePage, newFeedPage, REJECT_REASONS, settingsPage,
   type DashboardFeed, type DraftCard, type ReviewCard } from "./review-views.js";
 import { csrfToken, csrfValid } from "./security.js";
@@ -302,12 +303,14 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     const feed = await loadFeed(c, feedId);
     if (!feed) return notFound(c);
     const sb = c.get("supabase");
-    const [{ data: editors }, { data: sources }, { data: zipFound }] = await Promise.all([
+    const [{ data: editors }, { data: sources }, { data: zipFound }, { data: importRaw }] = await Promise.all([
       sb.from("feed_editors").select("user_id, role").eq("feed_id", feedId),
       sb.from("sources").select("id, sender_email, trusted, blocked, attachment_rule").eq("feed_id", feedId).order("created_at"),
       // D44: a ZIP found in this calendar's addresses (owner only; editors get an error and no suggestion).
       feed.owner_id === user.id && !feed.zip_code ? sb.rpc("feed_zip_suggestion", { p_feed_id: feedId }) : Promise.resolve({ data: null }),
+      sb.rpc("feed_import_status", { p_feed_id: feedId }), // D48
     ]);
+    const imported = ImportStatus.safeParse(importRaw);
     const suggestion = z.object({ zip: z.string().regex(/^\d{5}$/), places: z.number() }).safeParse(zipFound);
     const { data: profiles } = await sb.from("profiles").select("id, display_name").in("id", (editors ?? []).map((e) => e.user_id));
     return c.html(settingsPage({
@@ -316,6 +319,7 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
         name: feed.name, description: feed.description ?? "", visibility: feed.visibility, timezone: feed.timezone,
         threshold: feed.auto_publish_threshold === null ? 0.85 : Number(feed.auto_publish_threshold), isOwner: feed.owner_id === user.id,
         zip: feed.zip_code ?? null, zipSuggestion: suggestion.success ? suggestion.data : null,
+        imported: imported.success ? imported.data : null, importNotice: importNotice(c.req.query("import")) ?? null,
         editors: (editors ?? []).map((e) => ({ userId: e.user_id, role: e.role, label: e.user_id === user.id ? "You" : (profiles ?? []).find((p) => p.id === e.user_id)?.display_name ?? "An editor" })),
         senders: (sources ?? []).filter((x) => x.sender_email).map((x) => {
           const rule = x.attachment_rule as { prefer?: unknown[]; never?: unknown[]; allowLarge?: boolean } | null;

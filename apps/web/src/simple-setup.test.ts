@@ -48,7 +48,7 @@ describe("simpler setup (D47)", () => {
   it("settings show name and who can find it; the rest is folded away", async () => {
     const html = String(await settingsPage({ csrf: "x", feedId: "f1", s: { name: "Room F", description: "", visibility: "unlisted", timezone: "America/Los_Angeles", threshold: 0.85, isOwner: true, zip: null, zipSuggestion: null, editors: [], senders: [] } }));
     expect(html).toContain("<summary>More settings</summary>");
-    expect(html).toContain("<summary>Senders, editors and the subscribe link</summary>");
+    expect(html).toContain("Senders, editors, imports and the subscribe link</summary>");
     expect(html.indexOf('name="visibility"')).toBeLessThan(html.indexOf("More settings"));
     expect(html.indexOf('name="timezone"')).toBeGreaterThan(html.indexOf("More settings"));
   });

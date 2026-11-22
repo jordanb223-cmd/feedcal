@@ -4,6 +4,7 @@ import { html } from "hono/html";
 import { formatWhen } from "./subscribe-views.js";
 import { feedNav } from "./nav.js";
 import { visibilityChoice } from "./visibility.js";
+import { importStatus, type ImportStatus } from "./imports.js";
 import { layout } from "./views.js";
 
 type Html = ReturnType<typeof layout>;
@@ -229,6 +230,7 @@ ${opts.history.length
 export interface SettingsData {
   name: string; description: string; visibility: string; timezone: string; threshold: number; isOwner: boolean;
   zip: string | null; zipSuggestion: { zip: string; places: number } | null;
+  imported?: ImportStatus; importNotice?: string | null;
   editors: { userId: string; label: string; role: string }[];
   senders: { id: string; email: string; trusted: boolean; blocked: boolean; rule: string | null }[];
 }
@@ -255,7 +257,12 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
   </form>`
     : html`<p class="muted">Only the owner can change these settings.</p>`}
 </div>
-<details class="more card"><summary>Senders, editors and the subscribe link</summary>
+<details class="more card" ${s.importNotice ? "open" : ""}><summary>Senders, editors, imports and the subscribe link</summary>
+${s.isOwner ? html`<div class="card">
+  <h2>Copy events from a calendar link</h2>
+  ${s.importNotice ? html`<p role="status">${s.importNotice}</p>` : ""}
+  ${importStatus(opts.feedId, t, s.imported ?? null)}
+</div>` : ""}
 ${s.isOwner ? html`<div class="card">
   <h2>Verified badge</h2>
   <p>Families trust calendars from verified organizers. We verify automatically when you sign in with your organisation's email and it sends this feed's emails.</p>

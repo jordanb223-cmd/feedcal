@@ -1,21 +1,9 @@
-// Edge Function: re-fetches imported public calendars daily (pg_cron), D34. HTTPS only, 15 s,
-// 2 MB; a source that fails keeps its events and is retried tomorrow.
+// Edge Function: fetches imported calendar links (pg_cron every 10 minutes; each link at most once
+// per 20 hours), D34/D48. Safe fetch in _shared/importer/fetch.ts. A source that fails keeps its
+// events and is retried later.
 import { parseIcs } from "../_shared/importer/ics.ts";
+import { fetchIcs } from "../_shared/importer/fetch.ts";
 import { admin, json, log } from "../_shared/http.ts";
-
-const MAX_BYTES = 2 * 1024 * 1024;
-
-async function fetchIcs(url: string): Promise<string> {
-  if (!url.startsWith("https://")) throw new Error("not_https");
-  const res = await fetch(url, { signal: AbortSignal.timeout(15_000), headers: { "user-agent": "Feedcal-Importer/1.0", accept: "text/calendar" }, redirect: "follow" });
-  if (!res.ok) throw new Error(`http_${res.status}`);
-  const len = Number(res.headers.get("content-length") ?? 0);
-  if (len > MAX_BYTES) throw new Error("too_large");
-  const body = await res.text();
-  if (body.length > MAX_BYTES) throw new Error("too_large");
-  if (!body.includes("BEGIN:VCALENDAR")) throw new Error("not_ics");
-  return body;
-}
 
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();

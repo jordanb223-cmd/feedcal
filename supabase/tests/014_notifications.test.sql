@@ -13,8 +13,9 @@ insert into public.feed_fetch_daily (feed_id, day, client_hash, user_agent_famil
   ('aaaaaaaa-0000-4000-8000-000000000001', current_date - 1, extensions.digest('google-ip-2', 'sha256'), 'google'),
   ('aaaaaaaa-0000-4000-8000-000000000001', current_date - 10, extensions.digest('old', 'sha256'), 'apple')
 on conflict do nothing;
-select is(private.subscriber_estimate('aaaaaaaa-0000-4000-8000-000000000001', current_date - 7, current_date), 3,
-  'two personal clients + Google counted once (not once per Google address)');
+-- D48: only calendar apps count ("other" may be a monitor or script), busiest single day.
+select is(private.subscriber_estimate('aaaaaaaa-0000-4000-8000-000000000001', current_date - 7, current_date), 2,
+  'one Apple client + Google counted once (not once per Google address); "other" isn''t counted');
 select is(private.subscriber_estimate('aaaaaaaa-0000-4000-8000-000000000001', current_date - 14, current_date - 7), 1, 'last week is counted separately');
 select ok(public.public_feed_page('sutterville-kindergarten') -> 'feed' ? 'may_be_out_of_date', 'the public page says whether a feed may be out of date');
 
@@ -52,7 +53,7 @@ reset role;
 select ok(private.queue_weekly_digests() >= 2, 'digests are queued for each person with a feed');
 select is(private.queue_weekly_digests(), 0, 'running twice in a week queues nothing more');
 select is((select (f ->> 'subscribers')::int from private.email_outbox o, jsonb_array_elements(o.payload -> 'feeds') f
-           where o.kind = 'weekly_digest' and o.user_id = '11111111-1111-4111-8111-111111111111' and f ->> 'id' = 'aaaaaaaa-0000-4000-8000-000000000001'), 3,
+           where o.kind = 'weekly_digest' and o.user_id = '11111111-1111-4111-8111-111111111111' and f ->> 'id' = 'aaaaaaaa-0000-4000-8000-000000000001'), 2,
   'the digest carries this week''s subscriber estimate');
 select ok((select payload -> 'feeds' -> 0 ? 'needs_review' and payload -> 'feeds' -> 0 ? 'reports' and payload -> 'feeds' -> 0 ? 'events_added'
            from private.email_outbox where kind = 'weekly_digest' limit 1), 'and events added, items to review, reports');
