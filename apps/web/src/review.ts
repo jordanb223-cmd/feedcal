@@ -101,11 +101,12 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     if (user instanceof Response) return user;
     const parsed = z.object({
       name: z.string().trim().min(1).max(120),
-      category: z.enum(CATEGORIES),
-      visibility: z.enum(["public", "unlisted", "private"]),
+      // D47: only the name is asked for; kind defaults to "other" and every calendar starts Private.
+      category: z.enum(CATEGORIES).default("other"),
+      visibility: z.enum(["public", "unlisted", "private"]).default("unlisted"),
       zip_code: z.string().trim().regex(/^(\d{5})?$/).default(""),
     }).safeParse(form);
-    if (!parsed.success) return c.html(newFeedPage({ csrf: csrfToken(c), error: "Please give the feed a name (and a 5-digit ZIP code, or none).", values: form }), 400);
+    if (!parsed.success) return c.html(newFeedPage({ csrf: csrfToken(c), error: "Please give the calendar a name.", values: form }), 400);
     if (parsed.data.zip_code && !(await knownZip(c, parsed.data.zip_code))) {
       return c.html(newFeedPage({ csrf: csrfToken(c), error: `We don't know the ZIP code ${parsed.data.zip_code}. Check it, or leave it blank.`, values: form }), 400);
     }
@@ -120,7 +121,8 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       .select("id").single();
     if (error || !data) return c.html(newFeedPage({ csrf: csrfToken(c), error: "We couldn't create the feed. Please try again.", values: form }), 400);
     c.get("log").info("feed_created", { feed_id: data.id });
-    return c.redirect(`/feeds/${data.id}/email?done=${wantsPublic ? "created_public_later" : "created"}`, 303);
+    // D47: next, the one question that matters: where do the emails come from?
+    return c.redirect(`/feeds/${data.id}/setup${wantsPublic ? "?public_later=1" : ""}`, 303);
   });
 
   // ---------------------------------------------------------------- feed home + review queue

@@ -55,8 +55,11 @@ describe.skipIf(!enabled)("review screen, end to end", { timeout: 60_000 }, () =
   it("creates a feed from the dashboard", async () => {
     const res = await alice("/feeds/new", { name: `Room 12 ${run}`, category: "school", visibility: "unlisted" });
     expect(res.status).toBe(303);
-    feedId = /\/feeds\/([0-9a-f-]{36})\/email/.exec(res.headers.get("location") ?? "")?.[1] ?? "";
+    // D47: a new calendar goes next to "where do the emails come from?"
+    feedId = /\/feeds\/([0-9a-f-]{36})\/setup$/.exec(res.headers.get("location") ?? "")?.[1] ?? "";
     expect(feedId).not.toBe("");
+    const setup = await (await alice(`/feeds/${feedId}/setup`)).text();
+    expect(setup).toContain("emails come from?");
     const dash = await (await alice("/feeds")).text();
     expect(dash).toContain(`Room 12 ${run}`);
     const home = await (await alice(`/feeds/${feedId}`)).text();

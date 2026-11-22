@@ -5,6 +5,15 @@ import type { Context, Hono } from "hono";
 import type { AppEnv } from "./types.js";
 
 export const APP_CSS = `
+.pick{border:1.5px solid #d4d4d4;border-radius:12px;padding:1rem;margin:0 0 .75rem}
+.pick h2{font-size:1.125rem;margin:0 0 .25rem;display:flex;align-items:center;gap:.5rem}
+.pick form,.pick .button{margin:0}
+.tag{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#c2410c;border:1.5px solid #c2410c;border-radius:999px;padding:.05rem .5rem}
+details.more{margin:0 0 1rem}
+details.more>summary{font-weight:600;padding:.5rem 0;color:#111111}
+details.more[open]>summary{margin-bottom:.5rem}
+details.more.card>summary{padding:0}
+details.more.card[open]>summary{margin-bottom:1rem}
 .kicker{display:block;font-size:.8125rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#c2410c;margin:0 0 .5rem}
 .cal{list-style:none;padding:0;margin:0}
 .cal li{display:flex;gap:1rem;padding:.875rem 0;border-top:1px solid #ececec}

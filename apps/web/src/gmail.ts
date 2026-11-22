@@ -96,7 +96,7 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
     const cands = opts.candidates ?? s.candidates ?? [];
     return layout(`Gmail for ${name}`, html`<div class="card">${head}
       <h2>Step 1: find an example email</h2>
-      <p>Search your Gmail for one email that has the calendar information, for example the school's name or "schedule". Feedcal searches the last 30 days and shows up to 10 results, sender, subject and date only.</p>
+      <p>Search for one email with the calendar details, like the school's name. Feedcal looks back 30 days and shows sender, subject and date only.</p>
       <form method="post" action="/feeds/${id}/gmail/search">${csrfField(t)}
         <p><label for="words">Search for</label><input class="copy" id="words" name="words" required minlength="2" maxlength="100" autocomplete="off" placeholder="e.g. Room F newsletter"></p>
         <button type="submit">Search</button></form>
@@ -105,13 +105,15 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
       <form method="post" action="/feeds/${id}/gmail/review">${csrfField(t)}
         ${cands.map((x, i) => html`<p><label class="check"><input type="radio" name="gmail_id" value="${x.id}" ${i === 0 ? "checked" : ""} ${x.from_email ? "" : "disabled"}>
           <span><strong dir="auto">${x.subject || "(no subject)"}</strong><br><span class="muted" dir="auto">${x.from_name ? `${x.from_name} · ` : ""}${x.from_email || "no sender address, can't be used"} · ${day(x.date)}</span></span></label></p>`)}
-        <p><label for="interval">How often should Feedcal check for new emails from this sender?</label>
-          <select id="interval" name="interval"><option value="7" selected>Every 7 days</option><option value="3">Every 3 days</option></select></p>
-        <p><label class="check"><input type="checkbox" name="look_back" value="1" checked>
-          <span>Also read earlier emails from this sender, from the 30 days before your example</span></label></p>
-        <button type="submit">Next</button></form></div>`
+        <details class="more"><summary>Checks every 7 days · also reads the 30 days before your example · Change</summary>
+          <p><label for="interval">How often should Feedcal check for new emails from this sender?</label>
+            <select class="copy" id="interval" name="interval"><option value="7" selected>Every 7 days</option><option value="3">Every 3 days</option></select></p>
+          <p><label class="check"><input type="checkbox" name="look_back" value="1" checked>
+            <span>Also read earlier emails from this sender, from the 30 days before your example</span></label></p>
+        </details>
+        <button type="submit" class="wide">Next</button></form></div>`
       : opts.candidates ? html`<div class="card"><p class="muted">No emails matched. Try different words.</p></div>` : ""}
-    <div class="card">${disconnect}</div>`);
+    <details class="more card"><summary>Wrong Gmail account?</summary>${disconnect}</details>`);
   }
 
   return layout(`Gmail for ${name}`, html`<div class="card">${head}
@@ -143,6 +145,31 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
     if (!loaded) return { res: c.html(messagePage("Only the owner can do this", "Only the feed's owner can connect Gmail."), 403) };
     return { id: id.data, ...loaded };
   };
+
+  // D47: right after a calendar is made, the one question that matters.
+  app.get("/feeds/:id/setup", async (c) => {
+    const o = await owner(c);
+    if ("res" in o) return o.res;
+    const t = csrfToken(c);
+    const gmailOn = Boolean(c.env.GMAIL_CLIENT_ID);
+    const later = c.req.query("public_later") === "1";
+    return c.html(layout(`Set up ${o.name}`, html`<div class="card">
+      <span class="kicker">New calendar</span>
+      <h1>Where do <span dir="auto">${o.name}</span>'s emails come from?</h1>
+      ${later ? html`<p class="muted">It starts Private. You can make it Public in Settings once it has an event.</p>` : ""}
+      ${gmailOn ? html`<div class="pick">
+        <h2>Connect Gmail <span class="tag">Easiest</span></h2>
+        <p class="muted">Pick one example email. Feedcal reads only that sender, read-only, and keeps the calendar up to date.</p>
+        <form method="post" action="/feeds/${o.id}/gmail/connect">${csrfField(t)}<button type="submit" class="wide">Connect Gmail</button></form>
+      </div>` : ""}
+      <div class="pick">
+        <h2>Forward emails</h2>
+        <p class="muted">Works with any email app. Feedcal gives this calendar its own address to forward to.</p>
+        <a class="button ${gmailOn ? "secondary " : ""}wide" href="/feeds/${o.id}/email?done=created">Get the forwarding address</a>
+      </div>
+      <p class="muted" style="margin:1rem 0 0">Or <a href="/feeds/${o.id}/events/new">add events by hand</a>.</p>
+    </div>`));
+  });
 
   app.get("/feeds/:id/gmail", async (c) => {
     const o = await owner(c);
@@ -219,7 +246,7 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
     const { data, error } = await c.get("supabase").rpc("gmail_choose_example", { p_feed_id: o.id, p_gmail_id: body.gmail_id ?? "", p_interval_days: body.interval === "3" ? 3 : 7, p_look_back: body.look_back === "1" });
     if (error || data !== true) return c.html(page(c, o.id, o.name, o.status, { error: "That email isn't in your latest search any more. Search again." }), 400);
     c.get("log").info("gmail_example_confirmed");
-    return c.redirect(`/feeds/${o.id}/gmail?result=confirmed`, 303);
+    return c.redirect(`/feeds/${o.id}/share?ready=gmail`, 303);
   });
 
   app.post("/feeds/:id/gmail/interval", async (c) => {

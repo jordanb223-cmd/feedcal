@@ -7,6 +7,13 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-21
+
+### Changed
+- Setting up a calendar is shorter: give it a name, choose Gmail or forwarding, pick one example email, confirm. The usual choices (check every 7 days, read the last 30 days) are already made; tap Change to adjust them.
+- When setup is done, the first button copies your calendar's share link.
+- Settings shows the name and Private/Public first; everything else is under More settings.
+
 ## [0.4.0] - 2026-11-21
 
 ### Changed
