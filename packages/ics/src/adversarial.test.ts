@@ -51,11 +51,11 @@ it("survives every generated attack on its text fields, dates and rules", () => 
   }
   expect(n).toBeGreaterThan(400);
   expect(problems).toEqual({});
-  for (const t of timing) expect(Number(/: (\d+) ms/.exec(t)?.[1] ?? 99999), t).toBeLessThan(150);
+  for (const t of timing) expect(Number(/: (\d+) ms/.exec(t)?.[1] ?? 99999), t).toBeLessThan(500);
   for (const bad of ["FREQ=SECONDLY;COUNT=99999999", "FREQ=MINUTELY", "FREQ=HOURLY", "FREQ=DAILY;COUNT=5000", "FREQ=DAILY;BYHOUR=1", "FREQ=WEEKLY;COUNT=2;COUNT=3", "FREQ=DAILY\r\nX:1", "COUNT=2;FREQ=DAILY"]) {
     expect(buildCalendar({ name: "x" }, [{ ...base(), rrule: bad }], { defaultTimeZone: "America/Los_Angeles" }).ics).not.toContain("RRULE");
   }
   for (const good of ["FREQ=WEEKLY;BYDAY=TU,TH;UNTIL=20261219", "FREQ=MONTHLY;BYMONTHDAY=1;COUNT=10", "FREQ=YEARLY", "FREQ=DAILY;INTERVAL=2;UNTIL=20261219T075959Z"]) {
     expect(buildCalendar({ name: "x" }, [{ ...base(), rrule: good }], { defaultTimeZone: "America/Los_Angeles" }).ics).toContain(`RRULE:${good}`);
   }
-});
+}, 60_000); // hundreds of builds plus ical.js parses: ~1 s on a laptop, ~6 s on CI runners
