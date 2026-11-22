@@ -50,7 +50,7 @@ export function securityHeaders(c: Context, supabaseUrl: string | undefined, hst
     "style-src 'self'",
     "style-src-attr 'unsafe-inline'",
     "img-src 'self' data:",
-    "connect-src 'self'",
+    `connect-src 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`, // D61: the browser sends uploads straight to storage
     "manifest-src 'self'",
     `form-action 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""} https://accounts.google.com`,
     "frame-ancestors 'none'",

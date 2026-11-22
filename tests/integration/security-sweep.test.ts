@@ -80,11 +80,11 @@ async function csrf(req: Req, page: string) {
 
 const GETS = ["/account", "/account/export", "/account/export/:file", "/account/support", "/admin", "/c/:slug", "/c/:slug/go/google", "/c/:slug/report", "/feeds", "/feeds/:id",
   "/feeds/:id/email", "/feeds/:id/events/:eid", "/feeds/:id/events/new", "/feeds/:id/flyer", "/feeds/:id/gmail", "/feeds/:id/link", "/feeds/:id/milestones/10", "/feeds/:id/settings",
-  "/feeds/:id/setup", "/feeds/:id/share", "/report/:uid", "/near/95818", "/directory", "/supporters", "/sitemap.xml"];
+  "/feeds/:id/setup", "/feeds/:id/share", "/feeds/:id/upload", "/report/:uid", "/near/95818", "/directory", "/supporters", "/sitemap.xml"];
 const POSTS = ["/c/:slug/copied", "/c/:slug/report", "/feeds/:id/attachments/:att/choose", "/feeds/:id/attachments/:att/never", "/feeds/:id/delete", "/feeds/:id/events",
   "/feeds/:id/events/:eid", "/feeds/:id/events/:eid/cancel", "/feeds/:id/gmail/confirm", "/feeds/:id/gmail/connect", "/feeds/:id/gmail/disconnect", "/feeds/:id/gmail/interval",
   "/feeds/:id/gmail/look-back", "/feeds/:id/gmail/review", "/feeds/:id/gmail/search", "/feeds/:id/import", "/feeds/:id/import/stop", "/feeds/:id/messages/:msg",
-  "/feeds/:id/rotate-intake", "/feeds/:id/rotate-token", "/feeds/:id/senders/:src", "/feeds/:id/senders/:src/large", "/feeds/:id/settings", "/feeds/:id/verify", "/report/:uid",
+  "/feeds/:id/rotate-intake", "/feeds/:id/rotate-token", "/feeds/:id/senders/:src", "/feeds/:id/senders/:src/large", "/feeds/:id/settings", "/feeds/:id/verify", "/feeds/:id/upload/start", "/feeds/:id/upload/finish", "/report/:uid",
   "/undo/:eid", "/admin/alert-drill", "/admin/mfa", "/account/support/link", "/account/support/listing"];
 const FIELDS = { name: "pwned", title: "pwned", description: "pwned", location: "pwned", date: "2026-12-24", start_date: "2026-12-24", time: "09:00", all_day: "on", visibility: "public",
   category: "school", zip: "95818", zip_code: "95818", timezone: "UTC", url: "https://example.com/x.ics", mode: "daily", confirm: "yes", action: "publish", decision: "trust", interval: "1",

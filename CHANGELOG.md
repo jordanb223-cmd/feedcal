@@ -7,6 +7,15 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-21
+
+### Added
+- Upload a newsletter, schedule or flyer to a calendar: PDF, Word (.docx), photos and text files up to 10 MB. Calantern reads the dates the same way it reads emails.
+- Word files attached to forwarded emails are now read too.
+
+### Changed
+- Files are checked to be what their name says before they're read.
+
 ## [0.7.4] - 2026-11-21
 
 ### Fixed

@@ -126,6 +126,47 @@ blockquote{margin:0 0 1rem}
 //   data-print              print the page
 //   data-countdown="10"     remove this element after N seconds; [data-countdown-left] shows N
 export const APP_JS = `"use strict";
+// D61: upload a file: ask for a one-time link, send the file straight to storage, then confirm.
+(() => {
+  const form = document.getElementById("upload-form");
+  if (!form) return;
+  const status = document.getElementById("upload-status");
+  const say = (t) => { if (status) status.textContent = t; };
+  const TYPES = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", jpg: "image/jpeg", jpeg: "image/jpeg",
+    png: "image/png", webp: "image/webp", gif: "image/gif", txt: "text/plain", csv: "text/csv", ics: "text/calendar" };
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const input = form.querySelector("input[type=file]");
+    const file = input && input.files && input.files[0];
+    if (!file) { say("Choose a file first."); return; }
+    if (file.size > 10 * 1024 * 1024) { say("That file is over 10 MB. Try a smaller copy, or just the pages with dates."); return; }
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    const mime = TYPES[ext] || file.type;
+    const csrf = form.querySelector("input[name=csrf]").value;
+    const base = form.getAttribute("action").slice(0, -"/start".length); // action ends in /start
+    const button = form.querySelector("button");
+    const post = async (path, fields) => {
+      const res = await fetch(base + path, { method: "POST", body: new URLSearchParams({ csrf, ...fields }), credentials: "same-origin" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Something went wrong. Please try again.");
+      return body;
+    };
+    button.disabled = true;
+    try {
+      say("Getting ready…");
+      const start = await post("/start", { filename: file.name, mime, bytes: String(file.size) });
+      say("Uploading…");
+      const put = await fetch(start.url, { method: "PUT", body: file, headers: { "content-type": mime, "x-upsert": "false" } });
+      if (!put.ok) throw new Error("The upload didn't finish. Please try again.");
+      say("Checking the file…");
+      const done = await post("/finish", { ticket: start.ticket });
+      window.location.assign(done.redirect);
+    } catch (e) {
+      say(e instanceof Error ? e.message : "Something went wrong. Please try again.");
+      button.disabled = false;
+    }
+  });
+})();
 document.addEventListener("click", async (ev) => {
   const target = ev.target instanceof Element ? ev.target : null;
   if (!target) return;

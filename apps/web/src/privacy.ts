@@ -61,11 +61,11 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
   <ul>
     <li><strong>Your account:</strong> your email address and, if you add one, your name.</li>
     <li><strong>Your calendars:</strong> their events, the senders you trust, and your settings.</li>
-    <li><strong>Forwarded emails and attachments:</strong> so we can find events and show you where each one came from.</li>
+    <li><strong>Forwarded emails, their attachments, and files you upload:</strong> so we can find events and show you where each one came from.</li>
     <li><strong>No card details:</strong> if you donate, Buy Me a Coffee takes the payment; we never see your card.</li>
     <li><strong>Counts, not people:</strong> how many calendar apps check a feed, and how many times subscribe buttons are tapped. We store a scrambled code instead of an address, and the code can't be traced back after 2 days.</li>
   </ul>
-  <p><strong>Please don't forward emails with medical, legal or other sensitive details.</strong> Calantern reads everything you forward, and an AI service reads it too, so it can find events.</p>
+  <p><strong>Please don't forward emails or upload files with medical, legal or other sensitive details.</strong> Calantern reads everything you send it, and an AI service reads it too, so it can find events.</p>
   <p>We don't sell data, show ads, or use tracking cookies. Our only cookies keep you signed in and protect forms. They're deleted when you close your browser.</p>
   <h2>If you connect Gmail</h2>
   <ul>
@@ -77,7 +77,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
   </ul>
   <h2>How long we keep it</h2>
   <ul>
-    <li>Forwarded emails and their attachments: 30 days.</li>
+    <li>Forwarded emails, their attachments, and uploaded files: 30 days. An upload that's started but never finished is deleted within about 2 hours.</li>
     <li>Cancelled events: 30 days in calendars, so phones remove them.</li>
     <li>The "Undo" record after a change: 1 day.</li>
     <li>Sign-in and rate-limit records: 1 hour.</li>

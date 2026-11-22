@@ -63,6 +63,9 @@ function fakeTranscriber(text: string | ((i: TranscribeInput) => string)) {
   return { t, calls };
 }
 
+/** D61: fixtures start with a real JPEG header, since triage now checks a file is what it claims. */
+const jpeg = (n: number) => { const b = new Uint8Array(n); b.set([0xff, 0xd8, 0xff, 0xe0]); return b; };
+
 Deno.test("scoring: a schedule page beats a page of prose", () => {
   assert(scorePage(0, SCHEDULE_A.join("\n")).score >= 3);
   assert(scorePage(1, PROSE.join("\n")).score < 3);
@@ -101,7 +104,7 @@ Deno.test("the 5-page budget is shared across a message's attachments, best page
 Deno.test("a flyer photo is transcribed (vision last), and its events are in the transcription", async () => {
   const flyer = "FALL FESTIVAL\nSaturday, October 18 | 11 AM - 3 PM\nOak Street School field\nPie contest at 1 PM";
   const { t, calls } = fakeTranscriber(flyer);
-  const files = { "f/m/flyer": new Uint8Array(300_000) };
+  const files = { "f/m/flyer": jpeg(300_000) };
   const [r] = await triageMessage([att("flyer", { filename: "fall-festival-flyer.jpg", mime: "image/jpeg", bytes: 300_000, width: 1200, height: 1600 })], null, deps(files, { transcriber: t }).d);
   assertEquals(r?.status, "transcribed");
   assertEquals(r?.pages, [{ index: 0, text: flyer, source: "transcription" }]);
@@ -129,13 +132,13 @@ Deno.test("a scanned PDF sends only its first 2 pages to vision, or the page the
 
 Deno.test("the vision daily cap is respected", async () => {
   const { t, calls } = fakeTranscriber("x 5 PM");
-  const [r] = await triageMessage([att("flyer", { mime: "image/jpeg", filename: "flyer.jpg" })], null, deps({ "f/m/flyer": new Uint8Array(30_000) }, { transcriber: t, visionQuota: 0 }).d);
+  const [r] = await triageMessage([att("flyer", { mime: "image/jpeg", filename: "flyer.jpg" })], null, deps({ "f/m/flyer": jpeg(30_000) }, { transcriber: t, visionQuota: 0 }).d);
   assertEquals([r?.status, r?.triage.reason, calls.length], ["pending", "daily_vision_limit", 0]);
 });
 
 Deno.test("a refusal is recorded, not retried forever", async () => {
   const t: Transcriber = { transcribe: () => Promise.reject(new RefusedError("cyber")) };
-  const [r] = await triageMessage([att("flyer", { mime: "image/jpeg", filename: "flyer.jpg" })], null, deps({ "f/m/flyer": new Uint8Array(30_000) }, { transcriber: t }).d);
+  const [r] = await triageMessage([att("flyer", { mime: "image/jpeg", filename: "flyer.jpg" })], null, deps({ "f/m/flyer": jpeg(30_000) }, { transcriber: t }).d);
   assertEquals([r?.status, r?.triage.reason], ["skipped", "vision_refused"]);
 });
 
@@ -153,7 +156,7 @@ Deno.test("after one 'this one', the next email from that sender goes straight t
 Deno.test("stage 1: unsupported, too big, unlikely name, seen before, and 'never' rules skip without reading", async () => {
   const { d } = deps({});
   const results = await triageMessage([
-    att("doc", { mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", filename: "notes.docx" }),
+    att("doc", { mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename: "notes.xlsx" }), // Word is read since D61
     att("huge", { bytes: 16 * 1024 * 1024 }),
     att("rcpt", { filename: "receipt-1042.pdf" }),
     att("again", { seen_before: true }),
@@ -176,7 +179,7 @@ Deno.test("unsafe PDFs are refused before parsing: not really a PDF, or encrypte
   assertEquals(pdfRefusal(locked), "encrypted");
   assertEquals(pdfRefusal(real), null);
   const results = await triageMessage([att("fake"), att("locked"), att("ok")], null, deps({ "f/m/fake": fake, "f/m/locked": locked, "f/m/ok": real }).d);
-  assertEquals(results.map((r) => [r.id, r.status, r.triage.reason]), [["fake", "failed", "malformed"], ["locked", "failed", "encrypted"], ["ok", "text_layer", results[2]!.triage.reason]]);
+  assertEquals(results.map((r) => [r.id, r.status, r.triage.reason]), [["fake", "failed", "type_mismatch"], ["locked", "failed", "encrypted"], ["ok", "text_layer", results[2]!.triage.reason]]);
 });
 
 Deno.test("a parse that runs too long is stopped (D37)", async () => {
@@ -191,4 +194,33 @@ Deno.test("vision token estimate follows the documented formula and cap", () => 
   assertEquals(estimateVisionTokens(1920, 1080), 69 * 39);
   assertEquals(estimateVisionTokens(4000, 3000), 4784);
   assertEquals(estimateVisionTokens(null, null), 4784);
+});
+
+/** D61: a one-file .docx built in the test (stored, not compressed). */
+function storedDocx(xml: string): Uint8Array {
+  const enc = new TextEncoder(); const name = enc.encode("word/document.xml"); const data = enc.encode(xml);
+  const local = new Uint8Array(30 + name.length); const lv = new DataView(local.buffer);
+  lv.setUint32(0, 0x04034b50, true); lv.setUint32(18, data.length, true); lv.setUint32(22, data.length, true); lv.setUint16(26, name.length, true); local.set(name, 30);
+  const dir = new Uint8Array(46 + name.length); const dv = new DataView(dir.buffer);
+  dv.setUint32(0, 0x02014b50, true); dv.setUint32(20, data.length, true); dv.setUint32(24, data.length, true); dv.setUint16(28, name.length, true); dir.set(name, 46);
+  const end = new Uint8Array(22); const ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, 1, true); ev.setUint16(10, 1, true); ev.setUint32(12, dir.length, true); ev.setUint32(16, local.length + data.length, true);
+  const out = new Uint8Array(local.length + data.length + dir.length + end.length);
+  out.set(local, 0); out.set(data, local.length); out.set(dir, local.length + data.length); out.set(end, local.length + data.length + dir.length);
+  return out;
+}
+
+Deno.test("a Word file is read like a PDF with text (D61)", async () => {
+  const docx = storedDocx('<w:document><w:body><w:p><w:r><w:t>Winter concert is on Thursday, December 11 at 6:30 PM in the gym.</w:t></w:r></w:p></w:body></w:document>');
+  const [r] = await triageMessage([att("news", { filename: "December news.docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", bytes: docx.length, chosen: true })],
+    null, deps({ "f/m/news": docx }).d);
+  assertEquals(r?.status, "text_layer");
+  assert(r?.pages[0]?.text.includes("December 11 at 6:30 PM"));
+});
+
+Deno.test("a file that isn't what it claims is refused before reading (D61)", async () => {
+  const exe = new TextEncoder().encode("MZ\x90\x00 pretending to be a PDF");
+  const html = new TextEncoder().encode("%PDX<html><script>alert(1)</script>");
+  const results = await triageMessage([att("exe", { chosen: true }), att("htm", { chosen: true })], null, deps({ "f/m/exe": exe, "f/m/htm": html }).d);
+  assertEquals(results.map((r) => [r.id, r.status, r.triage.reason]), [["exe", "failed", "type_mismatch"], ["htm", "failed", "type_mismatch"]]);
 });
