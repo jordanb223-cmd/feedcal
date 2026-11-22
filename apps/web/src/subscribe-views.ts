@@ -58,7 +58,7 @@ export function subscribePage(opts: { page: PublicFeedPage; device: Device; link
   const next = events.slice(0, 5);
   const go = (target: string) => `/c/${encodeURIComponent(feed.slug)}/go/${target}`;
   const primary = PRIMARY[opts.device];
-  // D49: follower counts are never shown publicly (owner, 2026-11-21); organizers see theirs on the Share page.
+  const n = feed.subscribers_at_least;
   const description = feed.description ?? `Upcoming events from ${feed.name}, kept up to date automatically.`;
   const head = html`<meta name="description" content="${description}">
 <meta property="og:type" content="website">
@@ -89,7 +89,8 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
       <input class="copy" id="feed-link" readonly spellcheck="false" value="${opts.links.https}"></p>
     <p><button type="button" class="secondary" data-copy="feed-link" data-count="/c/${encodeURIComponent(feed.slug)}/copied">Copy link</button></p>
   </details>
-  <p class="muted">Updated ${formatUpdated(feed.last_updated_at)}.</p>
+  <p class="muted">${n > 0 ? html`At least ${n} ${n === 1 ? "calendar follows" : "calendars follow"} this. ` : ""}Updated ${formatUpdated(feed.last_updated_at)}.</p>
+  ${n > 0 ? html`<p class="muted" style="font-size:.875rem">How we count: calendar apps that checked for updates in the last 7 days. Google checks once for all its users, so the real number is often higher.</p>` : ""}
 </div>
 <div class="card">
   <h2>Coming up</h2>
