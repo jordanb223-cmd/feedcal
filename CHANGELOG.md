@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-21
+
+### Changed
+- Follower counts are no longer shown on public calendar pages or in Find a calendar. Organizers still see their own on the Share page and in the weekly email.
+
 ## [0.6.0] - 2026-11-21
 
 ### Added
