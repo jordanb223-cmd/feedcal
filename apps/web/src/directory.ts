@@ -1,5 +1,6 @@
 // Phase 13: the public directory (D34). Queries run with the public (anon) key and NO session,
 // so the database's anonymous rules decide what's visible: public feeds only, safe columns only.
+import { seoHead } from "./seo.js";
 import { createClient } from "@supabase/supabase-js";
 import { proxyHeaders } from "./supabase.js";
 import type { Context, Hono } from "hono";
@@ -26,7 +27,7 @@ export function anonSupabase(c: Context<AppEnv>): Supa {
   return createClient<Database>(c.env.SUPABASE_URL, c.env.SUPABASE_ANON_KEY ?? "", { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: proxyHeaders(c) } }) as unknown as Supa;
 }
 
-function directoryPage(opts: { q?: string | undefined; zip?: string | undefined; miles: number; category?: string | undefined; rows: DirectoryRow[]; searched: boolean; unknownZip: boolean }) {
+function directoryPage(head: ReturnType<typeof html> | string, opts: { q?: string | undefined; zip?: string | undefined; miles: number; category?: string | undefined; rows: DirectoryRow[]; searched: boolean; unknownZip: boolean }) {
   const title = opts.zip ? `Calendars near ${opts.zip}` : "Find a calendar";
   return publicLayout(title, html`<div class="card">
   <h1>${title}</h1>
@@ -54,7 +55,7 @@ ${opts.searched
       ${r.description ? html`<span class="when" dir="auto">${r.description.slice(0, 160)}</span>` : ""}
     </li>`)}</ul>`}
 </div>`
-  : ""}`);
+  : ""}`, head);
 }
 
 export function registerDirectoryRoutes(app: Hono<AppEnv>, anon: (c: Context<AppEnv>) => Supa = anonSupabase): void {
@@ -86,7 +87,7 @@ export function registerDirectoryRoutes(app: Hono<AppEnv>, anon: (c: Context<App
       }
     }
     c.header("cache-control", "public, max-age=300");
-    return c.html(directoryPage({ q: q.q, zip: q.zip, miles, category: q.category, rows, searched, unknownZip }));
+    return c.html(directoryPage(seoHead(c, "Find a calendar", "Find public school, team and club calendars near you, and add them to your phone in one tap."), { q: q.q, zip: q.zip, miles, category: q.category, rows, searched, unknownZip }));
   };
   app.get("/directory", (c) => search(c));
   app.get("/near/:zip", (c) => {
@@ -98,7 +99,8 @@ export function registerDirectoryRoutes(app: Hono<AppEnv>, anon: (c: Context<App
   app.get("/sitemap.xml", async (c) => {
     const { data } = await anon(c).from("feeds").select("slug, last_updated_at").eq("visibility", "public").order("last_updated_at", { ascending: false }).limit(5000);
     const origin = originOf(c);
-    const urls = [`<url><loc>${origin}/directory</loc></url>`,
+    // D60: the home page and the public information pages, then every public calendar.
+    const urls = [...["/", "/directory", "/about/costs", "/privacy", "/terms", "/rules", "/takedown"].map((p) => `<url><loc>${origin}${p}</loc></url>`),
       ...(data ?? []).map((f) => `<url><loc>${origin}/c/${encodeURIComponent(f.slug)}</loc><lastmod>${f.last_updated_at.slice(0, 10)}</lastmod></url>`)];
     c.header("content-type", "application/xml; charset=utf-8");
     c.header("cache-control", "public, max-age=3600");

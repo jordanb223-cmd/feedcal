@@ -1,5 +1,5 @@
 // Builds a subscribable RFC 5545 calendar from a feed and its events.
-import { escapeText, serialize } from "./text.js";
+import { escapeText, serialize, wellFormed } from "./text.js";
 import { formatDate, formatLocal, formatUtc, isValidTimeZone, nextDay, wallTime } from "./time.js";
 import { vtimezone } from "./vtimezone.js";
 
@@ -40,6 +40,8 @@ export interface BuildOptions {
   reportUrl?: (uid: string) => string;
   /** Product name and version for PRODID. */
   product?: string;
+  /** "Now", for the time-zone window below; defaults to the clock (tests pass a fixed value). */
+  now?: number;
 }
 
 export interface BuildResult {
@@ -49,7 +51,22 @@ export interface BuildResult {
 }
 
 // Only well-formed rules pass; anything else is dropped (and warned) rather than emitted.
-const RRULE = /^FREQ=(SECONDLY|MINUTELY|HOURLY|DAILY|WEEKLY|MONTHLY|YEARLY)(;[A-Z]+=[A-Z0-9,+-]+)*$/;
+// D60: only rules a school or team calendar uses. Second/minute/hour repeats and huge counts
+// could make subscribers' calendar apps expand millions of occurrences.
+const RRULE_PART = /^(INTERVAL=\d{1,3}|COUNT=\d{1,4}|UNTIL=\d{8}(T\d{6}Z?)?|BYDAY=[A-Z0-9,+-]{1,60}|BYMONTHDAY=[0-9,+-]{1,60}|BYMONTH=[0-9,]{1,30}|BYSETPOS=[0-9,+-]{1,30}|WKST=(MO|TU|WE|TH|FR|SA|SU))$/;
+export function validRrule(rule: string): boolean {
+  const parts = rule.split(";");
+  if (!/^FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)$/.test(parts[0] ?? "")) return false;
+  const keys = new Set<string>();
+  for (const part of parts.slice(1)) {
+    if (!RRULE_PART.test(part)) return false;
+    const key = part.slice(0, part.indexOf("="));
+    if (keys.has(key)) return false;
+    keys.add(key);
+    if (key === "COUNT" && Number(part.slice(6)) > 1000) return false;
+  }
+  return true;
+}
 
 const STATUS: Record<EventStatus, string> = { tentative: "TENTATIVE", confirmed: "CONFIRMED", cancelled: "CANCELLED" };
 
@@ -85,7 +102,7 @@ function eventLines(e: CalendarEvent, tz: string, opts: BuildOptions, warnings: 
   }
 
   if (e.rrule) {
-    if (RRULE.test(e.rrule)) {
+    if (validRrule(e.rrule)) {
       lines.push(`RRULE:${e.rrule}`);
       // EXDATE must match DTSTART's form: a DATE for all-day series, a local time in the same zone otherwise.
       const ex = (e.exdates ?? []).map(ms).filter((t) => Number.isFinite(t)).sort((a, b) => a - b);
@@ -101,7 +118,7 @@ function eventLines(e: CalendarEvent, tz: string, opts: BuildOptions, warnings: 
   const description = [
     e.description ?? "",
     e.source ? `Source: forwarded email from ${e.source}` : "",
-    opts.reportUrl ? `Report a problem: ${opts.reportUrl(e.uid)}` : "",
+    opts.reportUrl ? `Report a problem: ${opts.reportUrl(wellFormed(e.uid))}` : "",
   ]
     .filter((s) => s.trim() !== "")
     .join("\n\n");
@@ -133,8 +150,14 @@ export function buildCalendar(feed: CalendarFeed, events: readonly CalendarEvent
     if (e.allDay) return;
     const tz = zones[i] ?? opts.defaultTimeZone;
     const years = [ms(e.startsAt), e.endsAt ? ms(e.endsAt) : ms(e.startsAt)].map((t) => new Date(t).getUTCFullYear());
-    const from = Math.min(...years) - 1;
-    const to = Math.max(...years) + (e.rrule ? 5 : 1);
+    // D60: zone data is generated day by day, so its cost grows with the years covered. An event
+    // spanning 1900-2999 took about a second, far over Cloudflare's 10 ms. Coverage is capped to
+    // one year before and six after now (a series starting next year keeps its 5 years);
+    // an event outside that window still gets its zone.
+    const nowYear = new Date(opts.now ?? Date.now()).getUTCFullYear();
+    const from = Math.max(Math.min(...years) - 1, nowYear - 1);
+    const to = Math.min(Math.max(...years) + (e.rrule ? 5 : 1), nowYear + 6);
+    if (from > to) return;
     const r = ranges.get(tz);
     ranges.set(tz, r ? { from: Math.min(r.from, from), to: Math.max(r.to, to) } : { from, to });
   });

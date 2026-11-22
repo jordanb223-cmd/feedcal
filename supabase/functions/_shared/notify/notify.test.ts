@@ -65,3 +65,14 @@ Deno.test("gmail reconnect email (D39): names the feed, links to reconnect, no u
   assert(gone.subject === "Reconnect Gmail for Room F" && gone.text.includes("won't reach the calendar"));
   assert(NO_UNSUBSCRIBE.has("gmail_reconnect"));
 });
+
+Deno.test("subjects stay one line whatever the names and titles contain (D60)", () => {
+  for (const bad of ["\r\nBcc: evil@example.test", "a\nb", "a\rb", "a\u2028b", "a\u0085b", "a\x00b", "a\tb"]) {
+    for (const r of [
+      render("report", { feed_id: "f", feed_name: bad, event_id: "e", event_title: bad, starts_at: "2026-11-21T16:30:00Z", all_day: false, timezone: "UTC", kind: "other", details: "" }, SITE, UNSUB),
+      render("stale_nudge", { feed_id: "f", feed_name: bad, days: 46 }, SITE, UNSUB),
+      render("milestone", { feed_id: "f", feed_name: bad, milestone: 50 }, SITE, UNSUB),
+      render("gmail_reconnect", { feed_id: "f", feed_name: bad, expired: true }, SITE, UNSUB),
+    ]) assert(!/[\x00-\x1f\x7f\u0085\u2028\u2029]/.test(r.subject), JSON.stringify(r.subject));
+  }
+});

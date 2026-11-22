@@ -1,9 +1,19 @@
 // RFC 5545 text escaping and line folding.
 
-/** Escapes a TEXT value (RFC 5545 §3.3.11): backslash, semicolon, comma, newline. */
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+/** Replaces half of a broken emoji (a lone surrogate) with U+FFFD, so text always encodes. */
+export function wellFormed(value: string): string {
+  return value.replace(LONE_SURROGATE, "\uFFFD");
+}
+
+/** Escapes a TEXT value (RFC 5545 §3.3.11): backslash, semicolon, comma, newline. D60: Unicode
+ *  line separators count as newlines, and control characters (which RFC 5545 forbids in TEXT
+ *  and which can make a strict calendar app reject the whole feed) are removed. */
 export function escapeText(value: string): string {
-  return value
-    .replace(/\r\n?/g, "\n")
+  return wellFormed(value)
+    .replace(/\r\n?|[\u2028\u2029\u0085]/g, "\n")
+    // eslint-disable-next-line no-control-regex -- removing control characters is the point (RFC 5545 forbids them in TEXT)
+    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "")
     .replace(/\\/g, "\\\\")
     .replace(/;/g, "\\;")
     .replace(/,/g, "\\,")

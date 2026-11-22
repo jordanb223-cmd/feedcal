@@ -71,11 +71,21 @@ export function firstHeader(headers: [string, string][], name: string): string |
 }
 
 /** The address inside "Name <a@b>", or a bare address. Lower-cased. Null if none. */
+/** D60: linear time on a capped header (the old regexes were quadratic on long "From:" lines). */
+const MAX_FROM_HEADER = 2000;
 export function extractAddress(value: string | null): string | null {
   if (!value) return null;
-  const angled = /<([^<>\s]+@[^<>\s]+)>/.exec(value);
-  const bare = /([^\s<>",;:]+@[^\s<>",;:]+)/.exec(value);
-  const addr = (angled?.[1] ?? bare?.[1] ?? "").toLowerCase();
+  const line = value.slice(0, MAX_FROM_HEADER);
+  let addr = "";
+  for (let lt = line.indexOf("<"); lt >= 0 && !addr; lt = line.indexOf("<", lt + 1)) {
+    const gt = line.indexOf(">", lt + 1);
+    if (gt < 0) break;
+    const inside = line.slice(lt + 1, gt);
+    const at = inside.indexOf("@");
+    if (at > 0 && at < inside.length - 1 && !/[<>\s]/.test(inside)) addr = inside;
+  }
+  if (!addr) addr = line.split(/[\s<>",;:]+/).find((t) => { const at = t.indexOf("@"); return at > 0 && at < t.length - 1; }) ?? "";
+  addr = addr.toLowerCase();
   return addr.length > 0 && addr.length <= 320 ? addr : null;
 }
 

@@ -1,6 +1,7 @@
 // Phase 14: trust and safety pages (D35): the admin console (admins only, second factor
 // required), "Report this calendar" on public pages, verification, and the policy pages.
 import type { Context, Hono } from "hono";
+import { seoHead } from "./seo.js";
 import { html, raw } from "hono/html";
 import { z } from "zod";
 import { currentUser, MESSAGES } from "./auth.js";
@@ -204,7 +205,7 @@ export function registerPolicyRoutes(app: Hono<AppEnv>): void {
       <li>Keep children safe: no children's full names, home addresses, phone numbers or photos in public calendars. School and youth calendars start as "anyone with the link" for this reason.</li>
       <li>Keep events accurate. If plans change, update or cancel them.</li>
     </ul>
-    <p>Breaking these rules can get a calendar hidden or an account suspended. <a href="/takedown">How reports and takedowns work</a>.</p></div>`)));
+    <p>Breaking these rules can get a calendar hidden or an account suspended. <a href="/takedown">How reports and takedowns work</a>.</p></div>`, seoHead(c, "Community rules", "How Calantern calendars stay useful and safe: what can be shared, and what isn't allowed."))));
   app.get("/terms", (c) => c.html(publicLayout("Terms of use", html`<div class="card"><h1>Terms of use</h1>${DRAFT}
     <p>Calantern is a free service that turns forwarded emails into calendars people can subscribe to.</p>
     <ul>
@@ -213,7 +214,7 @@ export function registerPolicyRoutes(app: Hono<AppEnv>): void {
       <li><strong>No guarantees.</strong> Calantern is provided as is. Don't rely on it for anything where a missed or wrong event would cause harm.</li>
       <li><strong>Ending.</strong> You can delete your account at any time from your account page. We may hide calendars or suspend accounts that break the rules.</li>
       <li><strong>Email.</strong> Forwarded emails and attachments are deleted after 30 days.</li>
-    </ul></div>`)));
+    </ul></div>`, seoHead(c, "Terms of use", "The terms for using Calantern, the free service that turns emails into calendars people can subscribe to."))));
   app.get("/takedown", (c) => c.html(publicLayout("Reports and takedowns", html`<div class="card"><h1>Reports and takedowns</h1>${DRAFT}
     <p>Anyone can report a calendar with the "Report this calendar" link on its page, or report one event from the link inside it in their calendar.</p>
     <ul>
@@ -221,5 +222,5 @@ export function registerPolicyRoutes(app: Hono<AppEnv>): void {
       <li><strong>Impersonation, spam, wrong information</strong>: we aim to respond within 2 business days.</li>
       <li><strong>Copyright or other legal requests</strong>: report the calendar and choose "Something else", or use our <a href="/.well-known/security.txt">security contact</a>, with the details; we aim to respond within 5 business days.</li>
     </ul>
-    <p>Hidden calendars stop updating subscribers at once. Organizers are told what happened and can ask for another look.</p></div>`)));
+    <p>Hidden calendars stop updating subscribers at once. Organizers are told what happened and can ask for another look.</p></div>`, seoHead(c, "Reports and takedowns", "How to report a calendar or an event on Calantern, and how takedown requests are handled."))));
 }

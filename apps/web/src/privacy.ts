@@ -1,6 +1,7 @@
 // Phase 16 privacy routes (D37): download everything Feedcal holds about you (JSON), each feed
 // as an .ics file, and the plain-English privacy policy with its retention schedule.
 import type { Hono } from "hono";
+import { seoHead } from "./seo.js";
 import { html } from "hono/html";
 import { z } from "zod";
 import { buildCalendar, type CalendarEvent } from "@feedcal/ics";
@@ -93,5 +94,5 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li>Delete your account any time from <a href="/account">your account page</a>.</li>
     <li>Turn off any email from us with the link at the bottom of it.</li>
   </ul>
-</div>`)));
+</div>`, seoHead(c, "Privacy", "What Calantern keeps, how long it keeps it, who processes it, and how to download or delete your data."))));
 }

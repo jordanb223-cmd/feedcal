@@ -68,4 +68,10 @@ describe.skipIf(!enabled)("directory performance and ranking (local stack)", { t
     expect(Math.max(...miles)).toBeLessThanOrEqual(5);
     expect(ms).toBeLessThan(300);
   });
+  it("the sitemap lists the home page, the information pages and public calendars (D60)", async () => {
+    const xml = await (await request("/sitemap.xml")).text();
+    for (const p of ["/", "/directory", "/about/costs", "/privacy", "/terms", "/rules", "/takedown"]) expect(xml).toContain(`${p}</loc>`);
+    expect(xml).toMatch(/\/c\/[a-z0-9-]+<\/loc>/);
+    expect(xml).not.toContain("alice-private-drafts");
+  });
 });

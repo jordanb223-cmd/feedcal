@@ -32,7 +32,19 @@ function wrap(site: string, unsubscribe: string, why: string, bodyText: string, 
   return { text, html };
 }
 
+/** D60: a subject is a single header line. Feed names and event titles come from organizers and
+ *  emails, so line breaks and control characters (which could add a header, e.g. a hidden Bcc)
+ *  are flattened to spaces. */
+export function cleanSubject(subject: string): string {
+  return subject.replace(/[\x00-\x1f\x7f\u0085\u2028\u2029]+/g, " ").replace(/ {2,}/g, " ").trim().slice(0, 250);
+}
+
 export function render(kind: Kind, p: Record<string, unknown>, site: string, unsubscribe: string): Rendered {
+  const r = renderParts(kind, p, site, unsubscribe);
+  return { ...r, subject: cleanSubject(r.subject) };
+}
+
+function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsubscribe: string): Rendered {
   if (kind === "gmail_reconnect") {
     // Unverified Google apps get 7-day connections (D39); this is the one email that keeps checks running.
     const name = String(p.feed_name ?? "your calendar");
