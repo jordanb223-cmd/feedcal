@@ -33,13 +33,13 @@ type Cand = z.infer<typeof Candidate>;
 
 const RESULTS: Record<string, string> = {
   connected: "Gmail is connected. Now find an example email.",
-  confirmed: "Done. Feedcal will read your example now, then check on your schedule.",
+  confirmed: "Done. Calantern will read your example now, then check on your schedule.",
   cancelled: "Connecting was cancelled. Nothing was changed.",
-  not_granted: "Google didn't give Feedcal permission to read email, so nothing was connected. Try again and allow it.",
+  not_granted: "Google didn't give Calantern permission to read email, so nothing was connected. Try again and allow it.",
   expired: "That took too long. Please connect again.",
   failed: "Something went wrong connecting Gmail. Please try again.",
   interval: "Schedule saved.",
-  look_back: "Feedcal will now read emails from this sender from the last 30 days, 3 at a time every 5 minutes, until it's caught up.",
+  look_back: "Calantern will now read emails from this sender from the last 30 days, 3 at a time every 5 minutes, until it's caught up.",
   look_back_failed: "That didn't work. Gmail needs to be connected and a sender picked first.",
 };
 
@@ -67,28 +67,28 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
   const head = html`${feedNav(id, "gmail")}<h1>Gmail for <span dir="auto">${name}</span></h1>
     ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}`;
   const disconnect = html`<form method="post" action="/feeds/${id}/gmail/disconnect">${csrfField(t)}
-    <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand this deletes Feedcal's copies of these emails</label></p>
+    <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand this deletes Calantern's copies of these emails</label></p>
     <button type="submit" class="danger">Disconnect Gmail</button></form>
-    <p class="muted" style="font-size:.875rem">Disconnecting deletes Feedcal's access and every copy of the emails it read from Gmail, right away.</p>`;
+    <p class="muted" style="font-size:.875rem">Disconnecting deletes Calantern's access and every copy of the emails it read from Gmail, right away.</p>`;
 
   if (!s.connected) {
     return layout(`Gmail for ${name}`, html`<div class="card">${head}
-      <p>Instead of forwarding, Feedcal can check your Gmail for <strong>one sender</strong>, like your school or coach, and add their events to this calendar.</p>
+      <p>Instead of forwarding, Calantern can check your Gmail for <strong>one sender</strong>, like your school or coach, and add their events to this calendar.</p>
       <ul>
-        <li>You show Feedcal one example email. It only ever looks for emails <strong>from that sender</strong>.</li>
+        <li>You show Calantern one example email. It only ever looks for emails <strong>from that sender</strong>.</li>
         <li>It checks every 3 or 7 days, your choice.</li>
         <li>It can't send, delete or change anything in your Gmail (read-only).</li>
       </ul>
       ${enabled
         ? html`<form method="post" action="/feeds/${id}/gmail/connect">${csrfField(t)}<button type="submit">Connect Gmail</button></form>
-          <p class="muted" style="font-size:.875rem">Google will say Feedcal is in testing and ask you to allow reading email. While Feedcal is in Google's test mode, you'll be asked to reconnect once a week; we'll email you a reminder.</p>`
+          <p class="muted" style="font-size:.875rem">Google will say Calantern is in testing and ask you to allow reading email. While Calantern is in Google's test mode, you'll be asked to reconnect once a week; we'll email you a reminder.</p>`
         : html`<p class="muted">Gmail connection isn't switched on for this site yet.</p>`}
     </div>`);
   }
 
   if (s.status === "needs_reconnect") {
     return layout(`Gmail for ${name}`, html`<div class="card">${head}
-      <p class="error" role="alert">Google ended Feedcal's connection to ${s.google_email ?? "your Gmail"}. New emails from ${s.sender_email ?? "your sender"} won't arrive until you reconnect.</p>
+      <p class="error" role="alert">Google ended Calantern's connection to ${s.google_email ?? "your Gmail"}. New emails from ${s.sender_email ?? "your sender"} won't arrive until you reconnect.</p>
       <form method="post" action="/feeds/${id}/gmail/connect">${csrfField(t)}<button type="submit">Reconnect Gmail</button></form>
       <p class="muted">Your sender and schedule are kept.</p></div><div class="card">${disconnect}</div>`);
   }
@@ -97,7 +97,7 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
     const cands = opts.candidates ?? s.candidates ?? [];
     return layout(`Gmail for ${name}`, html`<div class="card">${head}
       <h2>Step 1: find an example email</h2>
-      <p>Search for one email with the calendar details, like the school's name. Feedcal looks back 30 days and shows sender, subject and date only.</p>
+      <p>Search for one email with the calendar details, like the school's name. Calantern looks back 30 days and shows sender, subject and date only.</p>
       <form method="post" action="/feeds/${id}/gmail/search">${csrfField(t)}
         <p><label for="words">Search for</label><input class="copy" id="words" name="words" required minlength="2" maxlength="100" autocomplete="off" placeholder="e.g. Room F newsletter"></p>
         <button type="submit">Search</button></form>
@@ -107,7 +107,7 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
         ${cands.map((x, i) => html`<p><label class="check"><input type="radio" name="gmail_id" value="${x.id}" ${i === 0 ? "checked" : ""} ${x.from_email ? "" : "disabled"}>
           <span><strong dir="auto">${x.subject || "(no subject)"}</strong><br><span class="muted" dir="auto">${x.from_name ? `${x.from_name} · ` : ""}${x.from_email || "no sender address, can't be used"} · ${day(x.date)}</span></span></label></p>`)}
         <details class="more"><summary>Checks every 7 days · also reads the 30 days before your example · Change</summary>
-          <p><label for="interval">How often should Feedcal check for new emails from this sender?</label>
+          <p><label for="interval">How often should Calantern check for new emails from this sender?</label>
             <select class="copy" id="interval" name="interval"><option value="7" selected>Every 7 days</option><option value="3">Every 3 days</option></select></p>
           <p><label class="check"><input type="checkbox" name="look_back" value="1" checked>
             <span>Also read earlier emails from this sender, from the 30 days before your example</span></label></p>
@@ -118,7 +118,7 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
   }
 
   return layout(`Gmail for ${name}`, html`<div class="card">${head}
-    <p>Feedcal checks <strong>${s.google_email ?? "your Gmail"}</strong> for emails <strong>from ${s.sender_name ? `${s.sender_name} ` : ""}&lt;${s.sender_email}&gt;</strong> only.</p>
+    <p>Calantern checks <strong>${s.google_email ?? "your Gmail"}</strong> for emails <strong>from ${s.sender_name ? `${s.sender_name} ` : ""}&lt;${s.sender_email}&gt;</strong> only.</p>
     <ul class="events">
       <li>How often<span class="when">every ${s.interval_days} days</span></li>
       <li>Last checked<span class="when">${day(s.last_checked_at)}</span></li>
@@ -160,18 +160,18 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
       ${later ? html`<p class="muted">It starts Private. You can make it Public in Settings once it has an event.</p>` : ""}
       ${gmailOn ? html`<div class="pick">
         <h2>Connect Gmail <span class="tag">Easiest</span></h2>
-        <p class="muted">Pick one example email. Feedcal reads only that sender, read-only, and keeps the calendar up to date.</p>
+        <p class="muted">Pick one example email. Calantern reads only that sender, read-only, and keeps the calendar up to date.</p>
         <form method="post" action="/feeds/${o.id}/gmail/connect">${csrfField(t)}<button type="submit" class="wide">Connect Gmail</button></form>
       </div>` : ""}
       <div class="pick">
         <h2>Forward emails</h2>
-        <p class="muted">Works with any email app. Feedcal gives this calendar its own address to forward to.</p>
+        <p class="muted">Works with any email app. Calantern gives this calendar its own address to forward to.</p>
         <a class="button ${gmailOn ? "secondary " : ""}wide" href="/feeds/${o.id}/email?done=created">Get the forwarding address</a>
       </div>
       <details class="more"><summary>More ways to add events</summary>
         <p><a href="/feeds/${o.id}/events/new">Add events by hand</a></p>
         <h3 style="margin:1rem 0 .25rem;font-size:1rem">Copy events from a calendar link</h3>
-        <p class="muted" style="font-size:.875rem">Already have a school or team calendar link? Feedcal copies its events into this calendar, alongside the ones from email.</p>
+        <p class="muted" style="font-size:.875rem">Already have a school or team calendar link? Calantern copies its events into this calendar, alongside the ones from email.</p>
         ${importForm(o.id, t, "setup")}
       </details>
     </div>`));
@@ -230,13 +230,13 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
     if (!pick) return c.html(page(c, o.id, o.name, o.status, { error: "Pick one of the emails first." }), 400);
     const t = csrfToken(c);
     return c.html(layout(`Gmail for ${o.name}`, html`<div class="card">${feedNav(o.id, "gmail")}
-      <h1>Here's what Feedcal will do for <span dir="auto">${o.name}</span></h1>
+      <h1>Here's what Calantern will do for <span dir="auto">${o.name}</span></h1>
       <ul>
         <li>Look <strong>only</strong> for emails <strong>from ${pick.from_name ? `${pick.from_name} ` : ""}&lt;${pick.from_email}&gt;</strong>. Nothing else in your Gmail is searched or read.</li>
         <li>Check <strong>every ${interval} days</strong>.</li>
         <li>Read your example now ("<span dir="auto">${pick.subject || "(no subject)"}</span>", ${day(pick.date)}), then each new email from that sender, and add their events to ${o.name}'s calendar.</li>
         ${lookBack ? html`<li>Also read earlier emails from that sender, from the 30 days before your example, 3 every 5 minutes until caught up.</li>` : ""}
-        <li>You can change this or disconnect at any time. Disconnecting deletes Feedcal's copies.</li>
+        <li>You can change this or disconnect at any time. Disconnecting deletes Calantern's copies.</li>
       </ul>
       <form method="post" action="/feeds/${o.id}/gmail/confirm" class="row">${csrfField(t)}
         <input type="hidden" name="gmail_id" value="${pick.id}"><input type="hidden" name="interval" value="${interval}">${lookBack ? html`<input type="hidden" name="look_back" value="1">` : ""}
@@ -285,6 +285,6 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
     const { data } = await c.get("supabase").rpc("gmail_disconnect", { p_feed_id: o.id });
     const n = Number((data as { messages_deleted?: number } | null)?.messages_deleted ?? 0);
     c.get("log").info("gmail_disconnected", { messages_deleted: n });
-    return c.html(messagePage("Gmail disconnected", `Feedcal's access is removed, and ${n} ${n === 1 ? "email copy was" : "email copies were"} deleted.`, { href: `/feeds/${o.id}`, text: `Back to ${o.name}` }));
+    return c.html(messagePage("Gmail disconnected", `Calantern's access is removed, and ${n} ${n === 1 ? "email copy was" : "email copies were"} deleted.`, { href: `/feeds/${o.id}`, text: `Back to ${o.name}` }));
   });
 }

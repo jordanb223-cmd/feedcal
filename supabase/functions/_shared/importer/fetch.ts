@@ -107,7 +107,7 @@ export async function fetchIcs(url: string, fetchImpl: typeof fetch = fetch, res
     await checkResolves(new URL(next).hostname, resolve);
     const res = await fetchImpl(next, {
       signal: AbortSignal.timeout(15_000), redirect: "manual",
-      headers: { "user-agent": "Feedcal-Importer/1.0", accept: "text/calendar" },
+      headers: { "user-agent": "Calantern-Importer/1.0", accept: "text/calendar" },
     });
     if (res.status >= 300 && res.status < 400) {
       const loc = res.headers.get("location");

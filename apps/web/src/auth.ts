@@ -1,3 +1,4 @@
+import { landingPage } from "./landing.js";
 import type { Context, Hono } from "hono";
 import { z } from "zod";
 import { csrfToken, csrfValid, originOf, safeNext } from "./security.js";
@@ -10,7 +11,7 @@ export const MESSAGES = {
   badEmail: "Please enter a valid email address.",
   tooMany: "Too many sign-in emails were sent. Please wait a few minutes and try again.",
   ourLimit: "You've asked for several sign-in links in the last hour. Please use the newest email we sent, or wait an hour and try again.",
-  intlEmail: "Feedcal can't send to addresses with accented or non-Latin letters yet. Please use another address.",
+  intlEmail: "Calantern can't send to addresses with accented or non-Latin letters yet. Please use another address.",
   unavailable: "We couldn't send a sign-in link just now. Please try again in a minute.",
   signInFailed: "We couldn't sign you in. Please try again.",
   // Supabase's built-in email links only finish in the browser that asked for them (PKCE).
@@ -57,7 +58,8 @@ function googleEnabled(c: Context<AppEnv>): boolean {
 }
 
 export function registerAuthRoutes(app: Hono<AppEnv>): void {
-  app.get("/", async (c) => c.redirect((await currentUser(c)) ? "/account" : "/login", 303));
+  // D55: visitors get the home page; signed-in organizers go straight to their account.
+  app.get("/", async (c) => ((await currentUser(c)) ? c.redirect("/account", 303) : c.html(landingPage())));
 
   app.get("/login", async (c) => {
     const next = safeNext(c.req.query("next"));

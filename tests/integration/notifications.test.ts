@@ -81,7 +81,7 @@ describe.skipIf(!enabled)("notifications, end to end with real delivery (Mailpit
     await db.rpc("run_weekly_digests");
     await send();
     // Digests are once per ISO week; on a re-run this week, the earlier one is in the inbox.
-    const mail = await inbox("alice@example.test", "Your Feedcal week", 0);
+    const mail = await inbox("alice@example.test", "Your Calantern week", 0);
     expect(mail).toBeTruthy();
     const full = (await (await fetch(`${MAILPIT}/api/v1/message/${mail?.ID}`)).json()) as { Text: string };
     expect(full.Text).toContain("Sutterville Kindergarten");

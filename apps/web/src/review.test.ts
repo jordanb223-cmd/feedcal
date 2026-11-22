@@ -35,7 +35,7 @@ describe("review cards", () => {
     expect(html).toContain("<mark>moves to Sunday</mark>");
     expect(html).toContain("&lt;script&gt;x&lt;/script&gt;");
     expect(html).not.toContain("<script>x</script>");
-    expect(html).toContain("Feedcal isn&#39;t sure");
+    expect(html).toContain("Calantern isn&#39;t sure");
   });
 
   it("warns loudly about possible injection and offers 'approve all Sure' only when something is sure", async () => {

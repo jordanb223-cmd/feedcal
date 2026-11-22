@@ -7,6 +7,14 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-21
+
+### Changed
+- Feedcal is now **Calantern**: the site, emails, flyer and Google sign-in screen use the new name. Existing calendars, links and subscriptions keep working unchanged.
+
+### Added
+- A home page for visitors explaining what Calantern does, with Make a calendar and Find a calendar.
+
 ## [0.6.6] - 2026-11-21
 
 ### Changed

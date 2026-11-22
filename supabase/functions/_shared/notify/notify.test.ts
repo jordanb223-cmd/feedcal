@@ -17,7 +17,7 @@ Deno.test("report email: says what and where, escapes the subscriber's text, has
 
 Deno.test("weekly digest: trends, review count in the subject, the 'about' explanation", () => {
   const r = render("weekly_digest", { feeds: [{ id: "f1", name: "Room 12", subscribers: 14, subscribers_last_week: 9, taps: 3, events_added: 4, needs_review: 2, reports: 0 }] }, SITE, UNSUB);
-  assertEquals(r.subject, "Your Feedcal week: 2 to review");
+  assertEquals(r.subject, "Your Calantern week: 2 to review");
   assert(r.text.includes("About 14 calendars follow it (up from 9); 3 subscribe taps this week."));
   assert(r.text.includes("4 events added. 2 to review. 0 reports."));
   assert(r.text.includes("Google and Outlook count once for all their users"));
@@ -36,7 +36,7 @@ Deno.test("senders call the right APIs", async () => {
     calls.push({ url, body: JSON.parse(String(init.body)), headers: new Headers(init.headers) });
     return Promise.resolve(new Response(JSON.stringify({ id: "r1", ID: "m1" }), { status: 200 }));
   }) as unknown as typeof fetch;
-  const msg = { to: "o@x.test", from: "Feedcal <hello@feedcal.test>", subject: "s", text: "t", html: "h", headers: { "List-Unsubscribe": "<u>" }, idempotencyKey: "k1" };
+  const msg = { to: "o@x.test", from: "Calantern <hello@feedcal.test>", subject: "s", text: "t", html: "h", headers: { "List-Unsubscribe": "<u>" }, idempotencyKey: "k1" };
   assertEquals(await resend("re_test", fake).send(msg), { ok: true, id: "r1" });
   assertEquals(calls[0]?.url, "https://api.resend.com/emails");
   assertEquals(calls[0]?.headers.get("authorization"), "Bearer re_test");
@@ -47,7 +47,7 @@ Deno.test("senders call the right APIs", async () => {
 
 Deno.test("ops alert email (D38): says what and where to look, marks drills, has no unsubscribe", () => {
   const real = render("ops_alert", { kind: "queue_backlog", detail: { queue: "extract_message", oldest_minutes: 22 }, drill: false }, "https://feedcal.test", "https://feedcal.test/unsubscribe?x");
-  assert(real.subject.startsWith("Feedcal alert: Emails are waiting"));
+  assert(real.subject.startsWith("Calantern alert: Emails are waiting"));
   assert(real.text.includes("extract_message") && real.text.includes("queue-backlog.md"));
   assert(!real.text.includes("unsubscribe") && !real.html.includes("unsubscribe"), "no unsubscribe link");
   const drill = render("ops_alert", { kind: "abuse_spike", detail: {}, drill: true }, "https://feedcal.test", "x");

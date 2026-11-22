@@ -65,10 +65,10 @@ describe("Gmail page (D39)", () => {
     expect(t.calls.find((c) => c.fn === "invoke:gmail-search")?.args).toEqual({ body: { feed_id: ID, words: "Room F" } });
   });
 
-  it("before saving, it says plainly what Feedcal will do: only that sender, the schedule", async () => {
+  it("before saving, it says plainly what Calantern will do: only that sender, the schedule", async () => {
     const t = app({ connected: true, status: "choose_example", candidates: CANDS });
     const html = await (await t.post(`/feeds/${ID}/gmail/review`, { gmail_id: "abc123", interval: "3" })).text();
-    expect(html).toContain("Here's what Feedcal will do");
+    expect(html).toContain("Here's what Calantern will do");
     expect(html).toContain("from Room F &lt;office@school.example&gt;");
     expect(html).toContain("Nothing else in your Gmail is searched or read");
     expect(html).toContain("every 3 days");
