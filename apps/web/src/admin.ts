@@ -47,7 +47,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
             <button type="submit">Continue</button></form></div>`));
       }
       // Not enrolled yet: show the QR code and the secret once.
-      const { data: enrolled, error } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: `Feedcal admin ${new Date().toISOString().slice(0, 10)}` });
+      const { data: enrolled, error } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: `Calantern admin ${new Date().toISOString().slice(0, 10)}` });
       if (error || !enrolled) return c.html(messagePage("Couldn't start set-up", "Please try again in a minute."), 503);
       const qr = String(enrolled.totp.qr_code);
       return c.html(layout("Set up your second factor", html`<div class="card"><h1>Set up your second factor</h1>
@@ -149,7 +149,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
   // ---------------------------------------------------------------- "Report this calendar" (public pages)
   const Slug = z.string().regex(/^[a-z0-9]([a-z0-9-]{0,78}[a-z0-9])?$/);
   const reportForm = (c: Context<AppEnv>, slug: string, error?: string) => publicLayout("Report this calendar", html`<div class="card"><h1>Report this calendar</h1>
-    <p>Reports go to Feedcal's team, not the calendar's organizer. We don't ask for your name.</p>
+    <p>Reports go to Calantern's team, not the calendar's organizer. We don't ask for your name.</p>
     ${error ? html`<p class="error" role="alert">${error}</p>` : ""}
     <form method="post" action="/c/${slug}/report">${raw(`<input type="hidden" name="csrf" value="${csrfToken(c)}">`)}
       <fieldset style="border:0;padding:0;margin:0 0 1rem"><legend style="font-weight:600">What's the problem?</legend>
@@ -174,7 +174,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
     const { data } = await c.get("supabase").rpc("submit_feed_report", { p_slug: slug.data, p_kind: kind.data, ...(body.details ? { p_details: body.details.slice(0, 2000) } : {}), ...(ip ? { p_client_ip: ip } : {}) });
     if (data === "rate_limited") return c.html(messagePage("Please wait", "Too many reports were sent from here recently. Please try again in an hour."), 429);
     if (data !== "ok") return hidden(c);
-    return c.html(messagePage("Thank you", "Your report was sent to Feedcal's team. We aim to look at it within 2 business days (sooner for safety issues)."));
+    return c.html(messagePage("Thank you", "Your report was sent to Calantern's team. We aim to look at it within 2 business days (sooner for safety issues)."));
   });
 
   // ---------------------------------------------------------------- verification
@@ -188,7 +188,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
     if (error) return c.html(messagePage("Not allowed", "Only the owner can ask for verification."), 403);
     return c.html(data === true
       ? messagePage("Verified", "Your feed now shows a verified badge: your email address is at the same organisation that sends its emails.", { href: `/feeds/${id.data}/settings`, text: "Back to settings" })
-      : messagePage("Not verified automatically", "We verify automatically when you sign in with your organisation's email (not Gmail, Yahoo and so on) and that organisation's address is a trusted sender for this feed. Otherwise, reply to any Feedcal email and we'll check by hand.", { href: `/feeds/${id.data}/settings`, text: "Back to settings" }));
+      : messagePage("Not verified automatically", "We verify automatically when you sign in with your organisation's email (not Gmail, Yahoo and so on) and that organisation's address is a trusted sender for this feed. Otherwise, reply to any Calantern email and we'll check by hand.", { href: `/feeds/${id.data}/settings`, text: "Back to settings" }));
   });
 }
 
@@ -196,7 +196,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
 const DRAFT = html`<p class="muted"><strong>Draft.</strong> To be reviewed by a lawyer before public launch (see BUILD-PLAN "Non-negotiables").</p>`;
 export function registerPolicyRoutes(app: Hono<AppEnv>): void {
   app.get("/rules", (c) => c.html(publicLayout("Community rules", html`<div class="card"><h1>Community rules</h1>${DRAFT}
-    <p>Feedcal calendars are for real events from real groups. To keep it useful and safe:</p>
+    <p>Calantern calendars are for real events from real groups. To keep it useful and safe:</p>
     <ul>
       <li>Only share events you have the right to share: your own group's, or ones you were sent to pass on.</li>
       <li>Don't pretend to be a school, team or person you aren't.</li>
@@ -206,11 +206,11 @@ export function registerPolicyRoutes(app: Hono<AppEnv>): void {
     </ul>
     <p>Breaking these rules can get a calendar hidden or an account suspended. <a href="/takedown">How reports and takedowns work</a>.</p></div>`)));
   app.get("/terms", (c) => c.html(publicLayout("Terms of use", html`<div class="card"><h1>Terms of use</h1>${DRAFT}
-    <p>Feedcal is a free service that turns forwarded emails into calendars people can subscribe to.</p>
+    <p>Calantern is a free service that turns forwarded emails into calendars people can subscribe to.</p>
     <ul>
-      <li><strong>Your content.</strong> You keep the rights to what you send. You let Feedcal store and process it to run your calendars, and publish what you choose to publish.</li>
-      <li><strong>Your responsibilities.</strong> Follow the <a href="/rules">community rules</a>. Check what Feedcal publishes for you; it uses AI and can make mistakes.</li>
-      <li><strong>No guarantees.</strong> Feedcal is provided as is. Don't rely on it for anything where a missed or wrong event would cause harm.</li>
+      <li><strong>Your content.</strong> You keep the rights to what you send. You let Calantern store and process it to run your calendars, and publish what you choose to publish.</li>
+      <li><strong>Your responsibilities.</strong> Follow the <a href="/rules">community rules</a>. Check what Calantern publishes for you; it uses AI and can make mistakes.</li>
+      <li><strong>No guarantees.</strong> Calantern is provided as is. Don't rely on it for anything where a missed or wrong event would cause harm.</li>
       <li><strong>Ending.</strong> You can delete your account at any time from your account page. We may hide calendars or suspend accounts that break the rules.</li>
       <li><strong>Email.</strong> Forwarded emails and attachments are deleted after 30 days.</li>
     </ul></div>`)));

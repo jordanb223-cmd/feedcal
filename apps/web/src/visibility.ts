@@ -20,7 +20,7 @@ export function visibilityChoice(current: string | undefined, area: AreaChoice =
     ? "Shown in Find a calendar so people nearby can find it."
     : found
       ? `Found in ${found.places} ${found.places === 1 ? "address" : "addresses"} in this calendar's emails and events. Change it if that's not right.`
-      : "Optional. Lets people nearby find it. Feedcal fills this in when an email includes an address.";
+      : "Optional. Lets people nearby find it. Calantern fills this in when an email includes an address.";
   return html`<fieldset class="choice">
   <legend>Who can find it</legend>
   <label><input type="radio" name="visibility" value="${privateValue}" ${isPublic ? "" : "checked"}>

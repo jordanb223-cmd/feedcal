@@ -19,7 +19,7 @@ export const REJECT_REASONS: Record<string, string> = {
   other: "Something else",
 };
 const REVIEW_LABELS: Record<string, string> = {
-  low_confidence: "Feedcal isn't sure about this one.",
+  low_confidence: "Calantern isn't sure about this one.",
   from_transcription: "Read from an image; compare with the picture.",
   possible_injection: "This email contains text aimed at the AI. Check it carefully before approving.",
   ambiguous_date: "The email's wording fits more than one date (like \"this Friday\" sent on a Friday). Check the date.",
@@ -39,7 +39,7 @@ export const DONE: Record<string, string> = {
   cancelled: "Event cancelled. Calendars will remove it.",
   settings: "Settings saved.",
   editor_added: "Editor added.",
-  editor_not_found: "No Feedcal account uses that email yet. Ask them to sign in once, then add them again.",
+  editor_not_found: "No Calantern account uses that email yet. Ask them to sign in once, then add them again.",
   editor_removed: "Editor removed.",
   rule_cleared: "Attachment rule cleared.",
   sender: "Sender updated.",
@@ -164,7 +164,7 @@ ${opts.cards.map((c) => html`<div class="card">
   <details><summary>Reject</summary>
     <form method="post" action="/feeds/${opts.feedId}/candidates/${c.id}/reject">${csrf(t)}
       <p><label for="r-${c.id}">Why?</label><select class="copy" id="r-${c.id}" name="reason">${Object.entries(REJECT_REASONS).map(([k, v]) => html`<option value="${k}">${v}</option>`)}</select></p>
-      <p><label for="n-${c.id}">Note (optional, helps Feedcal learn)</label><input class="copy" id="n-${c.id}" name="note" maxlength="500"></p>
+      <p><label for="n-${c.id}">Note (optional, helps Calantern learn)</label><input class="copy" id="n-${c.id}" name="note" maxlength="500"></p>
       <button type="submit" class="danger">Reject</button>
     </form>
   </details>
@@ -222,7 +222,7 @@ export function eventEditPage(opts: {
 </div>
 ${opts.quote ? html`<div class="card"><h2>Where it came from</h2><blockquote class="muted" dir="auto"><mark>${opts.quote}</mark></blockquote></div>` : ""}
 ${opts.history.length
-  ? html`<div class="card"><h2>History</h2><ul class="events">${opts.history.map((h) => html`<li>${CAUSES[h.cause] ?? h.cause}<span class="when">${new Date(h.at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: opts.timezone })} · ${h.actor === "ai" ? "Feedcal" : h.actor.startsWith("user:") ? "a person" : h.actor}</span></li>`)}</ul></div>`
+  ? html`<div class="card"><h2>History</h2><ul class="events">${opts.history.map((h) => html`<li>${CAUSES[h.cause] ?? h.cause}<span class="when">${new Date(h.at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: opts.timezone })} · ${h.actor === "ai" ? "Calantern" : h.actor.startsWith("user:") ? "a person" : h.actor}</span></li>`)}</ul></div>`
   : ""}`);
 }
 
@@ -250,7 +250,7 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
     <details class="more"><summary>More settings</summary>
     <p><label for="description">Description</label><textarea id="description" name="description" rows="2" maxlength="2000" dir="auto">${s.description}</textarea></p>
     <p><label for="timezone">Time zone</label><input class="copy" id="timezone" name="timezone" autocomplete="off" spellcheck="false" value="${s.timezone}" pattern="[A-Za-z]+(/[A-Za-z0-9_+-]+){0,2}"></p>
-    <p><label for="threshold">Publish automatically when Feedcal is at least this sure (from trusted senders)</label>
+    <p><label for="threshold">Publish automatically when Calantern is at least this sure (from trusted senders)</label>
       <select class="copy" id="threshold" name="threshold">${[0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1].map((n) => html`<option value="${n}" ${Math.abs(s.threshold - n) < 0.001 ? "selected" : ""}>${n === 1 ? "Never: I review everything" : `${Math.round(n * 100)}%`}</option>`)}</select></p>
     </details>
     <button type="submit">Save settings</button>

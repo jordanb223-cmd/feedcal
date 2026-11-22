@@ -17,12 +17,12 @@ export type Audience = "organizer" | "public" | "minimal";
 
 function siteHeader(audience: Audience): Html {
   if (audience === "public") {
-    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/directory">Feedcal</a><a href="/directory">Find a calendar</a></nav>`;
+    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/directory">Calantern</a><a href="/directory">Find a calendar</a></nav>`;
   }
   if (audience === "minimal") {
-    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Feedcal</a></nav>`;
+    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Calantern</a></nav>`;
   }
-  return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Feedcal</a><a href="/feeds">Your feeds</a><a href="/account">Account</a></nav>`;
+  return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Calantern</a><a href="/feeds">Your feeds</a><a href="/account">Account</a></nav>`;
 }
 
 /** For pages anyone can see without signing in. */
@@ -36,7 +36,7 @@ export function layout(title: string, body: Html, head: Html | string = "", audi
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${title} · Feedcal</title>
+<title>${title} · Calantern</title>
 ${head}
 <link rel="stylesheet" href="${ASSET_PATHS.css}">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -45,7 +45,7 @@ ${head}
 <script src="${ASSET_PATHS.js}" defer></script>
 </head>
 <body><a class="skip" href="#main">Skip to content</a><main id="main">${siteHeader(audience)}${body}
-<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/privacy">Privacy</a> · <a href="/about/costs">Support Feedcal</a></footer></main></body>
+<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/privacy">Privacy</a> · <a href="/about/costs">Support Calantern</a></footer></main></body>
 </html>`;
 }
 
@@ -55,7 +55,7 @@ export function loginPage(opts: { csrf: string; googleEnabled: boolean; error?: 
   return publicLayout(
     "Sign in",
     html`<div class="card">
-  <h1>Sign in to Feedcal</h1>
+  <h1>Sign in to Calantern</h1>
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
   <form method="post" action="/login">
     ${csrfField(opts.csrf)}
@@ -163,7 +163,7 @@ export function accountPage(opts: {
     : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${f.visibility})</span><span class="when"><a href="/feeds/${f.id}">Review and events</a> · <a href="/feeds/${f.id}/share">Share</a> · <a href="/feeds/${f.id}/email">Email forwarding</a></span></li>`)}</ul>`}
 </div>
 <div class="card">
-  <h2>Emails from Feedcal</h2>
+  <h2>Emails from Calantern</h2>
   <form method="post" action="/account/notifications">
     ${csrfField(opts.csrf)}
     <p><label class="check"><input type="checkbox" name="weekly_digest" value="1" ${n.weekly_digest ? "checked" : ""}> A weekly summary every Monday</label></p>
@@ -175,12 +175,12 @@ export function accountPage(opts: {
 </div>
 <div class="card">
   <h2>Your data</h2>
-  <p><a href="/account/export">Download everything Feedcal holds about you</a> (JSON).</p>
+  <p><a href="/account/export">Download everything Calantern holds about you</a> (JSON).</p>
   ${opts.feeds.length > 0 ? html`<p>Each calendar as a file: ${opts.feeds.map((f, i) => html`${i > 0 ? ", " : ""}<a href="/account/export/${f.id}.ics" dir="auto">${f.name}</a>`)}.</p>` : ""}
-  <p class="muted"><a href="/privacy">How Feedcal handles your data</a></p>
+  <p class="muted"><a href="/privacy">How Calantern handles your data</a></p>
 </div>
 <div class="card">
-  <h2>Supporting Feedcal</h2>
+  <h2>Supporting Calantern</h2>
   <p><a href="/account/support">Link your Buy Me a Coffee support</a> or choose whether you're listed as a supporter.</p>
 </div>
 <div class="card">

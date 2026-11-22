@@ -5,6 +5,14 @@ import type { Context, Hono } from "hono";
 import type { AppEnv } from "./types.js";
 
 export const APP_CSS = `
+.hero{padding:.5rem 0 1rem}
+.hero h1{font-size:2.5rem;line-height:1.05;margin:0 0 .75rem}
+.hero .lead{font-size:1.125rem;margin:0 0 1.25rem}
+.how{list-style:none;padding:0;margin:0}
+.how li{display:flex;gap:.875rem;padding:.75rem 0;border-top:1px solid #ececec}
+.how li:first-child{border-top:0}
+.how .n{flex-shrink:0;width:2rem;height:2rem;border-radius:999px;border:2px solid #c2410c;color:#c2410c;font-weight:700;display:flex;align-items:center;justify-content:center}
+.assure-line{text-align:center;font-weight:600;margin:1.25rem 0 0}
 .pick{border:1.5px solid #d4d4d4;border-radius:12px;padding:1rem;margin:0 0 .75rem}
 .pick h2{font-size:1.125rem;margin:0 0 .25rem;display:flex;align-items:center;gap:.5rem}
 .pick form,.pick .button{margin:0}
@@ -152,8 +160,8 @@ function shortHash(s: string): string {
 export const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#1d1d1b"/><rect x="12" y="16" width="40" height="36" rx="5" fill="#fff"/><rect x="12" y="16" width="40" height="10" rx="5" fill="#e8533f"/><rect x="20" y="10" width="5" height="12" rx="2" fill="#1d1d1b"/><rect x="39" y="10" width="5" height="12" rx="2" fill="#1d1d1b"/><path d="M22 39l7 7 13-14" fill="none" stroke="#1d1d1b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 export const MANIFEST = JSON.stringify({
-  name: "Feedcal",
-  short_name: "Feedcal",
+  name: "Calantern",
+  short_name: "Calantern",
   description: "Turn school and team emails into a calendar families can subscribe to.",
   start_url: "/",
   scope: "/",

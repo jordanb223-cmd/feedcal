@@ -27,18 +27,18 @@ async function form(c: Context<AppEnv>): Promise<Record<string, string>> {
 export function registerSupportRoutes(app: Hono<AppEnv>, anon: (c: Context<AppEnv>) => Supa = anonSupabase): void {
   app.get("/about/costs", (c) => {
     const bmc = bmcUrl(c.env.BMC_USERNAME);
-    return c.html(publicLayout("What Feedcal costs", html`<div class="card"><h1>What Feedcal costs</h1>
-  <p>Feedcal is free for everyone. There are no ads, and we don't sell data.</p>
+    return c.html(publicLayout("What Calantern costs", html`<div class="card"><h1>What Calantern costs</h1>
+  <p>Calantern is free for everyone. There are no ads, and we don't sell data.</p>
   <p>Today it runs on the free plans of the services below. As more groups use it, some of these start to cost money: the database, sending email, and the AI that reads forwarded emails.</p>
   <ul>
     <li><strong>Supabase</strong>: database, sign-in and background jobs.</li>
     <li><strong>Cloudflare</strong>: the website and receiving forwarded email.</li>
     <li><strong>Anthropic</strong>: the AI that finds events in emails.</li>
-    <li><strong>Resend</strong>: emails Feedcal sends you.</li>
+    <li><strong>Resend</strong>: emails Calantern sends you.</li>
   </ul>
   <p>Support is a thank-you, never a paywall. Supporters get a badge on their account and, if they want, their name on the <a href="/supporters">supporters page</a>.</p>
-  ${bmc ? html`<p><a class="button" href="${bmc}" rel="noopener">Support Feedcal on Buy Me a Coffee</a></p>
-  <p class="muted" style="font-size:.875rem">This opens Buy Me a Coffee's site. Feedcal never sees your card details.</p>`
+  ${bmc ? html`<p><a class="button" href="${bmc}" rel="noopener">Support Calantern on Buy Me a Coffee</a></p>
+  <p class="muted" style="font-size:.875rem">This opens Buy Me a Coffee's site. Calantern never sees your card details.</p>`
     : html`<p class="muted">Donations aren't set up yet.</p>`}
 </div>`));
   });
@@ -47,10 +47,10 @@ export function registerSupportRoutes(app: Hono<AppEnv>, anon: (c: Context<AppEn
     const { data } = await anon(c).rpc("public_supporters");
     const rows = (data ?? []) as { display_name: string; since: string }[];
     return c.html(publicLayout("Supporters", html`<div class="card"><h1>Thank you</h1>
-  <p>These people help keep Feedcal free. Only supporters who chose to be listed appear here.</p>
+  <p>These people help keep Calantern free. Only supporters who chose to be listed appear here.</p>
   ${rows.length === 0 ? html`<p class="muted">No one has chosen to be listed yet.</p>`
     : html`<ul class="events">${rows.map((r) => html`<li><strong dir="auto">${r.display_name}</strong></li>`)}</ul>`}
-  <p><a href="/about/costs">What Feedcal costs, and how to help</a></p>
+  <p><a href="/about/costs">What Calantern costs, and how to help</a></p>
 </div>`));
   });
 
@@ -62,12 +62,12 @@ export function registerSupportRoutes(app: Hono<AppEnv>, anon: (c: Context<AppEn
     return c.html(layout("Your support", html`<div class="card"><h1>Your support</h1>
   ${notice ? html`<p role="status">${notice}</p>` : ""}
   ${st.linked
-    ? html`<p><strong>Supporter</strong>${st.member ? " · member" : ""}. Thank you for helping keep Feedcal free.</p>
+    ? html`<p><strong>Supporter</strong>${st.member ? " · member" : ""}. Thank you for helping keep Calantern free.</p>
   <form method="post" action="/account/support/listing">${csrfField(csrfToken(c))}
     <input type="hidden" name="list" value="${st.list_publicly ? "0" : "1"}">
     <p>${st.list_publicly ? "Your name is on the supporters page." : "Your name is not on the supporters page."}</p>
     <button type="submit" class="secondary">${st.list_publicly ? "Remove my name" : "Show my name on the supporters page"}</button></form>`
-    : html`<p>Supported Feedcal on Buy Me a Coffee with the same email as this account? Link it to get a supporter badge. Nothing is linked unless you ask.</p>
+    : html`<p>Supported Calantern on Buy Me a Coffee with the same email as this account? Link it to get a supporter badge. Nothing is linked unless you ask.</p>
   <form method="post" action="/account/support/link">${csrfField(csrfToken(c))}<button type="submit">Link my support</button></form>
   ${bmc ? html`<p class="muted">Not a supporter yet? <a href="${bmc}" rel="noopener">Buy Me a Coffee</a>.</p>` : ""}`}
   <p><a href="/account">Back to your account</a></p>

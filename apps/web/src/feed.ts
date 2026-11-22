@@ -117,7 +117,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     const { ics, warnings } = buildCalendar({ name: feed.name, description: [feed.description, NOTE_ACCURACY].filter(Boolean).join("\n\n") }, calendarEvents, {
       defaultTimeZone: DEFAULT_TIME_ZONE,
       reportUrl: (uid) => `${origin}/report/${encodeURIComponent(uid)}`,
-      product: "Feedcal",
+      product: "Calantern",
     });
     if (warnings.length > 0) c.get("log").warn("feed_build_warnings", { feed_id: feed.id, count: warnings.length });
 

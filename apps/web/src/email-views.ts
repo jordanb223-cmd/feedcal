@@ -58,7 +58,7 @@ export function attachmentOutcome(a: RecentAttachment): string {
     case "too_many_pages": return `Skipped: over 40 pages${a.pages ? ` (${a.pages})` : ""}`;
     case "unlikely_filename": return "Skipped: looks like a receipt or form";
     case "seen_before": return "Skipped: already read in an earlier email";
-    case "unsupported_type": return "Skipped: Feedcal can't read this kind of file yet";
+    case "unsupported_type": return "Skipped: Calantern can't read this kind of file yet";
     case "page_budget_used": return "Skipped: this email already has 5 pages to read";
     case "too_large_for_vision": return "Skipped: image too large to read";
     case "vision_refused": case "vision_failed": case "unreadable": return "Couldn't read this file";
@@ -75,8 +75,8 @@ export const EMAIL_NOTICES = {
   rotated: "Your calendar has a new email address. The old one no longer works, so update any forwarding rules.",
   created: "Your feed is ready. Forward emails to the address below, or add events by hand from the feed's page.",
   created_public_later: "Your feed is ready, and private for now: a calendar can be listed publicly once it has a published event (and your account is 7 days old). Add events, then switch it to Public in Settings.",
-  chosen: "Got it. Feedcal will read that file, and will pick files like it from this sender from now on.",
-  never: "Got it. Feedcal will skip files like that from this sender.",
+  chosen: "Got it. Calantern will read that file, and will pick files like it from this sender from now on.",
+  never: "Got it. Calantern will skip files like that from this sender.",
   large: "Got it. Big attachments from this sender will be read.",
 } as const;
 export type EmailNotice = keyof typeof EMAIL_NOTICES;
@@ -106,7 +106,7 @@ export function emailSetupPage(opts: {
   ${feedNav(opts.feedId, "email")}
   <h1>Email for <span dir="auto">${opts.name}</span></h1>
   ${opts.notice ? html`<p role="status">${EMAIL_NOTICES[opts.notice]}</p>` : ""}
-  <p>Forward school or team emails to this address. Feedcal reads them and finds the events.</p>
+  <p>Forward school or team emails to this address. Calantern reads them and finds the events.</p>
   ${opts.address
     ? html`<p><label for="intake">This calendar's email address</label><input class="copy" id="intake" readonly spellcheck="false" value="${opts.address}"></p>
   <p><button type="button" class="secondary" data-copy="intake">Copy address</button></p>`
@@ -118,7 +118,7 @@ ${opts.confirmation
   <p>Gmail asked to confirm forwarding${opts.confirmation.requestedBy ? html` from <strong>${opts.confirmation.requestedBy}</strong>` : ""}. Only continue if that's you or someone you trust.</p>
   ${opts.confirmation.url
     ? html`<p><a class="button" href="${opts.confirmation.url}" rel="noreferrer noopener" target="_blank">Confirm on google.com</a></p>
-  <p class="muted">Then go back to Gmail's settings page and refresh it. Feedcal never clicks this link for you.</p>`
+  <p class="muted">Then go back to Gmail's settings page and refresh it. Calantern never clicks this link for you.</p>`
     : ""}
   <p class="muted">Confirmation code, if Gmail asks for one: <strong style="font-size:1.25rem;letter-spacing:.1em">${opts.confirmation.code}</strong></p>
 </div>`
@@ -150,7 +150,7 @@ ${opts.confirmation
 <div class="card">
   <h2>Recent emails</h2>
   ${!opts.recent?.length
-    ? html`<p class="muted">No emails yet. Once you forward one, you'll see here what Feedcal read from it.</p>`
+    ? html`<p class="muted">No emails yet. Once you forward one, you'll see here what Calantern read from it.</p>`
     : opts.recent.map(
       (m) => html`<div style="margin:0 0 1.25rem">
     <p><strong dir="auto">${m.subject ?? "(no subject)"}</strong><span class="when">${m.sender ?? "unknown sender"} · ${when(m.receivedAt)}</span></p>
@@ -192,7 +192,7 @@ ${opts.confirmation
       <li>In Outlook.com, Outlook on the web or the new Outlook, open Settings → Mail → Rules → Add rule.</li>
       <li>Condition: From → the school's address. Action: Forward to → this calendar's address. Save.</li>
     </ol>
-    <p class="muted">Outlook sends these as forwarded by you, so Feedcal will ask once whether to use emails from your own address. Some work and school accounts block forwarding to outside addresses; if so, forward emails by hand.</p>
+    <p class="muted">Outlook sends these as forwarded by you, so Calantern will ask once whether to use emails from your own address. Some work and school accounts block forwarding to outside addresses; if so, forward emails by hand.</p>
   </details>
   <details><summary>iCloud Mail: forward automatically</summary>
     <ol>
