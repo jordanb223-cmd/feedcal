@@ -279,6 +279,9 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
     const body = await form(c);
     if (!csrfValid(c, body.csrf)) return c.html(page(c, o.id, o.name, o.status, { error: MESSAGES.badForm }), 403);
     if (body.confirm !== "yes") return c.html(page(c, o.id, o.name, o.status, { error: "Tick the box to confirm, then press Disconnect Gmail again. Nothing was changed." }), 400);
+    // D51: revoke with Google first (form body, via the Edge Function), then delete. Best effort.
+    const { data: rev } = await c.get("supabase").functions.invoke("gmail-revoke", { body: { feed_id: o.id } }).catch(() => ({ data: null }));
+    c.get("log").info("gmail_revoke", { revoked: Boolean((rev as { revoked?: boolean } | null)?.revoked) });
     const { data } = await c.get("supabase").rpc("gmail_disconnect", { p_feed_id: o.id });
     const n = Number((data as { messages_deleted?: number } | null)?.messages_deleted ?? 0);
     c.get("log").info("gmail_disconnected", { messages_deleted: n });

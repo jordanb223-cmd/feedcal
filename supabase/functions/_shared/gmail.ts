@@ -53,6 +53,21 @@ async function get<T>(f: Fetch, token: string, path: string): Promise<{ status: 
   return { status: res.status, body };
 }
 
+/**
+ * D51: revoke the token with Google, sending it in a form body (Google's docs show both a URL
+ * parameter and a form body; the body keeps it out of URLs and request logs). True on 200.
+ */
+export async function revokeToken(f: Fetch, token: string): Promise<boolean> {
+  const res = await f("https://oauth2.googleapis.com/revoke", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ token }).toString(),
+    signal: AbortSignal.timeout(10_000),
+  });
+  await res.body?.cancel();
+  return res.ok;
+}
+
 export async function profileEmail(f: Fetch, token: string): Promise<string> {
   const r = await get<{ emailAddress?: string }>(f, token, "/profile");
   if (r.status !== 200) throw new Error(`profile_${r.status}`);

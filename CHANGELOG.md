@@ -7,6 +7,14 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-11-21
+
+### Security
+- Follower counts and the limits on reports, search and sign-in can no longer be gamed by calling Feedcal's database directly with made-up visitor addresses.
+- Disconnecting Gmail revokes Feedcal's access without putting the token in a web address.
+- Browsers are told to use HTTPS for Feedcal for a year.
+- Copying events from a calendar link refuses links whose name points into a private network.
+
 ## [0.6.2] - 2026-11-21
 
 ### Changed

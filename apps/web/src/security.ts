@@ -32,9 +32,9 @@ export function safeNext(next: string | undefined | null, fallback = "/account")
  * redirects is still checked against form-action by browsers).
  */
 export function securityHeaders(c: Context, supabaseUrl: string | undefined, hstsMaxAge?: string): Record<string, string> {
-  // HSTS starts at one day; raise HSTS_MAX_AGE to 31536000 (a year) once HTTPS is settled on the
-  // real domain (SETUP §13). Only digits are accepted.
-  const maxAge = hstsMaxAge && /^\d{1,9}$/.test(hstsMaxAge) ? hstsMaxAge : "86400";
+  // HSTS: one year (D51). HTTPS is permanent on pages.dev, and the policy covers only Feedcal's own
+  // host. HSTS_MAX_AGE can still override it (digits only), e.g. lower while moving to a new domain.
+  const maxAge = hstsMaxAge && /^\d{1,9}$/.test(hstsMaxAge) ? hstsMaxAge : "31536000";
   let supabaseOrigin: string;
   try {
     supabaseOrigin = supabaseUrl ? new URL(supabaseUrl).origin : "";

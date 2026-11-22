@@ -27,29 +27,29 @@ select set_config('test.token', public.get_feed_token('c2000000-0000-4000-8000-0
 reset role;
 
 set local role anon;
-select is(public.feed_calendar(current_setting('test.token'))->'feed'->>'name', 'Private cal',
+select is(public.feed_calendar_guarded(current_setting('test.token'))->'feed'->>'name', 'Private cal',
   'anon gets a private feed with its exact token');
 -- Change the first character to one it certainly isn't (a bare 'x' collided 1 run in 64).
-select is(public.feed_calendar(case when left(current_setting('test.token'), 1) = 'x' then 'y' else 'x' end
+select is(public.feed_calendar_guarded(case when left(current_setting('test.token'), 1) = 'x' then 'y' else 'x' end
                                || substr(current_setting('test.token'), 2)), null, 'a wrong token returns nothing');
-select is(public.feed_calendar('short'), null, 'a malformed token returns nothing');
-select is(public.feed_calendar(null), null, 'no token returns nothing');
+select is(public.feed_calendar_guarded('short'), null, 'a malformed token returns nothing');
+select is(public.feed_calendar_guarded(null), null, 'no token returns nothing');
 select is(
-  (select array_agg(e->>'title' order by e->>'title') from jsonb_array_elements(public.feed_calendar(current_setting('test.token'))->'events') e),
+  (select array_agg(e->>'title' order by e->>'title') from jsonb_array_elements(public.feed_calendar_guarded(current_setting('test.token'))->'events') e),
   array['Published', 'Recently cancelled'],
   'published events plus cancellations from the last 30 days; no drafts, no old cancellations');
-select ok(not (public.feed_calendar(current_setting('test.token'))->'events'->0 ?| array['evidence_quote', 'confidence', 'source_message_id']),
+select ok(not (public.feed_calendar_guarded(current_setting('test.token'))->'events'->0 ?| array['evidence_quote', 'confidence', 'source_message_id']),
   'evidence fields are never returned');
-select is(public.feed_calendar(current_setting('test.token'))->'events'->0->>'source', 'school.example.test',
+select is(public.feed_calendar_guarded(current_setting('test.token'))->'events'->0->>'source', 'school.example.test',
   'the source line is the sender''s domain, not the address');
-select ok(not (public.feed_calendar(current_setting('test.token'))->'feed' ?| array['feed_token_hash', 'intake_address', 'owner_id']),
+select ok(not (public.feed_calendar_guarded(current_setting('test.token'))->'feed' ?| array['feed_token_hash', 'intake_address', 'owner_id']),
   'feed secrets are never returned');
 select throws_ok($$ select count(*) from public.feed_fetch_daily $$, '42501', null, 'anon still cannot read fetch stats');
 
 -- Fetch counting: the same client twice in a day is one row; a different client is another.
-select lives_ok($$ select public.feed_calendar(current_setting('test.token'), '203.0.113.7', 'Google-Calendar-Importer', 'google') $$, 'a fetch with client info succeeds');
-select lives_ok($$ select public.feed_calendar(current_setting('test.token'), '203.0.113.7', 'Google-Calendar-Importer', 'google') $$, 'the same client again succeeds');
-select lives_ok($$ select public.feed_calendar(current_setting('test.token'), '198.51.100.9', 'iOS/18 dataaccessd', 'apple') $$, 'a second client succeeds');
+select lives_ok($$ select public.feed_calendar_guarded(current_setting('test.token'), '203.0.113.7', 'Google-Calendar-Importer', 'google') $$, 'a fetch with client info succeeds');
+select lives_ok($$ select public.feed_calendar_guarded(current_setting('test.token'), '203.0.113.7', 'Google-Calendar-Importer', 'google') $$, 'the same client again succeeds');
+select lives_ok($$ select public.feed_calendar_guarded(current_setting('test.token'), '198.51.100.9', 'iOS/18 dataaccessd', 'apple') $$, 'a second client succeeds');
 reset role;
 
 select is((select count(*)::int from public.feed_fetch_daily where feed_id = 'c2000000-0000-4000-8000-000000000001'), 2,
@@ -67,8 +67,8 @@ set local role authenticated;
 select set_config('test.token2', public.rotate_feed_token('c2000000-0000-4000-8000-000000000001'), true);
 reset role;
 set local role anon;
-select is(public.feed_calendar(current_setting('test.token')), null, 'after rotation the old link returns nothing');
-select isnt(public.feed_calendar(current_setting('test.token2')), null, 'the new link works');
+select is(public.feed_calendar_guarded(current_setting('test.token')), null, 'after rotation the old link returns nothing');
+select isnt(public.feed_calendar_guarded(current_setting('test.token2')), null, 'the new link works');
 reset role;
 
 select * from finish();

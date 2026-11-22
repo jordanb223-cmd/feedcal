@@ -1,6 +1,7 @@
 // Phase 13: the public directory (D34). Queries run with the public (anon) key and NO session,
 // so the database's anonymous rules decide what's visible: public feeds only, safe columns only.
 import { createClient } from "@supabase/supabase-js";
+import { proxyHeaders } from "./supabase.js";
 import type { Context, Hono } from "hono";
 import { html } from "hono/html";
 import { z } from "zod";
@@ -22,7 +23,7 @@ export interface DirectoryRow {
 }
 
 export function anonSupabase(c: Context<AppEnv>): Supa {
-  return createClient<Database>(c.env.SUPABASE_URL, c.env.SUPABASE_ANON_KEY ?? "", { auth: { persistSession: false, autoRefreshToken: false } }) as unknown as Supa;
+  return createClient<Database>(c.env.SUPABASE_URL, c.env.SUPABASE_ANON_KEY ?? "", { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: proxyHeaders(c) } }) as unknown as Supa;
 }
 
 function directoryPage(opts: { q?: string | undefined; zip?: string | undefined; miles: number; category?: string | undefined; rows: DirectoryRow[]; searched: boolean; unknownZip: boolean }) {
