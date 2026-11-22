@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-11-21
+
+### Changed
+- The follower count is shown publicly again ("At least N calendars follow this"), now with the honest count from 0.6.0. Feedcal never knows who follows: no names or emails are collected from subscribers. (0.6.1 hid the count; it was never released.)
+
 ## [0.6.1] - 2026-11-21
 
 ### Changed

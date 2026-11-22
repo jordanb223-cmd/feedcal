@@ -27,7 +27,7 @@ describe("directory (anonymous, public feeds only)", () => {
     const body = await res.text();
     expect(body).toContain('<a href="/c/lp-soccer"><strong dir="auto">Land Park Soccer</strong></a>');
     expect(body).toContain("1.2 mi");
-    expect(body).not.toContain("following") /* D49: never shown publicly */;
+    expect(body).toContain("at least 14 following");
   });
   it("/near/<zip> searches by ZIP; bad input falls back safely", async () => {
     const { request, rpc } = setup([]);
