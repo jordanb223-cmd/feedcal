@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.8.5] - 2026-11-22
+
+### Fixed
+- Same as 0.8.4, which wasn't released: its deploy would have recorded the pre-deploy backup before the database had the place to record it. The deploy now records it after updating the database.
+
 ## [0.8.4] - 2026-11-22
 
 ### Fixed
