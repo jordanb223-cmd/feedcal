@@ -4,7 +4,10 @@
 import { html } from "hono/html";
 import { publicLayout } from "./views.js";
 
-export function landingPage() {
+export const HOME_DESCRIPTION = "Calantern reads the school, team and club emails you already get and adds every event to your calendar, so you never add them one by one. Free.";
+const DEFAULT_HEAD = html`<meta name="description" content="${HOME_DESCRIPTION}">`;
+
+export function landingPage(head: ReturnType<typeof html> | string = DEFAULT_HEAD) {
   return publicLayout(
     "Events that add themselves",
     html`<section class="hero">
@@ -28,6 +31,6 @@ export function landingPage() {
   <p>Point your phone's camera at the code, tap the link, then tap <strong>Add to Calendar</strong>. No app, no sign-up.</p>
 </section>
 <p class="assure-line">Works with iPhone, Android, Google Calendar and Outlook. Free, no ads, and we don't sell data.</p>`,
-    html`<meta name="description" content="Calantern reads the school, team and club emails you already get and adds every event to your calendar, so you never add them one by one. Free.">`,
+    head,
   );
 }

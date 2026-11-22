@@ -1,6 +1,7 @@
 // Phase 15 routes (D36): what Feedcal costs, how to support it (a plain link to Buy Me a Coffee;
 // no third-party script), the opt-in supporters list, and linking support to an account.
 import type { Context, Hono } from "hono";
+import { seoHead } from "./seo.js";
 import { html } from "hono/html";
 import { z } from "zod";
 import { currentUser, MESSAGES } from "./auth.js";
@@ -40,7 +41,7 @@ export function registerSupportRoutes(app: Hono<AppEnv>, anon: (c: Context<AppEn
   ${bmc ? html`<p><a class="button" href="${bmc}" rel="noopener">Support Calantern on Buy Me a Coffee</a></p>
   <p class="muted" style="font-size:.875rem">This opens Buy Me a Coffee's site. Calantern never sees your card details.</p>`
     : html`<p class="muted">Donations aren't set up yet.</p>`}
-</div>`));
+</div>`, seoHead(c, "What Calantern costs", "Calantern is free, with no ads and no selling data. Here is what it costs to run and how to support it.")));
   });
 
   app.get("/supporters", async (c) => {

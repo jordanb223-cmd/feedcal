@@ -1,4 +1,5 @@
-import { landingPage } from "./landing.js";
+import { landingPage, HOME_DESCRIPTION } from "./landing.js";
+import { seoHead } from "./seo.js";
 import type { Context, Hono } from "hono";
 import { z } from "zod";
 import { csrfToken, csrfValid, originOf, safeNext } from "./security.js";
@@ -59,7 +60,7 @@ function googleEnabled(c: Context<AppEnv>): boolean {
 
 export function registerAuthRoutes(app: Hono<AppEnv>): void {
   // D55: visitors get the home page; signed-in organizers go straight to their account.
-  app.get("/", async (c) => ((await currentUser(c)) ? c.redirect("/account", 303) : c.html(landingPage())));
+  app.get("/", async (c) => ((await currentUser(c)) ? c.redirect("/account", 303) : c.html(landingPage(seoHead(c, "Events that add themselves", HOME_DESCRIPTION)))));
 
   app.get("/login", async (c) => {
     const next = safeNext(c.req.query("next"));

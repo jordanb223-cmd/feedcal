@@ -196,6 +196,38 @@ describe.skipIf(!enabled)("security sweep (D60)", () => {
     expect(hits).toEqual([]);
   }, 900_000);
 
+  it("junk input never crashes a page or shows internals", async () => {
+    await freshCarol();
+    const JUNK: Record<string, string>[] = [
+      Object.fromEntries(Object.keys(FIELDS).map((k) => [k, "x".repeat(100_000)])),
+      Object.fromEntries(Object.keys(FIELDS).map((k) => [k, "\u0000\u0001\u202e\ud800 ' \" ; -- ` ${} {{}} %s %n"])),
+      { ...FIELDS, date: "2026-02-30", start_date: "0000-00-00", time: "25:99", interval: "-1", zip: "' or 1=1--", zip_code: "999999", visibility: "admin", category: "../../etc",
+        url: "javascript:alert(1)", timezone: "Mars/Phobos", mode: "{}", look_back: "[]", email: "a@b@c", kind: "x".repeat(300), status: "deleted", decision: "own" },
+      {},
+    ];
+    const LEAK = [/\bat [\w$.<>]+ \(.*:\d+:\d+\)/, /PostgrestError|PGRST\d|violates|syntax error|relation "|column "|duplicate key|stack|node_modules|supabase\.co|127\.0\.0\.1:54|service_role|ZodError|TypeError|ReferenceError/i];
+    const problems: string[] = [];
+    const { cookie, token } = await csrf(carol, "/account");
+    for (const fields of JUNK) for (const { path, post } of paths()) {
+      if (!post || /\/delete$|rotate-|disconnect/.test(path)) continue; // keep Carol's feeds for the other cases
+      const res = await carol(path, { method: "POST", body: new URLSearchParams({ ...fields, csrf: token }),
+        headers: { "content-type": "application/x-www-form-urlencoded", origin: BASE, cookie: `feedcal_csrf=${cookie}` } });
+      const body = await res.text();
+      if (res.status >= 500) problems.push(`POST ${path} -> ${res.status}`);
+      for (const re of LEAK) if (re.test(body)) problems.push(`POST ${path} [${res.status}] shows ${re}`);
+    }
+    for (const path of ["/feeds/not-a-uuid", "/feeds/00000000-0000-0000-0000-000000000000", "/c/%00", "/c/" + "a".repeat(5000), "/report/%E0%A4%A", "/f/x.ics", "/f/" + "A".repeat(43) + ".ics",
+      "/near/abcde", "/near/" + "9".repeat(500), "/directory?q=" + "%27".repeat(2000), "/directory?zip=%00&miles=-5&limit=999999", "/feeds/" + F.pub + "/events/zzz", "/unsubscribe?u=x&k=y&t=z",
+      "/undo/not-a-uuid", "/account/export/../../etc/passwd", "/account/export/%2e%2e%2fx.ics", "/milestones/-1", "/feeds/" + F.pub + "/milestones/99999999999999999999"]) {
+      for (const req of [carol, anon]) {
+        const res = await req(path); const body = await res.text();
+        if (res.status >= 500) problems.push(`GET ${path} -> ${res.status}`);
+        for (const re of LEAK) if (re.test(body)) problems.push(`GET ${path} [${res.status}] shows ${re}`);
+      }
+    }
+    expect(problems).toEqual([]);
+  }, 900_000);
+
   it("the web detectors trip when Carol uses her own valid token", async () => {
     await freshCarol();
     const r = await sweep("carol", carol, "/account");

@@ -7,6 +7,18 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-11-21
+
+### Fixed
+- A specially crafted email could stall email processing; it now can't, and a message that keeps failing is set aside instead of retried forever.
+- Calendar imports can no longer be pointed at internal network addresses.
+- An imported calendar can no longer break your feed for subscribers (unusual characters, extreme dates or "every second" repeats).
+- Email subjects always stay on one line.
+
+### Changed
+- Bigger tap targets for the top links on phones.
+- Better previews when you share Calantern links, and search engines can find the main pages.
+
 ## [0.7.3] - 2026-11-21
 
 ### Fixed

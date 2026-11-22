@@ -54,6 +54,7 @@ a:hover{text-decoration-thickness:2px}
 form:has(.choice input[value=public]:not(:checked)) .area{display:none}
 .site{display:flex;flex-wrap:wrap;gap:.25rem 1rem;align-items:center;margin:0 0 1.5rem;padding:0 0 .875rem;border-bottom:1px solid #e6e6e6;font-size:.9375rem}
 .site .brand{font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-right:auto;text-decoration:none;color:inherit}
+.site a{padding:.6875rem 0;margin:-.6875rem 0} /* D60: ~45px tap height on phones (was 23px); the layout doesn't move */
 *{box-sizing:border-box}
 body{margin:0;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#111111;background:#ffffff}
 a{color:#111111;text-underline-offset:.15em}

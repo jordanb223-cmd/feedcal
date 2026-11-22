@@ -12,6 +12,7 @@ export function wellFormed(value: string): string {
 export function escapeText(value: string): string {
   return wellFormed(value)
     .replace(/\r\n?|[\u2028\u2029\u0085]/g, "\n")
+    // eslint-disable-next-line no-control-regex -- removing control characters is the point (RFC 5545 forbids them in TEXT)
     .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "")
     .replace(/\\/g, "\\\\")
     .replace(/;/g, "\\;")

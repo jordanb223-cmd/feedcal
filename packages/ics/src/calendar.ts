@@ -60,7 +60,7 @@ export function validRrule(rule: string): boolean {
   const keys = new Set<string>();
   for (const part of parts.slice(1)) {
     if (!RRULE_PART.test(part)) return false;
-    const key = part.split("=")[0]!;
+    const key = part.slice(0, part.indexOf("="));
     if (keys.has(key)) return false;
     keys.add(key);
     if (key === "COUNT" && Number(part.slice(6)) > 1000) return false;
