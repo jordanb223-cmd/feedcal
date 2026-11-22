@@ -14,7 +14,11 @@ const page = async (p: string) => (await app.request(`https://calantern.test${p}
 describe("footer and cookies (D62)", () => {
   it.each(["/", "/login", "/privacy", "/terms", "/rules", "/takedown", "/about/costs", "/nope"])("%s shows the disclaimer in the footer", async (p) => {
     const html = await page(p);
-    expect(html).toMatch(new RegExp(`<footer[^>]*><p[^>]*>${FOOTER_DISCLAIMER.replace("'", "&#39;").replace(/[.]/g, "\\.")}</p>`));
+    // Compare plain text (no pattern built from the sentence): it must sit inside the footer.
+    const shown = FOOTER_DISCLAIMER.replaceAll("&", "&amp;").replaceAll("'", "&#39;");
+    const footer = html.slice(html.indexOf("<footer"));
+    expect(html.indexOf("<footer")).toBeGreaterThan(-1);
+    expect(footer).toContain(`<p style="margin:0 0 .5rem">${shown}</p>`);
   });
   it("the privacy page lists the cookies and says there are no trackers", async () => {
     const html = await page("/privacy");
