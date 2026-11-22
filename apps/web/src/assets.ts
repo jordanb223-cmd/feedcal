@@ -5,40 +5,52 @@ import type { Context, Hono } from "hono";
 import type { AppEnv } from "./types.js";
 
 export const APP_CSS = `
+.kicker{display:block;font-size:.8125rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#c2410c;margin:0 0 .5rem}
+.cal{list-style:none;padding:0;margin:0}
+.cal li{display:flex;gap:1rem;padding:.875rem 0;border-top:1px solid #ececec}
+.cal li:first-child{border-top:0}
+.cal .day{width:2.75rem;flex-shrink:0;display:flex;flex-direction:column;font-variant-numeric:tabular-nums}
+.cal .dow{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#5c5c5c}
+.cal .num{font-size:1.625rem;font-weight:700;line-height:1.05}
+.cal .what{min-width:0;border-left:3px solid #e6e6e6;padding-left:.75rem;display:flex;flex-direction:column;gap:.125rem}
+.cal li.next .dow{color:#c2410c}
+.cal li.next .what{border-left-color:#c2410c}
 .skip{position:absolute;left:1rem;top:-3rem;background:#1d1d1b;color:#fff;padding:.5rem 1rem;border-radius:8px;z-index:10}
 .skip:focus{top:1rem}
 main{overflow-wrap:anywhere}
 button,.button,summary,label.check,.choice label{touch-action:manipulation}
 button,.button{transition:background-color .15s ease,border-color .15s ease,transform .1s ease}
-button:hover,.button:hover{background:#174a31;border-color:#174a31}
-button.secondary:hover,a.button.secondary:hover{background:#eef5f1;border-color:#174a31;color:#174a31}
+button:hover,.button:hover{background:#333333;border-color:#333333}
+button.secondary:hover,a.button.secondary:hover{background:#f4f4f4;border-color:#111111;color:#111111}
 button.danger:hover{background:#6e1616;border-color:#6e1616}
 button:active,.button:active{transform:scale(.97)}
 .choice label{transition:border-color .15s ease,background-color .15s ease}
-.choice label:hover{border-color:#6b6b66}
+.choice label:hover{border-color:#767676}
 a:hover{text-decoration-thickness:2px}
 @media (prefers-reduced-motion:reduce){button,.button,.choice label{transition:none}button:active,.button:active{transform:none}}
 .choice{border:0;padding:0;margin:0 0 .5rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
 .choice legend{font-weight:600;margin-bottom:.5rem}
-.choice label{display:flex;gap:.5rem;align-items:flex-start;border:2px solid #d8d8d3;border-radius:12px;padding:1rem;cursor:pointer;background:#fff}
-.choice label:has(input:checked){border-color:#1d1d1b;background:#f0f0ec}
+.choice label{display:flex;gap:.5rem;align-items:flex-start;border:1.5px solid #d4d4d4;border-radius:12px;padding:1rem;cursor:pointer;background:#fff}
+.choice label:has(input:checked){border:2px solid #111111;background:#f7f7f7}
 .choice input{margin-top:.25rem}
 @media (max-width:28rem){.choice{grid-template-columns:1fr}}
 form:has(.choice input[value=public]:not(:checked)) .area{display:none}
-.site{display:flex;flex-wrap:wrap;gap:.25rem 1rem;align-items:center;margin:0 0 1rem;font-size:.9375rem}
-.site .brand{font-weight:700;margin-right:auto;text-decoration:none;color:inherit}
+.site{display:flex;flex-wrap:wrap;gap:.25rem 1rem;align-items:center;margin:0 0 1.5rem;padding:0 0 .875rem;border-bottom:1px solid #e6e6e6;font-size:.9375rem}
+.site .brand{font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-right:auto;text-decoration:none;color:inherit}
 *{box-sizing:border-box}
-body{margin:0;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1d1d1b;background:#f6f6f4}
+body{margin:0;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#111111;background:#ffffff}
+a{color:#111111;text-underline-offset:.15em}
+input[type=checkbox],input[type=radio]{accent-color:#111111;width:1.125rem;height:1.125rem}
 main{max-width:30rem;margin:0 auto;padding:2rem 1rem}
-.card{background:#fff;border-radius:12px;padding:1.5rem;margin:0 0 1rem}
-h1{font-size:1.5rem;line-height:1.3;margin:0 0 1rem}
-h2{font-size:1.25rem;line-height:1.3;margin:0 0 .75rem}
+.card{background:#fff;border:1px solid #e6e6e6;border-radius:14px;padding:1.5rem;margin:0 0 1rem}
+h1{font-size:2rem;line-height:1.1;letter-spacing:-.03em;font-weight:800;margin:0 0 1rem;text-wrap:balance}
+h2{font-size:1.25rem;line-height:1.3;letter-spacing:-.01em;margin:0 0 .75rem;text-wrap:balance}
 p{margin:0 0 1rem}
-.muted{color:#4f4f4b}
+.muted{color:#5c5c5c}
 label{display:block;font-weight:600;margin:0 0 .25rem}
-input[type=email]{width:100%;font:inherit;padding:.75rem;border:2px solid #6b6b66;border-radius:8px}
-button,.button{display:inline-block;font:inherit;font-weight:600;padding:.75rem 1.25rem;border-radius:8px;border:2px solid #1f5f3f;background:#1f5f3f;color:#fff;cursor:pointer;text-decoration:none}
-button.secondary{background:#fff;color:#1f5f3f}
+input[type=email]{width:100%;font:inherit;padding:.75rem;border:1.5px solid #767676;border-radius:10px}
+button,.button{display:inline-block;font:inherit;font-weight:600;padding:.75rem 1.25rem;border-radius:10px;border:2px solid #111111;background:#111111;color:#fff;cursor:pointer;text-decoration:none}
+button.secondary{background:#fff;color:#111111;border-color:#d4d4d4}
 button.danger{background:#8a1c1c;border-color:#8a1c1c}
 form{margin:0 0 1rem}
 :focus-visible{outline:3px solid #1a4fd6;outline-offset:2px}
@@ -47,14 +59,14 @@ form{margin:0 0 1rem}
 .row{display:flex;flex-wrap:wrap;gap:.5rem}
 .sep{text-align:center;margin:1rem 0}
 a.button{margin:0 0 .5rem}
-a.button.secondary{background:#fff;color:#1f5f3f}
+a.button.secondary{background:#fff;color:#111111;border-color:#d4d4d4}
 .wide{display:block;width:100%;text-align:center}
 .events{list-style:none;padding:0;margin:0}
-.events li{padding:.75rem 0;border-top:1px solid #e3e3df}
+.events li{padding:.875rem 0;border-top:1px solid #ececec}
 .events li:first-child{border-top:0}
-.when{display:block;font-size:.95rem;color:#4f4f4b}
+.when{display:block;font-size:.95rem;color:#5c5c5c}
 details summary{cursor:pointer;font-weight:600;padding:.5rem 0}
-textarea,input.copy,select.copy{width:100%;font:inherit;padding:.75rem;border:2px solid #6b6b66;border-radius:8px;background:#fff}
+textarea,input.copy,select.copy{width:100%;font:inherit;padding:.75rem;border:1.5px solid #767676;border-radius:10px;background:#fff;color:#111111}
 mark{background:#fff0a8;color:inherit;padding:0 .1em}
 blockquote{margin:0 0 1rem}
 .qr svg{width:12rem;height:12rem;display:block;margin:0 auto}

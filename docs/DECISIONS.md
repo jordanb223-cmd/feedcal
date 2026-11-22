@@ -407,3 +407,10 @@ What was checked, against what, and what changed:
   8. `theme-color` now matches the page background (#f6f6f4), not near-black.
   9. `overflow-wrap: anywhere` on page content, so a long address can't push a page sideways.
 - **Not adopted:** Title Case for headings and buttons (Feedcal uses plain sentence case on purpose); placeholders ending in "…"; rules for React, large lists, images and video (not used here).
+
+## D46 — Look C, "crisp calendar" (2026-11-21)
+
+- **Why.** Step 2 of the UI revamp (D45): three mockups of Room F's subscribe page were shown to the owner as phone-size pictures: A calm paper (today's look refined), B bright and friendly, C crisp calendar. The owner chose C, then approved pictures of the real pages rendered from the code.
+- **The look.** White ground, near-black text and buttons (#111111), one orange accent (#c2410c) for the kind · ZIP line and the next event, grey for secondary text (#5c5c5c), thin outlined cards, a big bold title, uppercase FEEDCAL wordmark, system fonts only (the CSP allows no font hosts). Contrast computed (WCAG formula), all AA or better on white: text 18.9:1, grey 6.7:1, orange 5.2:1, field borders 4.5:1; error text on its tint 8.4:1 (an older code comment said 7.9:1; corrected).
+- **Subscribe page.** An orange "school · 95818" line above the title (the ZIP no longer repeats in the organizer line); events as a calendar list with the weekday and day number on the left (in the event's zone; hidden from screen readers, which read the full date beside it) and the next event marked in orange; the three subscriber notes (D44) moved below the events.
+- **Not covered.** Organizer pages keep their layout and only take the new colours and type; folding settings away is the next step (the simpler setup flow). Pictures were rendered with sample events; the live page was not screenshotted before release.

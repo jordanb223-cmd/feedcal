@@ -4,8 +4,9 @@ import type { HtmlEscapedString } from "hono/utils/html";
 
 type Html = HtmlEscapedString | Promise<HtmlEscapedString>;
 
-// Colors checked for WCAG AA contrast: text #1d1d1b on #f6f6f4 (16.5:1), white on #1f5f3f (7.6:1),
-// muted #4f4f4b on #ffffff (8.3:1), error #8a1c1c on #fdf1f1 (7.9:1).
+// Look C, "crisp calendar" (owner's pick, 2026-11-21, D46). Contrast on white (WCAG AA 4.5:1):
+// text #111111 (18.9:1), muted #5c5c5c (6.7:1), accent #c2410c (5.2:1), white on #111111 buttons
+// (18.9:1), field borders #767676 (4.5:1), error #8a1c1c on #fdf1f1 (8.4:1). Computed, not estimated.
 
 /**
  * Every page has a way to move on (2026-11-21). Organizer pages: Feedcal · Your feeds · Account.
@@ -40,7 +41,7 @@ ${head}
 <link rel="stylesheet" href="${ASSET_PATHS.css}">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#f6f6f4">
+<meta name="theme-color" content="#ffffff">
 <script src="${ASSET_PATHS.js}" defer></script>
 </head>
 <body><a class="skip" href="#main">Skip to content</a><main id="main">${siteHeader(audience)}${body}

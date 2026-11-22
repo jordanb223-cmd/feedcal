@@ -72,9 +72,10 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
   return publicLayout(
     feed.name,
     html`<div class="card">
+  ${kicker(feed.category, feed.zip_code)}
   <h1 dir="auto">${feed.name}${feed.verified ? html` <span title="Verified organizer" style="font-size:1rem">✓ Verified</span>` : ""}</h1>
   ${feed.may_be_out_of_date ? html`<p class="error" role="alert">This calendar hasn't been updated in over 90 days, so it may be out of date.</p>` : ""}
-  ${feed.organizer_name ? html`<p class="muted">Kept up to date by <span dir="auto">${feed.organizer_name}</span>${feed.area ? html` · <span dir="auto">${feed.area}</span>` : feed.zip_code ? html` · ${feed.zip_code}` : ""}</p>` : ""}
+  ${feed.organizer_name ? html`<p class="muted">Kept up to date by <span dir="auto">${feed.organizer_name}</span>${feed.area ? html` · <span dir="auto">${feed.area}</span>` : ""}</p>` : ""}
   ${feed.description ? html`<p dir="auto">${feed.description}</p>` : ""}
   <p><a class="button wide" href="${go(primary.target)}">${primary.label}</a></p>
   <details>
@@ -90,14 +91,17 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
   </details>
   <p class="muted">${n > 0 ? html`At least ${n} ${n === 1 ? "calendar follows" : "calendars follow"} this. ` : ""}Updated ${formatUpdated(feed.last_updated_at)}.</p>
   ${n > 0 ? html`<p class="muted" style="font-size:.875rem">How we count: calendar apps that checked for updates in the last 7 days. Google checks once for all its users, so the real number is often higher.</p>` : ""}
-  ${subscriberNotes(feed.verified === true)}
 </div>
 <div class="card">
   <h2>Coming up</h2>
   ${next.length === 0
     ? html`<p class="muted">No upcoming events yet. Subscribe now and new ones will appear in your calendar on their own.</p>`
-    : html`<ul class="events">${next.map((e) => html`<li><strong dir="auto">${e.title}</strong><span class="when">${formatWhen(e)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></li>`)}</ul>`}
+    : html`<ul class="cal">${next.map((e, i) => {
+        const d = dayParts(e);
+        return html`<li class="${i === 0 ? "next" : ""}"><span class="day" aria-hidden="true"><span class="dow">${d.dow}</span><span class="num">${d.num}</span></span><span class="what"><strong dir="auto">${e.title}</strong><span class="when">${formatWhen(e)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></span></li>`;
+      })}</ul>`}
 </div>
+${subscriberNotes(feed.verified === true)}
 <p class="muted no-print" style="text-align:center"><a href="/c/${feed.slug}/report">Report this calendar</a></p>`,
     head,
   );
@@ -184,4 +188,19 @@ function subscriberNotes(verified: boolean) {
     ${verified ? "" : html`<p>${NOTE_UNOFFICIAL}</p>`}
     <p>${NOTE_REFRESH}</p>
   </div>`;
+}
+
+// D46 (look C): the small orange line above the title, e.g. "SCHOOL · 95818".
+function kicker(category: string | null | undefined, zip: string | null | undefined) {
+  const bits = [category, zip].filter((x): x is string => Boolean(x));
+  return bits.length ? html`<span class="kicker">${bits.join(" · ")}</span>` : "";
+}
+
+/** The weekday and day number shown in the date column, in the event's own time zone. */
+export function dayParts(e: Pick<PageEvent, "starts_at" | "timezone">): { dow: string; num: string } {
+  const date = new Date(e.starts_at);
+  return {
+    dow: new Intl.DateTimeFormat("en-US", { timeZone: e.timezone, weekday: "short" }).format(date),
+    num: new Intl.DateTimeFormat("en-US", { timeZone: e.timezone, day: "numeric" }).format(date),
+  };
 }

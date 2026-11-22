@@ -7,6 +7,12 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-21
+
+### Changed
+- A new look: clean white and black with one orange accent, a bigger title, and black buttons.
+- Calendar pages show events like a calendar app, with the day and date on the left and the next event marked. The kind and ZIP (like "School · 95818") sit above the title, and the notes for subscribers move to the bottom.
+
 ## [0.3.2] - 2026-11-21
 
 ### Changed
