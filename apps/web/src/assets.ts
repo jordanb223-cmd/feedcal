@@ -80,6 +80,36 @@ mark{background:#fff0a8;color:inherit;padding:0 .1em}
 blockquote{margin:0 0 1rem}
 .qr svg{width:12rem;height:12rem;display:block;margin:0 auto}
 @media print{body{background:#fff}.no-print{display:none}.card{padding:0}}
+.flyer-controls{margin:0 0 1rem}
+.flyer{text-align:center;border:1px solid #e6e6e6;border-radius:14px;padding:1.5rem;margin:0 0 1rem;background:#fff}
+.flyer h1{font-size:2.25rem;margin:0 0 .5rem}
+.flyer .lead{font-size:1.125rem;margin:0 0 1rem}
+.flyer .qr svg{width:14rem;height:14rem}
+.flyer .steps{display:inline-block;text-align:left;margin:1rem auto;padding-left:1.25rem;font-size:1.0625rem}
+.flyer .steps li{margin:0 0 .25rem}
+.flyer .assure{font-weight:600;margin:0 0 .5rem}
+.flyer .link{font-size:.8125rem;color:#5c5c5c;overflow-wrap:anywhere;margin:0}
+.cut{border-top:2px dashed #767676;margin:1rem 0;position:relative;height:0}
+.cut span{position:absolute;left:50%;top:-.7rem;transform:translateX(-50%);background:#fff;padding:0 .5rem;font-size:.75rem;color:#5c5c5c}
+@media print{
+  @page{size:letter;margin:.5in}
+  main{max-width:none;padding:0}
+  .site,footer{display:none}
+  .flyer{border:0;border-radius:0;padding:0;margin:0;height:10in;display:flex;flex-direction:column;align-items:center;justify-content:center;break-inside:avoid}
+  .flyer h1{font-size:40pt}
+  .flyer .lead{font-size:18pt}
+  .flyer .qr svg{width:4.5in;height:4.5in}
+  .flyer .steps{font-size:15pt}
+  .flyer .assure{font-size:13pt}
+  .flyer .link{font-size:9pt}
+  .halves .flyer{height:4.75in}
+  .halves .flyer h1{font-size:26pt;margin:0 0 .1in}
+  .halves .flyer .lead{font-size:12pt;margin:0 0 .1in}
+  .halves .flyer .qr svg{width:2.4in;height:2.4in}
+  .halves .flyer .steps{font-size:11pt;margin:.1in auto}
+  .halves .flyer .assure{font-size:10pt}
+  .cut{margin:.1in 0}
+}
 `;
 
 // Behaviour hooks are data attributes; no inline handlers anywhere (the CSP would block them).

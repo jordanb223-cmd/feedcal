@@ -227,5 +227,19 @@ describe("share kit", () => {
     expect(body).toMatch(/<svg[^>]*>/);
     expect(body).toContain("Point your phone");
     expect(body).toContain("data-print");
+    // D54: the steps match the real button, and parents are told what it works with.
+    expect(body).toContain("Tap <strong>Add to Calendar</strong>");
+    expect(body).not.toContain("Tap Subscribe");
+    expect(body).toContain("Works with iPhone, Android, Google Calendar and Outlook");
+    expect((body.match(/<section class="flyer">/g) ?? []).length).toBe(1);
+    expect(body).toContain(`href="/feeds/${FEED_ID}/flyer?half=1"`);
+  });
+
+  it("half-sheets: two flyers on one page with a cut line (D54)", async () => {
+    const { request } = setup(kitRpc, { user: true, feedRow: { id: FEED_ID, name: "Room 12", slug: "room-12", visibility: "public" } });
+    const body = await (await request(`/feeds/${FEED_ID}/flyer?half=1`)).text();
+    expect((body.match(/<section class="flyer half">/g) ?? []).length).toBe(2);
+    expect(body).toContain("cut here");
+    expect(body).toContain(`href="/feeds/${FEED_ID}/flyer"`);
   });
 });

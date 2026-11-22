@@ -103,7 +103,7 @@ export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
     const kit = await loadShareKit(c, id.data);
     if (!kit) return c.html(messagePage("Feed not found", "That feed doesn't exist, or it isn't yours."), 404);
     const url = kit.pageUrl ?? kit.feedUrl;
-    return c.html(flyerPage({ name: kit.name, url, qrSvg: kit.qrSvg, feedId: id.data }));
+    return c.html(flyerPage({ name: kit.name, url, qrSvg: kit.qrSvg, feedId: id.data, half: c.req.query("half") === "1" }));
   });
 
   // Old address for the link page; the share kit replaces it.

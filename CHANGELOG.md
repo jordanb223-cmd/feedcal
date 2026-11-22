@@ -7,6 +7,14 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.6.6] - 2026-11-21
+
+### Changed
+- The printable flyer fills the page with a big QR code, steps that match the button parents will see, and a line saying it works with iPhone, Android, Google Calendar and Outlook.
+
+### Added
+- "Two per page" flyers with a cut line, to save paper.
+
 ## [0.6.5] - 2026-11-21
 
 ### Changed

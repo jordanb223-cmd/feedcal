@@ -173,17 +173,28 @@ ${opts.stats
   );
 }
 
-export function flyerPage(opts: { name: string; url: string; qrSvg: string; feedId: string }): Html {
+/**
+ * D54: the printable flyer, built for a teacher printing one QR code for every family.
+ * Full page: one large code. Half-sheets: two copies per page with a cut line.
+ */
+export function flyerPage(opts: { name: string; url: string; qrSvg: string; feedId: string; half?: boolean }): Html {
+  const one = html`<section class="flyer${opts.half ? " half" : ""}">
+    <h1 dir="auto">${opts.name}</h1>
+    <p class="lead">Get every event in your phone's calendar. It updates on its own.</p>
+    <div class="qr" role="img" aria-label="QR code for ${opts.url}">${raw(opts.qrSvg)}</div>
+    <ol class="steps"><li>Point your phone's camera at the code.</li><li>Tap the link that pops up.</li><li>Tap <strong>Add to Calendar</strong>.</li></ol>
+    <p class="assure">Works with iPhone, Android, Google Calendar and Outlook. Free, no sign-up.</p>
+    <p class="link">${opts.url}</p>
+  </section>`;
   return publicLayout(
     `${opts.name} flyer`,
-    html`<div class="card" style="text-align:center">
-  <h1 dir="auto" style="font-size:2rem">${opts.name}</h1>
-  <p style="font-size:1.25rem">Get every event in your phone's calendar. It updates on its own.</p>
-  <div class="qr" role="img" aria-label="QR code for ${opts.url}" style="margin:1.5rem 0">${raw(opts.qrSvg)}</div>
-  <p style="font-size:1.125rem"><strong>1.</strong> Point your phone's camera at the code. <strong>2.</strong> Tap the link. <strong>3.</strong> Tap Subscribe.</p>
-  <p class="muted" style="word-break:break-all">${opts.url}</p>
-  <p class="no-print"><button type="button" data-print>Print</button> <a class="button secondary" href="/feeds/${opts.feedId}/share">Back</a></p>
-</div>`,
+    html`<div class="no-print flyer-controls">
+  <p><button type="button" data-print>Print</button> <a class="button secondary" href="/feeds/${opts.feedId}/share">Back</a></p>
+  <p>${opts.half
+    ? html`<strong>Two per page</strong> (cut along the dashed line) · <a href="/feeds/${opts.feedId}/flyer">One big flyer</a>`
+    : html`<strong>One big flyer</strong> · <a href="/feeds/${opts.feedId}/flyer?half=1">Two per page, to save paper</a>`}</p>
+</div>
+<div class="flyer-sheet${opts.half ? " halves" : ""}">${one}${opts.half ? html`<div class="cut" aria-hidden="true"><span>cut here</span></div>${one}` : ""}</div>`,
   );
 }
 
