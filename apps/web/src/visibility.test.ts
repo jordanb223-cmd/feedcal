@@ -34,6 +34,6 @@ describe("Private / Public choice", () => {
     const res = await app.request("https://feedcal.test/feeds/new", { method: "POST", body: new URLSearchParams({ csrf, name: "Room F", category: "school", visibility: "public" }),
       headers: { "content-type": "application/x-www-form-urlencoded", cookie: `__Host-feedcal_csrf=${cookie}`, origin: "https://feedcal.test" } }, env);
     expect(inserted.visibility).toBe("unlisted");
-    expect(res.headers.get("location")).toBe("/feeds/f1/email?done=created_public_later");
+    expect(res.headers.get("location")).toBe("/feeds/f1/setup?public_later=1"); // D47: next, where the emails come from
   });
 });

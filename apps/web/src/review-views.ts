@@ -80,14 +80,17 @@ export function dashboardPage(opts: { csrf: string; feeds: DashboardFeed[]; done
 
 export function newFeedPage(opts: { csrf: string; error?: string; values?: Record<string, string> }): Html {
   const v = opts.values ?? {};
-  return layout("New feed", html`<div class="card">
-  <h1>New feed</h1>
+  return layout("New calendar", html`<div class="card">
+  <h1>New calendar</h1>
+  <p class="muted">Give it a name. Next you'll connect where its emails come from.</p>
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
   <form method="post" action="/feeds/new">${csrf(opts.csrf)}
     <p><label for="name">Name</label><input class="copy" id="name" name="name" required maxlength="120" autocomplete="off" value="${v.name ?? ""}" placeholder="Room 12 families" dir="auto"></p>
-    <p><label for="category">Kind</label><select class="copy" id="category" name="category">${CATEGORIES.map((c) => html`<option value="${c}" ${v.category === c ? "selected" : ""}>${c}</option>`)}</select></p>
-    ${visibilityChoice(v.visibility, { zip: v.zip_code || null })}
-    <button type="submit">Create feed</button>
+    <details class="more"><summary>More options</summary>
+      <p><label for="category">Kind</label><select class="copy" id="category" name="category">${CATEGORIES.map((c) => html`<option value="${c}" ${(v.category ?? "other") === c ? "selected" : ""}>${c}</option>`)}</select></p>
+      <p class="muted" style="font-size:.875rem">It starts Private: only people with its link or QR code can see it. You can make it Public later in Settings.</p>
+    </details>
+    <button type="submit" class="wide">Next</button>
   </form>
 </div>`);
 }
@@ -241,15 +244,18 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
   ${s.isOwner
     ? html`<form method="post" action="/feeds/${opts.feedId}/settings">${csrf(t)}
     <p><label for="name">Name</label><input class="copy" id="name" name="name" required maxlength="120" autocomplete="off" value="${s.name}" dir="auto"></p>
-    <p><label for="description">Description</label><textarea id="description" name="description" rows="2" maxlength="2000" dir="auto">${s.description}</textarea></p>
     ${visibilityChoice(s.visibility, { zip: s.zip, suggestion: s.zipSuggestion })}
+    <details class="more"><summary>More settings</summary>
+    <p><label for="description">Description</label><textarea id="description" name="description" rows="2" maxlength="2000" dir="auto">${s.description}</textarea></p>
     <p><label for="timezone">Time zone</label><input class="copy" id="timezone" name="timezone" autocomplete="off" spellcheck="false" value="${s.timezone}" pattern="[A-Za-z]+(/[A-Za-z0-9_+-]+){0,2}"></p>
     <p><label for="threshold">Publish automatically when Feedcal is at least this sure (from trusted senders)</label>
       <select class="copy" id="threshold" name="threshold">${[0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1].map((n) => html`<option value="${n}" ${Math.abs(s.threshold - n) < 0.001 ? "selected" : ""}>${n === 1 ? "Never: I review everything" : `${Math.round(n * 100)}%`}</option>`)}</select></p>
+    </details>
     <button type="submit">Save settings</button>
   </form>`
     : html`<p class="muted">Only the owner can change these settings.</p>`}
 </div>
+<details class="more card"><summary>Senders, editors and the subscribe link</summary>
 ${s.isOwner ? html`<div class="card">
   <h2>Verified badge</h2>
   <p>Families trust calendars from verified organizers. We verify automatically when you sign in with your organisation's email and it sends this feed's emails.</p>
@@ -276,6 +282,7 @@ ${s.isOwner ? html`<div class="card">
     <p><label for="editor">Add an editor by email</label><input class="copy" type="email" id="editor" name="email" required maxlength="320" autocomplete="off" spellcheck="false"></p>
     <button type="submit" class="secondary">Add editor</button></form>` : ""}
 </div>
+</details>
 ${s.isOwner ? html`<div class="card">
   <h2>Delete this feed</h2>
   <p>Subscribers stop getting updates at once. You'll have 10 seconds to undo.</p>

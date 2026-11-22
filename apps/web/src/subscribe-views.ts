@@ -118,21 +118,30 @@ export function shareKitPage(opts: {
   chatText: string;
   stats: { subscribers_at_least: number; clicks_30d: Record<string, number> } | null;
   notice?: string;
+  ready?: boolean;
 }): Html {
   const clicks = opts.stats ? Object.values(opts.stats.clicks_30d).reduce((a, b) => a + b, 0) : 0;
   return layout(
     `Share ${opts.name}`,
     html`<div class="card">
   ${feedNav(opts.feedId, "share")}
-  <h1>Share <span dir="auto">${opts.name}</span></h1>
+  ${opts.ready
+    ? html`<span class="kicker">You're set</span>
+  <h1><span dir="auto">${opts.name}</span> is ready</h1>
+  <p role="status">Feedcal is reading the emails now. Events appear as they're found, usually within a few minutes.</p>
+  <p><button type="button" class="wide" data-copy="${opts.pageUrl ? "page-link" : "feed-url"}" aria-live="polite">Copy share link</button></p>
+  ${opts.pageUrl ? html`<p><a class="button secondary wide" href="${opts.pageUrl}">Add it to my calendar</a></p>` : ""}
+  <details class="more"><summary>See the links</summary>`
+    : html`<h1>Share <span dir="auto">${opts.name}</span></h1>`}
   ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}
   ${opts.pageUrl
     ? html`<p>Send people this page. It has a one-tap subscribe button for their phone.</p>
   <p><label for="page-link">Page link</label><input class="copy" id="page-link" readonly spellcheck="false" value="${opts.pageUrl}"></p>
-  <p><button type="button" class="secondary" data-copy="page-link">Copy page link</button></p>`
+  ${opts.ready ? "" : html`<p><button type="button" class="wide" data-copy="page-link" aria-live="polite">Copy page link</button></p>`}`
     : html`<p>This feed is private, so it has no public page. Share the calendar link directly with the people who should see it.</p>`}
   <p><label for="feed-url">Calendar link (for calendar apps)</label><input class="copy" id="feed-url" readonly spellcheck="false" value="${opts.feedUrl}"></p>
   <p><button type="button" class="secondary" data-copy="feed-url">Copy calendar link</button></p>
+  ${opts.ready ? html`</details>` : ""}
 </div>
 <div class="card">
   <h2>QR code</h2>
@@ -192,7 +201,7 @@ function subscriberNotes(verified: boolean) {
 
 // D46 (look C): the small orange line above the title, e.g. "SCHOOL · 95818".
 function kicker(category: string | null | undefined, zip: string | null | undefined) {
-  const bits = [category, zip].filter((x): x is string => Boolean(x));
+  const bits = [category === "other" ? null : category, zip].filter((x): x is string => Boolean(x));
   return bits.length ? html`<span class="kicker">${bits.join(" · ")}</span>` : "";
 }
 

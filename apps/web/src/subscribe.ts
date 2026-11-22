@@ -91,7 +91,8 @@ export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
     const kit = await loadShareKit(c, id.data);
     if (!kit) return c.html(messagePage("Feed not found", "That feed doesn't exist, or it isn't yours."), 404);
     const notice = c.req.query("rotated") === "1" ? "New link made. The old link has stopped working; anyone using it needs the new one." : undefined;
-    return c.html(shareKitPage({ csrf: csrfToken(c), ...kit, ...(notice ? { notice } : {}) }));
+    const ready = c.req.query("ready") === "gmail"; // D47: the end of Gmail setup
+    return c.html(shareKitPage({ csrf: csrfToken(c), ...kit, ...(notice ? { notice } : {}), ready }));
   });
 
   app.get("/feeds/:id/flyer", async (c) => {

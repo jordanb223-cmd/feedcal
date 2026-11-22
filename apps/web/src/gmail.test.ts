@@ -74,7 +74,7 @@ describe("Gmail page (D39)", () => {
     expect(html).toContain("every 3 days");
     expect(t.calls.some((c) => c.fn === "gmail_choose_example")).toBe(false); // nothing saved yet
     const done = await t.post(`/feeds/${ID}/gmail/confirm`, { gmail_id: "abc123", interval: "3" });
-    expect(done.headers.get("location")).toBe(`/feeds/${ID}/gmail?result=confirmed`);
+    expect(done.headers.get("location")).toBe(`/feeds/${ID}/share?ready=gmail`); // D47: straight to "You're set"
     expect(t.calls.find((c) => c.fn === "gmail_choose_example")?.args).toEqual({ p_feed_id: ID, p_gmail_id: "abc123", p_interval_days: 3, p_look_back: false });
   });
 
