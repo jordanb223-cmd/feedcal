@@ -12,12 +12,32 @@ const DEFAULT_TIME_ZONE = "America/Los_Angeles";
 const FeedId = z.uuid();
 
 /** Coarse calendar-client family for fetch stats. The full user agent is never stored. */
+/**
+ * Which calendar app is checking the feed (D52). Only real calendar-app signatures count toward
+ * "at least N follow": a web browser or a crawler opening the link is not a subscriber.
+ *   apple:   iPhone/iPad Calendar sends "dataaccessd/1.0" (seen in published traffic studies);
+ *            Mac Calendar is widely reported as "CalendarAgent" (not confirmed from a primary source).
+ *   google:  "Google-Calendar-Importer" (Google's calendar fetcher; Googlebot is not counted).
+ *   outlook: Outlook/Microsoft Office calendar fetchers ("Microsoft Outlook", "Microsoft Office");
+ *            the exact Outlook.com server signature is unconfirmed, so unrecognised ones are logged
+ *            by product name (see unrecognisedProduct) to learn it from real traffic.
+ */
 export function userAgentFamily(ua: string | undefined): "google" | "apple" | "outlook" | "other" {
   if (!ua) return "other";
-  if (/Google-Calendar-Importer|Google/i.test(ua)) return "google";
-  if (/Outlook|Microsoft|Exchange/i.test(ua)) return "outlook";
-  if (/iOS|iPhone|iPad|Mac ?OS|CalendarAgent|dataaccessd|Darwin/i.test(ua)) return "apple";
+  if (/Google-Calendar-Importer/i.test(ua)) return "google";
+  if (/\bdataaccessd\/|\bCalendarAgent\b/i.test(ua)) return "apple";
+  if (/Microsoft Outlook|Microsoft Office|\bOutlook-|MSOffice/i.test(ua) && !/bot\b|crawler|spider/i.test(ua)) return "outlook";
   return "other";
+}
+
+/**
+ * For an unrecognised client, just its product name ("SomeApp/2.1"), safe to log: no address,
+ * no version details beyond the first token, letters/digits/._/- only, at most 40 characters.
+ */
+export function unrecognisedProduct(ua: string | undefined): string {
+  const first = (ua ?? "").trim().split(/\s+/)[0] ?? "";
+  const clean = first.replace(/[^A-Za-z0-9._/-]/g, "").slice(0, 40);
+  return clean || "none";
 }
 
 async function etagFor(body: string): Promise<string> {
@@ -52,9 +72,12 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     const ua = c.req.header("user-agent");
     // Cloudflare sets cf-connecting-ip. Locally it's absent, so local fetches aren't counted.
     const ip = c.req.header("cf-connecting-ip");
+    const family = userAgentFamily(ua);
+    // D52: learn which calendar apps we don't recognise yet (product name only, nothing personal).
+    if (family === "other") c.get("log").info("feed_client_unrecognised", { product: unrecognisedProduct(ua) });
     const { data, error } = await c.get("supabase").rpc("feed_calendar_guarded", {
       p_token: token.data,
-      p_ua_family: userAgentFamily(ua),
+      p_ua_family: family,
       ...(ip ? { p_client_ip: ip } : {}),
       ...(ua ? { p_user_agent: ua } : {}),
     });
