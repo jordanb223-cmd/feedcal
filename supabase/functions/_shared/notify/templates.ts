@@ -11,6 +11,7 @@ const ALERT_TEXT: Record<string, { title: string; check: string }> = {
   email_failures: { title: "Many emails from Calantern are failing", check: "Check the email provider's dashboard for bounces or a suspended key." },
   purge_stuck: { title: "Account deletions are overdue", check: "Open docs/runbooks/purge-stuck.md." },
   abuse_spike: { title: "Many requests are being rate-limited", check: "Open docs/runbooks/spam-wave.md." },
+  backup_stale: { title: "No database backup in over 30 hours", check: "Open docs/runbooks/restore.md (\"When backups stop\"). Run the Backup workflow by hand, then check its log." },
 };
 export interface Rendered { subject: string; text: string; html: string; replyTo?: string }
 

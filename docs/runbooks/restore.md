@@ -19,3 +19,14 @@ With no file, `scripts/restore-drill.sh` drills the local database itself: it ba
 2. Otherwise, make a fresh project. Apply the migrations (the deploy does this), then load `data.sql` from the decrypted backup with `psql` and `session_replication_role = replica`. **Skip `vault.sql`** in a new project: its secrets only decrypt in the project that made them.
 3. What that costs: subscribers' calendar links keep working, because feeds are looked up by hash. But the tokens themselves can't be shown again, so public pages' subscribe buttons and share kits break for old feeds until each owner uses "Make a new link". The migrations make a new unsubscribe key and sign-in salt, so unsubscribe links in old emails stop working.
 4. Re-run the deploy so `app_settings` (the functions URL and key) and cron are set, then check `/health`.
+
+## When backups stop
+
+Trigger: the "No database backup in over 30 hours" alert email (D65).
+
+1. GitHub → Actions → **Backup** → **Run workflow**. Watch the run.
+2. If it fails at "Dump and encrypt": check the `BACKUP_DB_URL` secret still works (the database password may have changed) and that Supabase is up.
+3. If it fails at "Tell the database a backup was stored": the backup itself is safe in the run's artifacts; the alert clears with the next successful run.
+4. If runs simply aren't starting: GitHub drops scheduled runs when it's busy. Backups are scheduled four times a day for that reason; a manual run counts the same. Deploys also take a backup first.
+5. The alert clears by itself within 5 minutes of the next successful backup.
+

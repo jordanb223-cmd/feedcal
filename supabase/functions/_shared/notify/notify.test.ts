@@ -88,3 +88,9 @@ Deno.test("contact message email (D63): escaped, one-line subject, safe Reply-To
     assertEquals(render("contact", { kind: "other", message: "hi", reply_to: bad }, SITE, UNSUB).replyTo, undefined, JSON.stringify(bad));
   }
 });
+
+Deno.test("backup alarm email (D65) names the problem and where to look", () => {
+  const r = render("ops_alert", { kind: "backup_stale", detail: { last_backup: "2026-11-21T22:57:27Z", hours: 31 }, drill: false }, SITE, UNSUB);
+  assertEquals(r.subject, "Calantern alert: No database backup in over 30 hours");
+  assert(r.text.includes("restore.md") && r.text.includes("\"hours\":31"));
+});

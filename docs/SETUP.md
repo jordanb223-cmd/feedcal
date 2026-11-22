@@ -114,7 +114,7 @@ Locally, emails go to Mailpit (http://127.0.0.1:54324): `supabase/functions/.env
 - [ ] **Imported Sacramento calendars.** The importer is built (daily, labelled with the source). Choosing which real public calendars to list is yours: add each with `select public.add_imported_feed('<name>', '<https .ics url>', '<source name>', '<category>', '<zip>', '<your user id>');` in the SQL editor. Only list calendars their owners publish for public use.
 
 ## 11. Moderation (Phase 14)
-- [ ] Make yourself an admin: in the SQL editor, `insert into public.admins (user_id) select id from auth.users where email = '<your email>';`. **Needed for contact-form messages (D63) and operations alerts to reach you**: they're emailed to everyone in `public.admins`, and stored either way.
+- [x] Make yourself an admin (done; confirmed in production 2026-11-22, added 2026-11-21): in the SQL editor, `insert into public.admins (user_id) select id from auth.users where email = '<your email>';`. **Needed for contact-form messages (D63) and operations alerts to reach you**: they're emailed to everyone in `public.admins`, and stored either way.
 - [ ] Check that TOTP MFA is on for each hosted project (Authentication → Multi-Factor; Supabase's docs say it's on by default). Then open `/admin`: it asks you to set up an authenticator app before showing the queue.
 - [ ] Have a lawyer review `/terms`, `/rules` and `/takedown` (drafts) before public launch.
 
