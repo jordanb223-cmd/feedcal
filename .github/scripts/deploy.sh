@@ -15,7 +15,22 @@ set -euo pipefail
 : "${CLOUDFLARE_ACCOUNT_ID:?}"
 export SUPABASE_YES=1  # hosted changes need an explicit yes in non-interactive runs
 
+# Management API "Run sql query": supabase.com/docs/reference/api/v1-run-a-query.
+run_sql() { jq -n --arg q "$1" '{query: $q}' | curl --fail --silent --show-error -X POST \
+  "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "content-type: application/json" --data @-; }
+
+echo "::group::Migration safety check ($ENVIRONMENT)"
+# D57: refuse unreviewed migrations that delete data. If the applied list can't be read, stop
+# rather than guess which migrations are new.
+if ! applied="$(run_sql "select version from supabase_migrations.schema_migrations order by version;" | jq -r '.[].version')"; then
+  echo "Could not read which migrations $ENVIRONMENT already has; stopping before any change." >&2; exit 1
+fi
+printf '%s\n' "$applied" | .github/scripts/migration-guard.sh supabase/migrations "$ENVIRONMENT"
+echo "::endgroup::"
+
 echo "::group::Database migrations ($ENVIRONMENT)"
+echo "WARNING: applying new migrations to the $ENVIRONMENT database. Schema changes are live for every user as soon as this step finishes."
 npx supabase link --project-ref "$SUPABASE_PROJECT_REF"
 npx supabase db push --remote
 echo "::endgroup::"
@@ -63,7 +78,6 @@ fi
 echo "::endgroup::"
 
 echo "::group::Scheduler settings (where pg_cron finds the Edge Functions)"
-# Management API "Run sql query" (experimental): supabase.com/docs/reference/api/v1-run-a-query.
 # Not yet run against a hosted project.
 # Values are the public project URL and public anon key, not secrets (D26).
 SETTINGS_SQL="insert into private.app_settings (key, value) values
@@ -78,9 +92,6 @@ echo "::endgroup::"
 echo "::group::Server-only proof for database calls (D51)"
 # Created once inside Supabase Vault (random 256 bits), never typed or seen by a person. Read here,
 # masked in the log before anything else can print it, and given to the web app as a secret.
-run_sql() { jq -n --arg q "$1" '{query: $q}' | curl --fail --silent --show-error -X POST \
-  "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" \
-  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "content-type: application/json" --data @-; }
 run_sql "select vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'rpc_proxy_key')
   where not exists (select 1 from vault.secrets where name = 'rpc_proxy_key');" >/dev/null
 PROXY_KEY="$(run_sql "select decrypted_secret as k from vault.decrypted_secrets where name = 'rpc_proxy_key';" \

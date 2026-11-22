@@ -1,7 +1,7 @@
 // Phase 7 end to end on the local stack: real fixture emails go through the Worker code,
 // ingest functions, queue, and the process-messages Edge Function; then we read what was stored.
 //   npm run test:integration
-import { execFileSync } from "node:child_process";
+import { localStatus } from "./local-stack.js";
 import { readFileSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -15,7 +15,7 @@ const CF = "Authentication-Results: mx.cloudflare.net; spf=pass; dkim=pass; dmar
 const FIXTURES = new URL("../../supabase/functions/_shared/parse/fixtures/", import.meta.url);
 
 function stack() {
-  const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+  const s = localStatus();
   const secret = /^INGEST_HMAC_SECRET=(.+)$/m.exec(readFileSync(new URL("../../supabase/functions/.env", import.meta.url), "utf8"))?.[1]?.trim() ?? "";
   if (!s.API_URL || !s.SERVICE_ROLE_KEY || !secret) throw new Error("Local stack or supabase/functions/.env missing");
   return { url: s.API_URL, service: s.SERVICE_ROLE_KEY, secret };

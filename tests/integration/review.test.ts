@@ -2,7 +2,7 @@
 // local stack. Creates a feed, adds an event, reviews an item (reject → undo → edit and approve),
 // changes settings, deletes with undo.
 //   npm run test:integration
-import { execFileSync } from "node:child_process";
+import { localStatus } from "./local-stack.js";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@feedcal/shared";
@@ -42,7 +42,7 @@ describe.skipIf(!enabled)("review screen, end to end", { timeout: 60_000 }, () =
   }
 
   beforeAll(async () => {
-    const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+    const s = localStatus();
     const { API_URL: url, ANON_KEY: anon, SERVICE_ROLE_KEY: service } = s;
     if (!url || !anon || !service) throw new Error("Local Supabase isn't running");
     db = createClient<Database>(url, service, { auth: { persistSession: false } });

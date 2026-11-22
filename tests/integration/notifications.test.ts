@@ -1,7 +1,7 @@
 // Phase 12 "passes when", end to end on the local stack with real delivery (Mailpit):
 // a subscriber's report reaches the owner within a minute, and the owner gets a weekly digest.
 //   npm run test:integration
-import { execFileSync } from "node:child_process";
+import { localStatus } from "./local-stack.js";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@feedcal/shared";
@@ -27,7 +27,7 @@ describe.skipIf(!enabled)("notifications, end to end with real delivery (Mailpit
   let request: (path: string, init?: RequestInit) => Promise<Response>;
 
   beforeAll(() => {
-    s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+    s = localStatus();
     const url = s.API_URL ?? "";
     db = createClient<Database>(url, s.SERVICE_ROLE_KEY ?? "", { auth: { persistSession: false } });
     // A subscriber has no account: the app runs with the public key only.

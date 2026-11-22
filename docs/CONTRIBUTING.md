@@ -37,6 +37,22 @@ curl -s https://api.github.com/repos/jordanb223-cmd/feedcal/commits | grep -o '"
 - `staging`: no reviewers; restrict to `main`.
 - `production`: required reviewer = repo owner; restrict to tags `v*`.
 
+## Safety rails (D57)
+
+Each rule below has a control that enforces it, and a safe command to use instead.
+
+| Rule | What enforces it | Safe command |
+|---|---|---|
+| Tests never touch a hosted database | `tests/integration/local-stack.ts` stops the run unless the API and database hosts are `127.0.0.1`/`localhost` | `npm run test:integration` |
+| `db:reset` only wipes the local database | `scripts/db-reset.mjs` refuses `--linked`, `--db-url`, `--project-ref` | `npm run db:reset` |
+| Production is backed up right before every change | `deploy-production.yml` runs `scripts/backup.sh` and keeps the copy 90 days (`backup-predeploy-…` artifact); if the backup fails, production isn't touched (D58) | `scripts/restore-drill.sh <file>` to restore into the local stack |
+| Migrations that delete or rewrite data are flagged | `.github/scripts/migration-guard.sh` runs on every pull request (a required check) and again in the deploy. It flags drop table/schema/column/sequence/extension/materialized view, truncate, run-time `delete from` and column type changes, and fails until the file has `-- destructive: reviewed`. That line is a self-declaration anyone can add; the pre-deploy backup is the real safety net | add the line in the PR after checking it |
+| Hosted databases and sites change only through the deploy | `.claude/settings.json` denies agents `supabase db push`, `supabase link`, `db reset --linked/--db-url`, `wrangler pages deploy`, project deletes; production needs the owner's approval (environment protection above) | tag `vX.Y.Z` and approve the run |
+| No force-push, repo deletion, or secret changes from an agent | `.claude/settings.json` deny rules; branch protection on `main` | `gh pr create` / `gh pr merge --squash` |
+| Agents don't read local secrets files | `.claude/settings.json` denies reading `.dev.vars`, `supabase/functions/.env`, `.env*` | use `.dev.vars.example` |
+
+How far the agent rules reach (Claude Code docs, checked 2026-11-21): deny rules block in every permission mode; they match past `FOO=1` prefixes and inside `&&` chains, and `Read` denies also cover `cat`, `head`, `tail`, `sed` and `tee`. They do **not** stop `bash -c "…"`, a program called by its full path (`/bin/rm`, `node_modules/.bin/supabase`), a script that opens files itself, or `git push origin :branch`. They load only when a session starts in this folder. The scripts, CI and GitHub settings are the backstop.
+
 ## Rules for every screen and form
 
 - **Empty state.** Every list says what it is when it's empty, and what to do next ("You don't have any feeds yet").

@@ -2,7 +2,7 @@
 // Runs against the real local stack: real Auth sessions, real RLS, real RPCs.
 //   npm run test:integration
 // Needs `npm run db:start` and `npm run db:reset` (seeded Alice and Bob). CI runs it in the database job.
-import { execFileSync } from "node:child_process";
+import { localStatus } from "./local-stack.js";
 import { createClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@feedcal/shared";
@@ -17,7 +17,7 @@ const ALICE_FEED = "aaaaaaaa-0000-4000-8000-000000000002"; // Alice's unlisted f
 interface Local { url: string; anon: string; service: string }
 
 function localStack(): Local {
-  const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+  const s = localStatus();
   const url = s.API_URL;
   const anon = s.ANON_KEY;
   const service = s.SERVICE_ROLE_KEY; // the local demo key; it never leaves this test process

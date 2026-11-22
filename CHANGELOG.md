@@ -7,6 +7,11 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-11-21
+
+### Changed
+- Nothing you'll see. Behind the scenes, every update now saves a fresh backup of all calendars first, and changes that would delete data are flagged for review.
+
 ## [0.7.1] - 2026-11-21
 
 ### Changed

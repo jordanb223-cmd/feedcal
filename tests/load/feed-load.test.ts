@@ -4,6 +4,7 @@
 // for every unchanged feed), and reports latency and bytes.
 //   npm run test:load      (needs the local stack; adds 1,000 feeds, then removes them)
 import { execFileSync } from "node:child_process";
+import { localStatus } from "../integration/local-stack.js";
 import { createClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@feedcal/shared";
@@ -34,7 +35,7 @@ describe.skipIf(!enabled)("feed endpoint under load", { timeout: 300_000 }, () =
           insert into public.events (feed_id, title, starts_at, published)
           select f.id, 'Practice ' || n, now() + (n || ' days')::interval, true from public.feeds f, generate_series(1, 8) n where f.slug like 'load-%';`);
     tokens = psql(`select ds.decrypted_secret from public.feeds f join vault.decrypted_secrets ds on ds.id = f.feed_token_secret_id where f.slug like 'load-%'`).trim().split("\n");
-    const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+    const s = localStatus();
     const anon = createClient<Database>(s.API_URL ?? "", s.ANON_KEY ?? "", { auth: { persistSession: false } });
     const env: Bindings = { ENVIRONMENT: "local", SUPABASE_URL: s.API_URL ?? "", SUPABASE_ANON_KEY: s.ANON_KEY ?? "" };
     const app = createApp({ version: "load", commit: "load", supabase: () => anon as unknown as Supa, logSink: () => {} });

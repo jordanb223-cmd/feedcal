@@ -489,3 +489,26 @@ What was checked, against what, and what changed:
 - **What changed (`landing.ts`).** Label "Free for you, your family and friends"; headline and page title "Events that add themselves"; the intro now opens "Stop adding events one by one." and names school, team or club emails; step 3 is "Share it" (your own phone, a link, or the printed QR code); the search description matches. Steps 1–2, "Got a flyer?" and the works-with line are unchanged.
 - **Kept.** D55's "your class calendar, lit up" stays as the story behind the name; it's no longer on the page.
 
+## D57 — Safety rails that don't depend on an agent following prose (2026-11-21)
+
+- **Why.** The owner asked for an audit of the repo and dev setup for ways an AI agent (or a slip) could do lasting damage, and for fixes inside the repo. Before this, the project's rules lived only in prose; the tests were local only because each one happened to call `supabase status`.
+- **What changed.**
+  - `tests/integration/local-stack.ts`: the one place integration and load tests get addresses and keys; refuses non-local hosts and prints only the host, never a URL (they hold passwords). Unit-tested in `tests/unit/local-stack.test.ts`.
+  - `scripts/db-reset.mjs` behind `npm run db:reset`: refuses `--linked`, `--db-url`, `--project-ref`, and says it's wiping local data.
+  - `.github/scripts/migration-guard.sh`, run by `deploy.sh` before `db push`: for each migration the target hasn't applied, flags drop table/schema/database/column, truncate and delete from in code that runs at migration time (comments and function bodies are ignored; `do` blocks are kept). Each flag prints a WARNING naming the file and environment; the push is refused unless the file has `-- destructive: reviewed`. If the applied list can't be read, the deploy stops. Of the 30 existing migrations, 2 would be flagged (both real `drop table`s, both already applied). Unit-tested in `tests/unit/migration-guard.test.ts`.
+  - `deploy.sh` prints a warning before applying migrations.
+  - `.claude/settings.json`: deny rules for agents (force-push, hosted DB push/link/reset, Pages deploy, project and repo deletion, GitHub secrets and DELETE/PUT API calls, reading local secrets files). Prefix matching only; the scripts and GitHub protections are the backstop.
+  - `docs/CONTRIBUTING.md` "Safety rails": each rule, its control, and the safe command.
+- **Not changed (outside the repo; owner's manual steps):** GitHub token scopes, where backups are copied, Supabase token scope, plaintext keys in the shell profile and MCP configs, MCP version pins, Claude user settings and auto mode.
+
+## D58 — Back up production right before every deploy; flag destructive migrations on the PR (2026-11-21)
+
+- **Why.** Arguing D57 against itself: the migration guard is pattern matching, and its `-- destructive: reviewed` line is a self-declaration anyone (including an agent) can add. Recovery beats detection. Supabase's backups page says it backs up "Pro, Team, and Enterprise Plan projects" and tells free projects to export their own data, so the daily `Backup` workflow (D37) is the only copy.
+- **What changed.**
+  - `deploy-production.yml` runs `scripts/backup.sh` against `BACKUP_DB_URL` before `deploy.sh`, uploads it as `backup-predeploy-<tag>-<run>` (90 days), and stops if either secret is missing or the dump fails.
+  - CI runs `migration-guard.sh` on every pull request, comparing against the base branch, so a destructive migration fails a required check where the SQL is visible, before the deploy approval.
+  - The guard also flags drop sequence / extension / materialized view and column type changes.
+  - `.claude/settings.json` uses wildcards (`git push * --force*`, `gh pr merge * --admin*`, `gh workflow run*`, `git push * --delete *`, `+refspec`), since Claude Code matches `*` anywhere. A trailing `:*` is the old "anything" form, so `git push * :*` would have blocked every push; it isn't used.
+- **Outside the repo (same day, owner asked):** user-level `ask` rules for posting, messaging and spending tools (X, Gmail send/reply/forward, iMessage, Higgsfield ads/GPU/publish) and for force-push, repo deletion, admin merges and secrets; MCP servers pinned (blender-mcp 2.0.0, mcp-youtube 0.2.0 with mcp 1.30.0, which also fixes its startup crash under mcp 2.x; mcp-remote 0.16.7).
+- **Known gaps.** `bash -c`, programs called by full path, `git push origin :branch`, and sessions started outside this folder aren't covered by the deny rules; backups and code still sit behind one GitHub account (owner's manual step: a fine-grained token, and an occasional download of the weekly backup).
+

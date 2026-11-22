@@ -1,6 +1,6 @@
 // Phase 16 (D37) on the local stack: the scheduler's anon-key call purges an account whose grace
 // period has passed (and nothing else), and a signed-in user's export holds their own data only.
-import { execFileSync } from "node:child_process";
+import { localStatus } from "./local-stack.js";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@feedcal/shared";
@@ -16,7 +16,7 @@ describe.skipIf(!enabled)("privacy, end to end", { timeout: 60_000 }, () => {
   let db: SupabaseClient<Database>;
 
   beforeAll(() => {
-    const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+    const s = localStatus();
     url = s.API_URL ?? "";
     anonKey = s.ANON_KEY ?? "";
     db = createClient<Database>(url, s.SERVICE_ROLE_KEY ?? "", { auth: { persistSession: false } });

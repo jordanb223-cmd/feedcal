@@ -1,7 +1,7 @@
 // Phase 8 end to end on the local stack: email → parse → triage, the owner's "this one" as a real
 // signed-in user, and the next email from that sender going straight to the matching file.
 //   npm run test:integration
-import { execFileSync } from "node:child_process";
+import { localStatus } from "./local-stack.js";
 import { readFileSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts } from "pdf-lib";
@@ -15,7 +15,7 @@ const TO = "feed-aliceschoolfeed23456@in.feedcal.test";
 const SENDER = "news@sutterville.example.test";
 
 function stack() {
-  const s = JSON.parse(execFileSync("npx", ["supabase", "status", "-o", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })) as Record<string, string>;
+  const s = localStatus();
   const secret = /^INGEST_HMAC_SECRET=(.+)$/m.exec(readFileSync(new URL("../../supabase/functions/.env", import.meta.url), "utf8"))?.[1]?.trim() ?? "";
   if (!s.API_URL || !s.SERVICE_ROLE_KEY || !s.ANON_KEY || !secret) throw new Error("Local stack or supabase/functions/.env missing");
   return { url: s.API_URL, service: s.SERVICE_ROLE_KEY, anon: s.ANON_KEY, secret };
