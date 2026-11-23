@@ -1,11 +1,12 @@
 // Edge Function: deletes files queued in private.storage_trash, through the Storage API (SQL
 // can't delete stored files). Called daily by pg_cron after private.expire_intake().
 // It only deletes what the database already queued, so any caller with the public key is harmless.
-import { admin, json, log } from "../_shared/http.ts";
+import { admin, carriesUser, json, log, notScheduler } from "../_shared/http.ts";
 
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
   if (req.method !== "POST") return json({ error: "Use POST." }, 405);
+  if (carriesUser(req)) return notScheduler();
   const db = admin();
   let removed = 0;
   for (let round = 0; round < 20; round++) {

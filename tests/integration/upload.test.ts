@@ -65,6 +65,8 @@ describe.skipIf(!enabled)("uploading a file (D61)", () => {
     s = localStatus();
     service = createClient<Database>(s.API_URL ?? "", s.SERVICE_ROLE_KEY ?? "", { auth: { persistSession: false } });
     sql(`delete from private.upload_tickets`);
+    // Rows left by an earlier run would be found first by the subject lookups below.
+    sql(`delete from public.messages where uploaded_by is not null and original_subject in ('Winter news.docx', 'Picture day.pdf')`);
     alice = await webFor("alice@example.test"); bob = await webFor("bob@example.test");
     await token("alice", alice, `/feeds/${FEED}/upload`); await token("bob", bob, "/account");
   }, 60_000);

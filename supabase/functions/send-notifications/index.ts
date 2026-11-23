@@ -3,11 +3,12 @@
 // mail stays queued until one is configured. Logs ids and kinds only, never addresses or content.
 import { mailpit, resend, type Sender } from "../_shared/notify/sender.ts";
 import { type Kind, render, NO_UNSUBSCRIBE, safeReplyTo } from "../_shared/notify/templates.ts";
-import { admin, json, log } from "../_shared/http.ts";
+import { admin, carriesUser, json, log, notScheduler } from "../_shared/http.ts";
 
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
   if (req.method !== "POST") return json({ error: "Use POST." }, 405);
+  if (carriesUser(req)) return notScheduler();
   const site = (Deno.env.get("SITE_URL") ?? "http://localhost:8788").replace(/\/$/, "");
   const from = Deno.env.get("EMAIL_FROM") ?? "Calantern <notifications@feedcal.test>";
   const resendKey = Deno.env.get("RESEND_API_KEY");

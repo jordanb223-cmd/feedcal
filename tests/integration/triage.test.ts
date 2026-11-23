@@ -82,6 +82,18 @@ describe.skipIf(!enabled)("attachment triage, end to end on the local stack", { 
     await alice.auth.verifyOtp({ token_hash: link.properties?.hashed_token ?? "", type: "magiclink" });
   });
 
+  it("a signed-in person cannot start a scheduler-only function; the scheduler's public key can", async () => {
+    const { data } = await alice.auth.getSession();
+    const token = data.session?.access_token ?? "";
+    expect(token).not.toBe("");
+    for (const fn of ["extract-events", "process-messages", "triage-attachments", "storage-trash", "import-feeds", "send-notifications", "delete-accounts", "gmail-poll"]) {
+      const res = await fetch(`${s.url}/functions/v1/${fn}`, { method: "POST", headers: { authorization: `Bearer ${token}` } });
+      expect(res.status, fn).toBe(403);
+    }
+    const ok = await fetch(`${s.url}/functions/v1/storage-trash`, { method: "POST", headers: { authorization: `Bearer ${s.anon}` } });
+    expect(ok.status).toBe(200);
+  });
+
   it("first email: the newsletter's date page is read; the weekly file has no dates and is skipped", async () => {
     await deliver(email(`w47-${run}`, [
       { name: "newsletter.pdf", type: "application/pdf", data: await pdf([PROSE, PROSE, PROSE, PROSE, DATES, PROSE]) },

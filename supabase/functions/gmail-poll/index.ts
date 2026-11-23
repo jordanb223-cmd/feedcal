@@ -4,10 +4,11 @@
 // due work.
 import { ReconnectError, runCheck } from "../_shared/gmail.ts";
 import { ingestRaw } from "../_shared/gmail-ingest.ts";
-import { admin, json, log } from "../_shared/http.ts";
+import { admin, carriesUser, json, log, notScheduler } from "../_shared/http.ts";
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
+  if (carriesUser(req)) return notScheduler();
   const clientId = Deno.env.get("GMAIL_CLIENT_ID");
   const clientSecret = Deno.env.get("GMAIL_CLIENT_SECRET");
   if (!clientId || !clientSecret) return json({ checked: 0, configured: false });

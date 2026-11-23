@@ -3,11 +3,12 @@
 // events and is retried later.
 import { parseIcs } from "../_shared/importer/ics.ts";
 import { fetchIcs } from "../_shared/importer/fetch.ts";
-import { admin, json, log } from "../_shared/http.ts";
+import { admin, carriesUser, json, log, notScheduler } from "../_shared/http.ts";
 
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
   if (req.method !== "POST") return json({ error: "Use POST." }, 405);
+  if (carriesUser(req)) return notScheduler();
   const db = admin();
   const { data: rows, error } = await db.rpc("claim_imports", { p_limit: 20 });
   if (error) return json({ error: "Try again later." }, 503);

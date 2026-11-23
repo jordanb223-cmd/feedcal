@@ -5,13 +5,14 @@
 import { claudeExtractor } from "../_shared/extract/extractor.ts";
 import { extractEvents } from "../_shared/extract/pipeline.ts";
 import type { ExtractInput } from "../_shared/extract/prompt.ts";
-import { admin, json, log } from "../_shared/http.ts";
+import { admin, carriesUser, json, log, notScheduler } from "../_shared/http.ts";
 
 const TIME_BUDGET_MS = 100_000;
 
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
   if (req.method !== "POST") return json({ error: "Use POST." }, 405);
+  if (carriesUser(req)) return notScheduler();
   const db = admin();
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
   const extractor = apiKey ? claudeExtractor(apiKey) : null;

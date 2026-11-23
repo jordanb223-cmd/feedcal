@@ -2,7 +2,7 @@
 // in the private "attachments" bucket, and records the result (D28). Run every minute by pg_cron.
 // It only acts on jobs the database queued, so a stranger calling it changes nothing.
 import { parseMessage } from "../_shared/parse/parse.ts";
-import { admin, json, log } from "../_shared/http.ts";
+import { admin, carriesUser, json, log, notScheduler } from "../_shared/http.ts";
 
 const BATCH = 5;
 const TIME_BUDGET_MS = 100_000; // stay well inside the Edge Function wall-clock limit
@@ -10,6 +10,7 @@ const TIME_BUDGET_MS = 100_000; // stay well inside the Edge Function wall-clock
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
   if (req.method !== "POST") return json({ error: "Use POST." }, 405);
+  if (carriesUser(req)) return notScheduler();
   const db = admin();
   const started = Date.now();
   const counts = { parsed: 0, ignored: 0, skipped: 0, retry: 0, failed: 0 };
