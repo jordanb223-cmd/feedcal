@@ -79,7 +79,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
       <form method="post" action="/admin/alert-drill">${csrf}<button type="submit" class="secondary">Run the alert drill</button></form>
       <p class="muted" style="font-size:.875rem">The drill fires every alert once (each admin gets the emails, marked as a drill), then clears them.</p></div>` : "";
     const actions = (feed: { id: string; hidden: boolean; owner_id: string }, item: { kind: "report" | "flag"; id: string }) => html`<div class="row" style="margin-top:.5rem">
-      ${feed.hidden ? html`<span class="muted">Calendar hidden</span>` : html`<form method="post" action="/admin/feeds/${feed.id}/hide">${csrf}<input type="hidden" name="reason" value="${item.kind}:${item.id}"><button type="submit" class="danger">Hide calendar</button></form>`}
+      ${feed.hidden ? html`<span class="muted">Calendar hidden</span><form method="post" action="/admin/feeds/${feed.id}/unhide">${csrf}<input type="hidden" name="reason" value="${item.kind}:${item.id}"><button type="submit" class="secondary">Show it again</button></form>` : html`<form method="post" action="/admin/feeds/${feed.id}/hide">${csrf}<input type="hidden" name="reason" value="${item.kind}:${item.id}"><button type="submit" class="danger">Hide calendar</button></form>`}
       <form method="post" action="/admin/${item.kind}s/${item.id}/dismiss">${csrf}<button type="submit" class="secondary">Dismiss</button></form>
       <form method="post" action="/admin/users/${feed.owner_id}/suspend">${csrf}<input type="hidden" name="reason" value="${item.kind}:${item.id}"><button type="submit" class="secondary">Suspend owner</button></form>
     </div>`;
@@ -133,6 +133,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
     });
   };
   adminAction("/admin/feeds/:id/hide", (c, id, f) => c.get("supabase").rpc("admin_hide_feed", { p_feed_id: id, p_reason: (f.reason ?? "").slice(0, 500) }));
+  adminAction("/admin/feeds/:id/unhide", (c, id, f) => c.get("supabase").rpc("admin_unhide_feed", { p_feed_id: id, p_reason: (f.reason ?? "").slice(0, 500) }));
   adminAction("/admin/reports/:id/dismiss", (c, id) => c.get("supabase").rpc("admin_dismiss", { p_kind: "report", p_id: id }));
   adminAction("/admin/flags/:id/dismiss", (c, id) => c.get("supabase").rpc("admin_dismiss", { p_kind: "flag", p_id: id }));
   adminAction("/admin/users/:id/suspend", (c, id, f) => c.get("supabase").rpc("admin_suspend_user", { p_user_id: id, p_reason: (f.reason ?? "").slice(0, 500) }));
@@ -220,7 +221,7 @@ export function registerPolicyRoutes(app: Hono<AppEnv>): void {
     <ul>
       <li><strong>Safety issues</strong> (a child's private information, threats): we aim to act within 1 business day, usually by hiding the calendar while we look.</li>
       <li><strong>Impersonation, spam, wrong information</strong>: we aim to respond within 2 business days.</li>
-      <li><strong>Copyright or other legal requests</strong>: report the calendar and choose "Something else", or use our <a href="/.well-known/security.txt">security contact</a>, with the details; we aim to respond within 5 business days.</li>
+      <li><strong>Copyright or other legal requests</strong>: send the details through the <a href="/contact">contact form</a>; we aim to respond within 5 business days.</li>
     </ul>
     <p>Hidden calendars stop updating subscribers at once. Organizers are told what happened and can ask for another look.</p></div>`, seoHead(c, "Reports and takedowns", "How to report a calendar or an event on Calantern, and how takedown requests are handled."))));
 }

@@ -86,6 +86,20 @@ Deno.test("a big backlog is read a few at a time, and the run says there's more"
   assertEquals(r.checkedAt.toISOString(), after.toISOString(), "the starting point stays, so none are skipped");
 });
 
+Deno.test("an email refused by the daily limit is not marked as seen, so a later check reads it", async () => {
+  const after = new Date("2026-11-14T16:00:00Z");
+  const q = senderQuery("office@school.example", after);
+  const { f } = fakeGoogle({ list: { [q]: ["a", "b"] }, raw: { a: "Subject: a\r\n\r\nbody", b: "Subject: b\r\n\r\nbody" } });
+  const recorded: string[] = [];
+  let n = 0;
+  await assertRejects(() => runCheck({ refreshToken: "rt", sender: "office@school.example", exampleId: null, lastCheckedAt: after }, {
+    fetch: f, clientId: "c", clientSecret: "s", now: () => new Date("2026-11-21T19:00:00Z"),
+    seen: async () => [], record: async (id) => { recorded.push(id); },
+    ingest: async () => (++n === 1 ? { outcome: "queued", messageId: null } : { outcome: "daily_limit", messageId: null }),
+  }), Error, "daily_limit");
+  assertEquals(recorded, ["a"], "the refused email is left for next time");
+});
+
 Deno.test("revokeToken sends the token in a form body, never in the URL (D51)", async () => {
   const { revokeToken } = await import("./gmail.ts");
   let seen: { url: string; init?: RequestInit } | null = null;

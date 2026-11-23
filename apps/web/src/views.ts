@@ -1,6 +1,5 @@
 import { html } from "hono/html";
 import { ASSET_PATHS } from "./assets.js";
-import { visibilityLabel } from "./visibility.js";
 
 /** D62: shown at the foot of every page (calendar pages also carry the longer notes). */
 export const FOOTER_DISCLAIMER = "Calantern fills calendars in automatically and can make mistakes. It isn't run by any school or team.";
@@ -158,13 +157,8 @@ export function accountPage(opts: {
     <form method="post" action="/logout-everywhere">${csrfField(opts.csrf)}<button type="submit" class="secondary">Sign out everywhere</button></form>
   </div>
 </div>
-<div class="card">
-  <h2>Your calendars</h2>
-  <p><a href="/feeds">Open your calendars</a></p>
-  ${opts.feeds.length === 0
-    ? html`<p class="muted">You don't have any calendars yet. <a href="/feeds/new">Create one</a>.</p>`
-    : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${visibilityLabel(f.visibility)})</span><span class="when"><a href="/feeds/${f.id}">Review and events</a> · <a href="/feeds/${f.id}/share">Share</a> · <a href="/feeds/${f.id}/email">Email forwarding</a></span></li>`)}</ul>`}
-</div>
+<div class="split">
+<div>
 <div class="card">
   <h2>Emails from Calantern</h2>
   <form method="post" action="/account/notifications">
@@ -176,6 +170,8 @@ export function accountPage(opts: {
     <button type="submit" class="secondary">Save email choices</button>
   </form>
 </div>
+</div>
+<aside>
 <div class="card">
   <h2>Your data</h2>
   <p><a href="/account/export">Download everything Calantern holds about you</a> (JSON).</p>
@@ -186,8 +182,9 @@ export function accountPage(opts: {
   <h2>Supporting Calantern</h2>
   <p><a href="/account/support">Link your Buy Me a Coffee support</a> or choose whether you're listed as a supporter.</p>
 </div>
-<div class="card">
-  <h2>Delete your account</h2>
+</aside>
+</div>
+${opts.deletionDate ? html`<div class="card"><h2>Delete your account</h2>` : html`<details class="more card"><summary>Delete your account</summary>`}
   ${opts.deletionDate
     ? html`<p class="error" role="alert">Your account will be deleted on <strong>${opts.deletionDate}</strong>.</p>
   <form method="post" action="/account/cancel-delete">${csrfField(opts.csrf)}<button type="submit">Keep my account</button></form>`
@@ -197,6 +194,6 @@ export function accountPage(opts: {
     <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand my account will be deleted ${opts.graceDays ? `in ${opts.graceDays} days` : "after the grace period"}.</label></p>
     <button type="submit" class="danger">Delete my account</button>
   </form>`}
-</div>`,
+${opts.deletionDate ? html`</div>` : html`</details>`}`,
   );
 }

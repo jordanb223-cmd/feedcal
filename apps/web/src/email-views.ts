@@ -164,7 +164,7 @@ ${opts.confirmation
       ? ""
       : html`<ul class="files">${m.attachments.map(
         (a) => html`<li>
-      ${a.thumbnailUrl ? html`<img src="${a.thumbnailUrl}" alt="" width="44" height="44">` : ""}
+      ${a.thumbnailUrl ? html`<img src="${a.thumbnailUrl}" alt="" width="44" height="44" loading="lazy">` : ""}
       <span dir="auto">${a.filename ?? "(unnamed file)"}</span>${a.chosen ? html`<span class="chip">Your pick</span>` : ""}
       <span class="when">${attachmentOutcome(a)}</span>
       <div class="acts">

@@ -156,6 +156,9 @@ export async function runCheck(c: { refreshToken: string; sender: string; exampl
     const raw = await rawMessage(d.fetch, token, id);
     if (!raw) { await d.record(id, "gone", null); continue; }
     const r = await d.ingest(raw);
+    // The calendar's daily email limit is a passing refusal. Recording the email as seen would lose it
+    // for good, so stop here: the caller notes the reason and the check runs again in an hour.
+    if (r.outcome === "daily_limit") throw new Error("daily_limit");
     await d.record(id, r.outcome, r.messageId);
     ingested++;
   }

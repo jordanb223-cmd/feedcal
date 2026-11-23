@@ -102,7 +102,7 @@ Locally: `supabase/functions/.env` (gitignored) holds a local-only `INGEST_HMAC_
 Without a key, emails are parsed and triaged, then wait at extraction ("waiting", reason `no_api_key`). To switch it on:
 - [ ] Create an Anthropic API key with a monthly spend limit at console.anthropic.com (you paste it; it never goes in the repo).
 - [ ] `npx supabase secrets set --project-ref <ref> ANTHROPIC_API_KEY=<key>` (this also turns on vision reading of photos and scans, Phase 8).
-- [ ] Send waiting emails back through: run `select public.requeue_waiting_extractions();` in the Supabase SQL editor.
+- [ ] Waiting emails go back through on their own within the hour (D69). To do it at once, run `select public.requeue_waiting_extractions();` in the Supabase SQL editor.
 - [ ] Optional: measure the real models on the evaluation set (see docs/TESTING.md).
 
 ## 9. Notification email (Phase 12), needs a domain

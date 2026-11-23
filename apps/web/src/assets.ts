@@ -143,7 +143,12 @@ details[open]>:not(summary){animation:rise .2s ease both}
 /* Wide screens: the home page uses the width (pitch left, the demo right, three steps across);
    the calendar page puts the list beside the subscribe panel. Other pages stay one calm column. */
 @media (min-width:60rem){
+  main{max-width:36rem}
   main:has(.hero),main:has(.two-up){max-width:66rem;padding-top:2rem}
+  /* Organizer pages on a wide screen: the main work on the left, supporting things on the right. */
+  main:has(.split){max-width:60rem}
+  .split{display:grid;grid-template-columns:minmax(0,1fr) 21rem;gap:3.5rem;align-items:start}
+  .split>*>.card:first-child:not(.panel){border-top:0;padding-top:.5rem}
   .hero{display:grid;grid-template-columns:1.25fr .75fr;gap:3.5rem;align-items:center;padding:2.5rem 0 3.5rem}
   .hero h1{font-size:4rem}
   .hero h1 span{white-space:nowrap}
@@ -227,6 +232,15 @@ form:has(.choice input[value=public]:not(:checked)) .area{display:none}
 //   data-print              print the page
 //   data-countdown="10"     remove this element after N seconds; [data-countdown-left] shows N
 export const APP_JS = `"use strict";
+// A picture that can't be shown (a phone format this browser can't read, or a damaged file) is
+// hidden, so the page never shows a broken-image box.
+(() => {
+  const hide = (img) => { img.hidden = true; };
+  for (const img of document.querySelectorAll("img")) {
+    if (img.complete && img.naturalWidth === 0) hide(img);
+    else img.addEventListener("error", () => hide(img), { once: true });
+  }
+})();
 // D61: upload a file: ask for a one-time link, send the file straight to storage, then confirm.
 (() => {
   const form = document.getElementById("upload-form");

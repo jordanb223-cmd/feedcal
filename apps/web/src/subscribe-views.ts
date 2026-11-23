@@ -98,7 +98,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
     ? html`<p class="muted">No upcoming events yet. Subscribe now and new ones will appear in your calendar on their own.</p>`
     : html`<ul class="cal">${next.map((e, i) => {
         const d = dayParts(e);
-        return html`<li class="${i === 0 ? "next" : ""}"><span class="day" aria-hidden="true"><span class="dow">${d.dow}</span><span class="num">${d.num}</span></span><span class="what"><strong dir="auto">${e.title}</strong><span class="when">${formatWhen(e)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></span></li>`;
+        return html`<li class="${i === 0 ? "next" : ""}"><span class="day" aria-hidden="true"><span class="dow">${d.dow}</span><span class="num">${d.num}</span></span><span class="what"><strong dir="auto">${e.title}</strong><span class="when">${formatWhen(e)}${e.repeats ? " · Repeats" : ""}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></span></li>`;
       })}</ul>`}
 </div></div>
 ${subscriberNotes(feed.verified === true)}
@@ -130,11 +130,15 @@ export function shareKitPage(opts: {
   ${feedNav(opts.feedId, "share")}
   <p role="status">Calantern is reading the emails now. Events appear as they're found, usually within a few minutes.</p>
   <p><button type="button" class="wide" data-copy="${opts.pageUrl ? "page-link" : "feed-url"}" aria-live="polite">Copy share link</button></p>
-  ${opts.pageUrl ? html`<p><a class="button secondary wide" href="${opts.pageUrl}">Add it to my calendar</a></p>` : ""}
-  <details class="more"><summary>See the links</summary>`
+  ${opts.pageUrl ? html`<p><a class="button secondary wide" href="${opts.pageUrl}">Add it to my calendar</a></p>` : ""}`
     : html`<h1>Share <span dir="auto">${opts.name}</span></h1>
   ${feedNav(opts.feedId, "share")}`}
   ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}
+</div>
+<div class="split">
+<div>
+<div class="card">
+  ${opts.ready ? html`<details class="more"><summary>See the links</summary>` : ""}
   ${opts.pageUrl
     ? html`<p>Send people this page. It has a one-tap subscribe button for their phone.</p>
   <p><label for="page-link">Page link</label><input class="copy" id="page-link" readonly spellcheck="false" value="${opts.pageUrl}"></p>
@@ -145,15 +149,17 @@ export function shareKitPage(opts: {
   ${opts.ready ? html`</details>` : ""}
 </div>
 <div class="card">
+  <h2>Group chat message</h2>
+  <p><label for="chat-text">Copy and paste into your group chat</label><textarea id="chat-text" rows="4" readonly>${opts.chatText}</textarea></p>
+  <p><button type="button" class="secondary" data-copy="chat-text">Copy message</button></p>
+</div>
+</div>
+<aside>
+<div class="card">
   <h2>QR code</h2>
   <div class="qr" role="img" aria-label="QR code for ${opts.pageUrl ?? opts.feedUrl}">${raw(opts.qrSvg)}</div>
   <p class="muted">Points to ${opts.pageUrl ? "the page link" : "the calendar link"}.</p>
   <p><a class="button secondary" href="/feeds/${opts.feedId}/flyer">Printable flyer</a></p>
-</div>
-<div class="card">
-  <h2>Group chat message</h2>
-  <p><label for="chat-text">Copy and paste into your group chat</label><textarea id="chat-text" rows="4" readonly>${opts.chatText}</textarea></p>
-  <p><button type="button" class="secondary" data-copy="chat-text">Copy message</button></p>
 </div>
 ${opts.stats
   ? html`<div class="card">
@@ -162,15 +168,17 @@ ${opts.stats
   <p class="muted" style="font-size:.875rem">Google checks once for all its users, so the real number is often higher.</p>
 </div>`
   : ""}
-<div class="card">
-  <h2>Make a new calendar link</h2>
+</aside>
+</div>
+<details class="more card">
+  <summary>Make a new calendar link</summary>
   <p>If the link reached the wrong people, make a new one. The old link stops working right away, and current subscribers will need the new one.</p>
   <form method="post" action="/feeds/${opts.feedId}/rotate-token">
     <input type="hidden" name="csrf" value="${opts.csrf}">
     <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand current subscribers will stop getting updates until they use the new link</label></p>
     <button type="submit" class="danger">Make a new link</button>
   </form>
-</div>`,
+</details>`,
   );
 }
 
