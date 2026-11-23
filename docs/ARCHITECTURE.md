@@ -26,7 +26,7 @@ Status: Phase 18 (operations: alerts, budget, uptime, runbooks), after Phase 16 
 | Email intake | `apps/email-worker` → Cloudflare Email Worker (not deployed: needs the domain) | 6 | Ingest HMAC secret only |
 | Queues and jobs | `supabase/functions` + pgmq + pg_cron | 6–12 | Service-role key (server side only) |
 | Calendar generator | `packages/ics` | 4 | none |
-| AI extraction | `packages/extract` | 9 | Claude API key (in Edge Function env) |
+| AI extraction | `supabase/functions/_shared/extract` | 9 | Claude API key (in Edge Function env) |
 | Shared schemas/types | `packages/shared` | 1+ | none |
 | Directory | Postgres functions + `apps/web` pages | 13 | none |
 | Donations webhook | `supabase/functions/bmc-webhook` (D36) | 15 | BMC signing secret + service-role key |

@@ -8,25 +8,32 @@ const UNSUB = "https://feedcal.example/unsubscribe?u=1&k=report&t=abc";
 Deno.test("report email: says what and where, escapes the subscriber's text, has unsubscribe", () => {
   const r = render("report", { feed_id: "f", feed_name: "Room 12", event_id: "e", event_title: "Picture day", starts_at: "2026-11-21T16:30:00Z", all_day: false,
     timezone: "America/Los_Angeles", kind: "wrong_details", details: "<b>It's at 9</b>" }, SITE, UNSUB);
-  assertEquals(r.subject, 'Someone reported a problem with "Picture day"');
-  assert(r.text.includes("A subscriber to Room 12 says the details are wrong"));
+  assertEquals(r.subject, 'Someone spotted a problem with "Picture day"');
+  assert(r.text.includes("Someone following Room 12 says the details are wrong"));
   assert(r.text.includes("Sat, Nov 21, 8:30 AM")); // Nov 21, 2026 is a Saturday
   assert(r.html.includes("&lt;b&gt;It's at 9&lt;/b&gt;") && !r.html.includes("<b>It's"));
   assert(r.text.includes(`Stop these emails: ${UNSUB}`) && r.html.includes("Stop these emails"));
+  // Every email also says how to stop following a calendar in the calendar app, with the steps page.
+  assert(r.text.includes(`Unsubscribe from it in your calendar app. Steps for each app: ${SITE}/help/unsubscribe`));
+  assert(r.html.includes(`<a href="${SITE}/help/unsubscribe">your calendar app</a>`));
+  assert(r.text.startsWith("Hi,\n\n") && r.text.includes("Thanks,\nCalantern"));
 });
 
-Deno.test("weekly digest: trends, review count in the subject, the 'about' explanation", () => {
+Deno.test("weekly digest: what needs you first, the follower guess last and small", () => {
   const r = render("weekly_digest", { feeds: [{ id: "f1", name: "Room 12", subscribers: 14, subscribers_last_week: 9, taps: 3, events_added: 4, needs_review: 2, reports: 0 }] }, SITE, UNSUB);
   assertEquals(r.subject, "Your Calantern week: 2 to review");
-  assert(r.text.includes("About 14 calendars follow it (up from 9); 3 subscribe taps this week."));
-  assert(r.text.includes("4 events added. 2 to review. 0 reports."));
-  assert(r.text.includes("Google and Outlook count once for all their users"));
+  assert(r.text.includes("Here's your week. 2 events need a quick look from you."));
+  assert(r.text.includes("2 events waiting for your OK.\n  4 new events this week.\n  Open it: https://feedcal.example/feeds/f1\n  Roughly 14 calendars follow it (a rough guess)."));
+  assert(!r.text.includes("up from") && !r.text.includes("subscribe taps"), "no trend or tap counts");
+  const quiet = render("weekly_digest", { feeds: [{ id: "f1", name: "Room 12", subscribers: 0, subscribers_last_week: 0, taps: 0, events_added: 1, needs_review: 0, reports: 1 }] }, SITE, UNSUB);
+  assert(quiet.text.includes("Nothing waiting for you.\n  1 new event this week, 1 problem report.") && !quiet.text.includes("Roughly"));
 });
 
 Deno.test("stale nudge and milestone wording", () => {
-  assertEquals(render("stale_nudge", { feed_id: "f", feed_name: "Hawks", days: 46 }, SITE, UNSUB).subject, "Hawks hasn't had an update in 46 days");
+  assertEquals(render("stale_nudge", { feed_id: "f", feed_name: "Hawks", days: 46 }, SITE, UNSUB).subject, "Hawks has been quiet for 46 days");
   const m = render("milestone", { feed_id: "f", feed_name: "Hawks", milestone: 50 }, SITE, UNSUB);
-  assertEquals(m.subject, "50 calendars follow Hawks");
+  assertEquals(m.subject, "Hawks is helping a lot of families");
+  assert(m.text.includes("around 50 calendars follow it now. It's only a guess"));
   assert(m.text.includes(`${SITE}/feeds/f/milestones/50`));
 });
 

@@ -65,7 +65,7 @@ describe("GET /f/<token>.ics", () => {
     const ics = (await (await request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
     const descriptions = ics.split("\r\n").filter((l) => l.startsWith("DESCRIPTION:"));
     expect(descriptions.length).toBeGreaterThan(0);
-    for (const d of descriptions) expect(d).toMatch(/\\n\\n— Added by Calantern for Room 12\. It fills calendars in automatically and can make mistakes\\, so check details with the organizer\.$/);
+    for (const d of descriptions) expect(d).toMatch(/\\n\\n— Added by Calantern for Room 12\. It fills calendars in automatically and can make mistakes\\, so check details with the organizer\. Don't want this calendar any more\? Unsubscribe in your calendar app: https?:\/\/[^\\\s]+\/help\/unsubscribe$/);
   });
 
   it("answers 304 when the calendar hasn't changed", async () => {

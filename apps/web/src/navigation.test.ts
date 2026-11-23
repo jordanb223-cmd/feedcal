@@ -26,7 +26,7 @@ function app(signedIn: boolean) {
   return (path: string) => a.request(`https://feedcal.test${path}`, { headers: { accept: "text/html" } }, env);
 }
 
-const PUBLIC = ["/login", "/directory", "/rules", "/terms", "/takedown", "/privacy", "/about/costs", "/supporters", "/c/no-such-calendar", "/c/no-such-calendar/report", "/no-such-page"];
+const PUBLIC = ["/login", "/directory", "/rules", "/terms", "/takedown", "/privacy", "/about/costs", "/help/unsubscribe", "/supporters", "/c/no-such-calendar", "/c/no-such-calendar/report", "/no-such-page"];
 const ORGANIZER = ["/account", "/feeds", "/feeds/new", "/account/support", "/feeds/6dc8d67e-7490-4ffd-b718-4b4eed87274c/share"];
 
 describe("every page has a way to move on", () => {

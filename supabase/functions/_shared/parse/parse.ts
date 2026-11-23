@@ -61,8 +61,11 @@ export async function parseMessage(raw: Uint8Array | string, opts: { receivedAt:
   const unwrapped = unwrapForwards(body, email.subject ?? null);
   const { clean, stripped } = stripQuotes(unwrapped.body);
   const forwardedDate = parseLooseDate(unwrapped.headers?.date ?? null, fallbackOffset);
-  const referenceDate = forwardedDate ?? email.date ?? opts.receivedAt;
-  const referenceDateSource = forwardedDate ? "forwarded_header" : email.date ? "date_header" : "received";
+  // postal-mime passes an unreadable Date header through as raw text; fall back to arrival time
+  // instead of throwing on it (the email would otherwise fail parsing for good).
+  const headerDate = email.date && !Number.isNaN(Date.parse(email.date)) ? email.date : null;
+  const referenceDate = forwardedDate ?? headerDate ?? opts.receivedAt;
+  const referenceDateSource = forwardedDate ? "forwarded_header" : headerDate ? "date_header" : "received";
   const forwardedSender = parseSender(unwrapped.headers?.from ?? null);
   const sender = forwardedSender ?? (email.from?.address ? { address: email.from.address.toLowerCase(), name: email.from.name || null } : null);
   const subject = (unwrapped.headers?.subject ?? email.subject ?? null)?.replace(/^\s*((fw|fwd|re)\s*:\s*)+/i, "").trim() || null;

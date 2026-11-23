@@ -49,7 +49,7 @@ export function securityHeaders(c: Context, supabaseUrl: string | undefined, hst
     "script-src 'self'",
     "style-src 'self'",
     "style-src-attr 'unsafe-inline'",
-    "img-src 'self' data:",
+    `img-src 'self' data:${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`, // attachment thumbnails and review images are signed storage links
     `connect-src 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`, // D61: the browser sends uploads straight to storage
     "manifest-src 'self'",
     `form-action 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""} https://accounts.google.com`,

@@ -124,15 +124,16 @@ export function shareKitPage(opts: {
   return layout(
     `Share ${opts.name}`,
     html`<div class="card">
-  ${feedNav(opts.feedId, "share")}
   ${opts.ready
     ? html`<span class="kicker">You're set</span>
   <h1><span dir="auto">${opts.name}</span> is ready</h1>
+  ${feedNav(opts.feedId, "share")}
   <p role="status">Calantern is reading the emails now. Events appear as they're found, usually within a few minutes.</p>
   <p><button type="button" class="wide" data-copy="${opts.pageUrl ? "page-link" : "feed-url"}" aria-live="polite">Copy share link</button></p>
   ${opts.pageUrl ? html`<p><a class="button secondary wide" href="${opts.pageUrl}">Add it to my calendar</a></p>` : ""}
   <details class="more"><summary>See the links</summary>`
-    : html`<h1>Share <span dir="auto">${opts.name}</span></h1>`}
+    : html`<h1>Share <span dir="auto">${opts.name}</span></h1>
+  ${feedNav(opts.feedId, "share")}`}
   ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}
   ${opts.pageUrl
     ? html`<p>Send people this page. It has a one-tap subscribe button for their phone.</p>
@@ -200,8 +201,8 @@ export function flyerPage(opts: { name: string; url: string; qrSvg: string; feed
 
 // D44: what a subscriber should know. They never see the terms page, so it's said here.
 /** D64: the last line of every event in a Calantern calendar, so people can tell where it came from. */
-export const eventSignOff = (calendarName: string) =>
-  `Added by Calantern for ${calendarName}. It fills calendars in automatically and can make mistakes, so check details with the organizer.`;
+export const eventSignOff = (calendarName: string, origin: string) =>
+  `Added by Calantern for ${calendarName}. It fills calendars in automatically and can make mistakes, so check details with the organizer. Don't want this calendar any more? Unsubscribe in your calendar app: ${origin}/help/unsubscribe`;
 export const NOTE_ACCURACY = "Calantern fills this calendar in automatically, from emails and other calendars, and it can make mistakes. Check important details (dates, times, places) with the organizer.";
 export const NOTE_UNOFFICIAL = "Not run or endorsed by any school, team or group named in it, unless they say so.";
 export const NOTE_REFRESH = "Your calendar app checks for changes on its own schedule, so updates can take a few hours to show.";

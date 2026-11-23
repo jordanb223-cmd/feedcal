@@ -125,10 +125,3 @@ export function registerNotifyRoutes(app: Hono<AppEnv>): void {
     </div><p class="no-print"><a href="/feeds/${id.data}">Back to the feed</a> · Take a screenshot or print this page to share it.</p>`));
   });
 }
-
-export const NOTIFICATION_LABELS = {
-  weekly_digest: "A weekly summary every Monday",
-  instant_reports: "Right away when a subscriber reports a problem",
-  staleness: "A reminder when a feed goes quiet",
-  milestones: "A thank-you when a feed reaches 10, 50 or 100 followers",
-} as const;

@@ -24,7 +24,7 @@ function contactForm(c: Context<AppEnv>, f: Form) {
   return publicLayout("Contact", html`<div class="card">
   <h1>Contact Calantern</h1>
   <p>Found a bug, have a question, or want to ask about your data? Send a message. If you'd like an answer, add your email address.</p>
-  ${f.error ? html`<p class="notice" role="alert">${f.error}</p>` : ""}
+  ${f.error ? html`<p class="error" role="alert">${f.error}</p>` : ""}
   <form method="post" action="/contact">
     <input type="hidden" name="csrf" value="${csrfToken(c)}">
     <input type="hidden" name="page" value="${f.page ?? ""}">

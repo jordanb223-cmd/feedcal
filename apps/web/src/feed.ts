@@ -118,7 +118,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
       defaultTimeZone: DEFAULT_TIME_ZONE,
       reportUrl: (uid) => `${origin}/report/${encodeURIComponent(uid)}`,
       product: "Calantern",
-      signOff: eventSignOff(feed.name),
+      signOff: eventSignOff(feed.name, origin),
     });
     if (warnings.length > 0) c.get("log").warn("feed_build_warnings", { feed_id: feed.id, count: warnings.length });
 
