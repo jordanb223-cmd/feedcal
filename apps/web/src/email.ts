@@ -13,11 +13,11 @@ const Notice = z.enum(Object.keys(EMAIL_NOTICES) as [EmailNotice, ...EmailNotice
 const Triage = z.object({ reason: z.string().max(60).optional(), keptPages: z.array(z.number().int().min(0)).max(40).optional() }).nullable();
 const IMAGE = /^image\/(jpeg|png|gif|webp)$/;
 
-const notFound = (c: Context<AppEnv>) => c.html(messagePage("Feed not found", "That feed doesn't exist, or it isn't yours."), 404);
+const notFound = (c: Context<AppEnv>) => c.html(messagePage("Calendar not found", "That calendar doesn't exist, or it isn't yours."), 404);
 
 /** Owner or editor check comes from RLS: a stranger simply can't select the feed. */
 async function loadFeed(c: Context<AppEnv>, id: string) {
-  const { data } = await c.get("supabase").from("feeds").select("id, name, owner_id, intake_address").eq("id", id).maybeSingle();
+  const { data } = await c.get("supabase").from("feeds").select("id, name, owner_id, intake_address, timezone").eq("id", id).maybeSingle();
   return data;
 }
 
@@ -107,6 +107,7 @@ export function registerEmailRoutes(app: Hono<AppEnv>): void {
         senders: [...senders.values()],
         suspicious,
         recent,
+        timezone: feed.timezone,
         ...(notice.success ? { notice: notice.data } : {}),
       }),
     );
@@ -184,7 +185,7 @@ export function registerEmailRoutes(app: Hono<AppEnv>): void {
     if (!csrfValid(c, body.csrf)) return c.html(messagePage("Please try again", MESSAGES.badForm, { href: `/feeds/${id.data}/email`, text: "Back" }), 403);
     if (body.confirm !== "yes") return c.html(messagePage("Nothing changed", "Tick the box to confirm, then press Get a new address again.", { href: `/feeds/${id.data}/email`, text: "Back" }), 400);
     const { error } = await c.get("supabase").rpc("rotate_intake_address", { p_feed_id: id.data });
-    if (error) return c.html(messagePage("Not allowed", "Only the feed's owner can change its email address."), 403);
+    if (error) return c.html(messagePage("Not allowed", "Only the calendar's owner can change its email address."), 403);
     c.get("log").info("intake_address_rotated", { feed_id: id.data });
     return c.redirect(`/feeds/${id.data}/email?done=rotated`, 303);
   });

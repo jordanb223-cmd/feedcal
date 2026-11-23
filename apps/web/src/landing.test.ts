@@ -14,8 +14,10 @@ describe("home page (D55)", () => {
     const res = await app(false).request("https://calantern.test/", {}, env);
     expect(res.status).toBe(200);
     const html = await res.text();
-    expect(html).toContain("Events that add themselves.");
-    expect(html).toContain("Stop adding events one by one.");
+    expect(html).toContain("<h1>Events that <span>add themselves.</span></h1>");
+    expect(html).toContain("↓ becomes"); // the picture of what it does (DESIGN.md: show the calendar)
+    expect(html).toContain("Keep emailing like you always do.");
+    expect(html).toContain("so nobody types anything in");
     expect(html).toContain('href="/login?next=/feeds/new">Make a calendar</a>');
     expect(html).toContain('href="/directory">Find a calendar</a>');
     expect((html.match(/<span class="n" aria-hidden="true">/g) ?? []).length).toBe(3);

@@ -5,105 +5,206 @@ import type { Context, Hono } from "hono";
 import type { AppEnv } from "./types.js";
 
 export const APP_CSS = `
-.hero{padding:.5rem 0 1rem}
-.hero h1{font-size:2.5rem;line-height:1.05;margin:0 0 .75rem}
-.hero .lead{font-size:1.125rem;margin:0 0 1.25rem}
-.how{list-style:none;padding:0;margin:0}
-.how li{display:flex;gap:.875rem;padding:.75rem 0;border-top:1px solid #ececec}
-.how li:first-child{border-top:0}
-.how .n{flex-shrink:0;width:2rem;height:2rem;border-radius:999px;border:2px solid #c2410c;color:#c2410c;font-weight:700;display:flex;align-items:center;justify-content:center}
-.assure-line{text-align:center;font-weight:600;margin:1.25rem 0 0}
-.pick{border:1.5px solid #d4d4d4;border-radius:12px;padding:1rem;margin:0 0 .75rem}
-.pick h2{font-size:1.125rem;margin:0 0 .25rem;display:flex;align-items:center;gap:.5rem}
-.pick form,.pick .button{margin:0}
-.tag{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#c2410c;border:1.5px solid #c2410c;border-radius:999px;padding:.05rem .5rem}
+/* Calantern, "Lantern paper" (DESIGN.md part 4). Tokens first; every colour pair below was
+   computed for contrast: ink on paper 15.4:1, soft ink 6.4:1, accent text 5.2:1, white on accent 5.2:1. */
+@font-face{font-family:"Young Serif";src:url(/fonts/young-serif-latin-400.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+:root{--paper:#f6efe2;--card:#fffaf0;--ink:#1c1813;--soft:#5e5546;--line:#e2d6bf;--field:#857a66;--accent:#c2410c;--accent-text:#b23a08;--mark:#fbd9a5;--danger:#8a1c1c;--ring:#1a4fd6;
+  --radius:12px;--display:"Young Serif","Iowan Old Style","Palatino Linotype",Georgia,serif;--text:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:16px/1.5 var(--text);color:var(--ink);background:var(--paper)}
+main{max-width:30rem;margin:0 auto;padding:1.25rem 1.25rem 2.5rem;overflow-wrap:anywhere}
+a{color:inherit;text-underline-offset:.18em;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance}
+h1{font-size:2rem;line-height:1.05;letter-spacing:-.015em;margin:0 0 .875rem}
+h2{font-size:1.375rem;line-height:1.2;margin:0 0 .75rem}
+h3{font-size:1.125rem;line-height:1.25;margin:0 0 .25rem}
+p{margin:0 0 1rem}
+ul,ol{margin:0 0 1rem;padding-left:1.25rem}
+li{margin:0 0 .375rem}
+code{font-size:.9375em;background:#efe6d3;border-radius:4px;padding:.05em .3em}
+:focus-visible{outline:3px solid var(--ring);outline-offset:2px;border-radius:4px}
+.muted{color:var(--soft)}
+.skip{position:absolute;left:1rem;top:-3rem;background:var(--ink);color:var(--paper);padding:.5rem 1rem;border-radius:8px;z-index:10}
+.skip:focus{top:1rem}
+
+/* Site header and footer */
+.site{display:flex;flex-wrap:wrap;gap:.25rem 1.125rem;align-items:center;margin:0 0 1.75rem;font-size:.9375rem}
+.site .brand{font:400 1.3125rem/1 var(--display);letter-spacing:-.01em;margin-right:auto;text-decoration:none;display:inline-flex;align-items:center;gap:.4375rem}
+.site .brand::before{content:"";width:.5625rem;height:.5625rem;border-radius:50%;background:var(--accent)}
+.site a{padding:.6875rem 0;margin:-.6875rem 0}
+footer{border-top:1px solid var(--line);margin-top:2rem;padding-top:1.25rem;font-size:.875rem;color:var(--soft)}
+footer p{margin:0 0 .75rem}
+footer nav{display:flex;flex-wrap:wrap;gap:.125rem 1.125rem}
+footer nav a{padding:.375rem 0}
+/* Calendar pages already carry the longer notes right above the footer; don't say it twice. */
+main:has(.notes) footer>p:first-child{display:none}
+
+/* Surfaces */
+/* A page is open sections divided by a rule. Only the one main thing on a page gets a panel. */
+.card{padding:1.5rem 0 .5rem;margin:0;border-top:1px solid var(--line)}
+main>.card:first-of-type{border-top:0;padding-top:0}
+.card.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1.25rem;margin:0 0 1.25rem}
+main>.card.panel:first-of-type{padding-top:1.25rem;border-top:1px solid var(--line)}
+.card.panel+.card{border-top:0;padding-top:.5rem}
+.two-up>.card.panel{padding-top:1.25rem}
+.card.panel>:last-child,.card.panel>form:last-child{margin-bottom:0}
+.kicker{display:block;font-size:.8125rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-text);margin:0 0 .5rem}
+.tag{font:700 .6875rem/1.6 var(--text);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-text);border:1.5px solid var(--accent-text);border-radius:999px;padding:0 .5rem}
+.error{background:#fbe9e4;color:var(--danger);border-left:4px solid var(--danger);padding:.75rem 1rem;border-radius:4px}
+[role=status],main>.card[role=status]{background:#eef3e2;border:0;border-left:4px solid #5b7a2a;padding:.75rem 1rem;border-radius:4px;margin:0 0 1.25rem}
+.card[role=status]>:last-child{margin-bottom:0}
+.card[role=status]+.card{border-top:0;padding-top:0}
+mark{background:var(--mark);color:inherit;padding:0 .15em}
+blockquote{margin:0 0 1rem;border-left:3px solid var(--accent);padding-left:.75rem}
+
+/* Buttons: one filled pill per screen; the rest are outlined or plain links */
+button,.button{display:inline-block;font:inherit;font-weight:700;line-height:1.25;padding:.8125rem 1.375rem;min-height:2.875rem;border-radius:999px;border:2px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;text-decoration:none;text-align:center;touch-action:manipulation;transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .1s ease}
+button:hover,.button:hover{background:#3a332a;border-color:#3a332a}
+button:active,.button:active{transform:scale(.97)}
+button.secondary,a.button.secondary{background:transparent;color:var(--ink);border-color:#bfb299;font-weight:600}
+button.secondary:hover,a.button.secondary:hover{background:#efe6d3;border-color:var(--ink);color:var(--ink)}
+/* Destructive: red outline at rest, so it is never the loudest thing on the page */
+button.danger{background:transparent;border-color:var(--danger);color:var(--danger);font-weight:600}
+button.danger:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+/* Small repeated actions inside lists read as links, not a stack of pills */
+button.link{background:none;border:0;border-radius:4px;padding:.25rem 0;min-height:0;color:inherit;font-weight:600;font-size:.9375rem;text-decoration:underline;text-underline-offset:.18em;text-decoration-thickness:1px}
+button.link:hover{background:none;text-decoration-thickness:2px}
+.chip{display:inline-block;font-size:.75rem;font-weight:700;color:var(--soft);border:1px solid #cbbfa6;border-radius:999px;padding:0 .5rem;margin-left:.375rem;vertical-align:.1em;white-space:nowrap}
+button:disabled{opacity:.55;cursor:default;transform:none}
+a.button{margin:0 0 .5rem}
+.wide{display:block;width:100%}
+.row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.row form{margin:0}
+.row button,.row .button{padding:.6875rem 1.125rem;margin:0}
+.sep{text-align:center;margin:1rem 0}
+form{margin:0 0 1rem}
+/* A second form in the same panel (usually the destructive one) is set apart, never stacked under Save */
+.card>form+form{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--line)}
+
+/* Fields */
+label{display:block;font-weight:600;margin:0 0 .3125rem}
+input[type=email],textarea,input.copy,select.copy,select{width:100%;font:inherit;padding:.75rem .875rem;min-height:2.875rem;border:1.5px solid var(--field);border-radius:10px;background:#fffdf8;color:var(--ink)}
+select:not(.copy){width:auto}
+input::placeholder,textarea::placeholder{color:#8f8573}
+input:hover,textarea:hover,select:hover{border-color:var(--ink)}
+input[type=checkbox],input[type=radio]{accent-color:var(--ink);width:1.25rem;height:1.25rem;flex-shrink:0;margin:.125rem 0 0}
+.check{display:flex;gap:.5rem;align-items:flex-start;font-weight:400;touch-action:manipulation}
+details summary{cursor:pointer;font-weight:600;padding:.5rem 0;touch-action:manipulation}
 details.more{margin:0 0 1rem}
-details.more>summary{font-weight:600;padding:.5rem 0;color:#111111}
+details.more>summary{color:var(--ink)}
 details.more[open]>summary{margin-bottom:.5rem}
 details.more.card>summary{padding:0}
 details.more.card[open]>summary{margin-bottom:1rem}
-.kicker{display:block;font-size:.8125rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#c2410c;margin:0 0 .5rem}
+details[open]>:not(summary){animation:rise .2s ease both}
+
+/* Lists */
+.events{list-style:none;padding:0;margin:0 0 1rem}
+.events li{padding:.875rem 0;margin:0;border-top:1px solid var(--line)}
+.events li:first-child{border-top:0;padding-top:.25rem}
+.when{display:block;font-size:.9375rem;color:var(--soft)}
+.badge{display:inline-block;font-size:.8125rem;font-weight:700;color:var(--danger);background:#fbe9e4;border-radius:999px;padding:.05rem .625rem;vertical-align:.1em}
+
+/* A calendar's own menu: a row of tabs that scrolls sideways on a phone instead of wrapping */
+.tabs{display:flex;gap:1.125rem;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line);margin:0 -1.25rem 1.125rem;padding:0 1.25rem;font-size:.9375rem;white-space:nowrap}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a,.tabs strong{padding:.5rem 0 .625rem;border-bottom:3px solid transparent;text-decoration:none;color:var(--soft)}
+.tabs a:hover{color:var(--ink);border-bottom-color:var(--line)}
+.tabs strong,.tabs a[aria-current]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
+
+/* Home */
+.hero{padding:.25rem 0 1.5rem}
+.hero h1{font-size:2.625rem;line-height:1;margin:0 0 .875rem}
+.hero h1 span{display:block;color:var(--accent-text)}
+.hero .lead{font-size:1.0625rem;line-height:1.45;margin:0 0 1.125rem;color:#3a332a}
+.hero .actions{display:flex;flex-wrap:wrap;gap:.25rem 1.125rem;align-items:center;margin:0 0 .625rem}
+.hero .actions .button{margin:0}
+.assure{font-size:.875rem;color:var(--soft);margin:0}
+.demo{margin:1.75rem 0 0}
+.slip{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:.875rem 1rem;font-size:.9375rem;margin:0}
+.slip small{display:block;color:var(--soft);font-size:.8125rem;margin:0 0 .375rem}
+.becomes{font:400 1.25rem/1 var(--display);color:var(--accent-text);margin:.75rem 0 .5rem 1.5rem}
+.how{list-style:none;padding:0;margin:0}
+.how li{display:flex;gap:.875rem;padding:.75rem 0;margin:0;border-top:1px solid var(--line)}
+.how li:first-child{border-top:0}
+.how .n{flex-shrink:0;width:1.875rem;font:400 1.5rem/1.2 var(--display);color:var(--accent-text)}
+.assure-line{text-align:center;font-size:.9375rem;color:var(--soft);margin:1.25rem 0 0}
+.mail,.files{list-style:none;padding:0;margin:0}
+.mail>li{padding:.875rem 0;margin:0;border-top:1px solid var(--line)}
+.mail>li:first-child{border-top:0;padding-top:.25rem}
+.mail p{margin:0}
+.files{margin:.375rem 0 0}
+.files li{margin:0;padding:.375rem 0 .375rem .875rem;border-left:2px solid var(--line);font-size:.9375rem}
+.files img{float:right;margin-left:.5rem;border-radius:6px;object-fit:cover}
+.files .acts{display:flex;flex-wrap:wrap;gap:0 1rem}
+.files .acts form{margin:0}
+@media (min-width:40rem){.hero h1{font-size:3.5rem}}
+/* Wide screens: the home page uses the width (pitch left, the demo right, three steps across);
+   the calendar page puts the list beside the subscribe panel. Other pages stay one calm column. */
+@media (min-width:60rem){
+  main:has(.hero),main:has(.two-up){max-width:66rem;padding-top:2rem}
+  .hero{display:grid;grid-template-columns:1.25fr .75fr;gap:3.5rem;align-items:center;padding:2.5rem 0 3.5rem}
+  .hero h1{font-size:4rem}
+  .hero h1 span{white-space:nowrap}
+  main:has(.hero) .card{padding-bottom:1.5rem}
+  .assure-line{text-align:left}
+  .hero .lead{font-size:1.1875rem;max-width:32rem}
+  .demo{margin:0}
+  .slip{font-size:1.0625rem;padding:1.125rem 1.25rem}
+  .how{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5rem}
+  .how li{flex-direction:column;gap:.375rem;border-top:0;padding:0}
+  .how .n{font-size:2rem}
+  .two-up{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+  .two-up>.card:not(.panel){border-top:0;padding-top:0}
+  main:has(.two-up) .notes,main:has(.hero) .assure-line{max-width:32rem}
+}
+@media (prefers-reduced-motion:no-preference){.demo .slip{animation:rise .5s ease both}.demo .becomes{animation:rise .5s .25s ease both}.demo .cal{animation:rise .5s .45s ease both}}
+@keyframes rise{from{opacity:0;translate:0 .5rem}to{opacity:1;translate:0 0}}
+
+/* Event rows with a date tile (public calendar page and the home demo) */
 .cal{list-style:none;padding:0;margin:0}
-.cal li{display:flex;gap:1rem;padding:.875rem 0;border-top:1px solid #ececec}
-.cal li:first-child{border-top:0}
-.cal .day{width:2.75rem;flex-shrink:0;display:flex;flex-direction:column;font-variant-numeric:tabular-nums}
-.cal .dow{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#5c5c5c}
-.cal .num{font-size:1.625rem;font-weight:700;line-height:1.05}
-.cal .what{min-width:0;border-left:3px solid #e6e6e6;padding-left:.75rem;display:flex;flex-direction:column;gap:.125rem}
-.cal li.next .dow{color:#c2410c}
-.cal li.next .what{border-left-color:#c2410c}
-.skip{position:absolute;left:1rem;top:-3rem;background:#1d1d1b;color:#fff;padding:.5rem 1rem;border-radius:8px;z-index:10}
-.skip:focus{top:1rem}
-main{overflow-wrap:anywhere}
-button,.button,summary,label.check,.choice label{touch-action:manipulation}
-button,.button{transition:background-color .15s ease,border-color .15s ease,transform .1s ease}
-button:hover,.button:hover{background:#333333;border-color:#333333}
-button.secondary:hover,a.button.secondary:hover{background:#f4f4f4;border-color:#111111;color:#111111}
-button.danger:hover{background:#6e1616;border-color:#6e1616}
-button:active,.button:active{transform:scale(.97)}
-.choice label{transition:border-color .15s ease,background-color .15s ease}
-.choice label:hover{border-color:#767676}
-a:hover{text-decoration-thickness:2px}
-@media (prefers-reduced-motion:reduce){button,.button,.choice label{transition:none}button:active,.button:active{transform:none}}
+.cal li{display:flex;gap:.875rem;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.625rem .875rem;margin:0 0 .5rem}
+.cal .day{width:2.875rem;flex-shrink:0;display:flex;flex-direction:column;text-align:center;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;background:#fff;font-variant-numeric:tabular-nums}
+.cal .dow{font-size:.65625rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#6b6152;padding:.125rem 0}
+.cal .num{font:400 1.3125rem/1.3 var(--display)}
+.cal .what{min-width:0;display:flex;flex-direction:column;gap:.0625rem;line-height:1.3}
+.cal li.next .dow{background:var(--accent)}
+
+/* Choices */
+.pick{border:1.5px solid var(--line);border-radius:var(--radius);padding:1rem;margin:0 0 .75rem;background:#fffdf8}
+.pick h2{font-size:1.1875rem;margin:0 0 .25rem;display:flex;align-items:center;gap:.5rem}
+.pick form,.pick .button{margin:0}
 .choice{border:0;padding:0;margin:0 0 .5rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
-.choice legend{font-weight:600;margin-bottom:.5rem}
-.choice label{display:flex;gap:.5rem;align-items:flex-start;border:1.5px solid #d4d4d4;border-radius:12px;padding:1rem;cursor:pointer;background:#fff}
-.choice label:has(input:checked){border:2px solid #111111;background:#f7f7f7}
-.choice input{margin-top:.25rem}
+.choice legend{font-weight:600;margin-bottom:.5rem;padding:0}
+.choice label{display:flex;gap:.5rem;align-items:flex-start;border:1.5px solid var(--line);border-radius:var(--radius);padding:1rem;cursor:pointer;background:#fffdf8;font-weight:400;touch-action:manipulation;transition:border-color .15s ease,background-color .15s ease}
+.choice label:hover{border-color:var(--field)}
+.choice label:has(input:checked){border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:#fff}
 @media (max-width:28rem){.choice{grid-template-columns:1fr}}
 form:has(.choice input[value=public]:not(:checked)) .area{display:none}
-.site{display:flex;flex-wrap:wrap;gap:.25rem 1rem;align-items:center;margin:0 0 1.5rem;padding:0 0 .875rem;border-bottom:1px solid #e6e6e6;font-size:.9375rem}
-.site .brand{font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-right:auto;text-decoration:none;color:inherit}
-.site a{padding:.6875rem 0;margin:-.6875rem 0} /* D60: ~45px tap height on phones (was 23px); the layout doesn't move */
-*{box-sizing:border-box}
-body{margin:0;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#111111;background:#ffffff}
-a{color:#111111;text-underline-offset:.15em}
-input[type=checkbox],input[type=radio]{accent-color:#111111;width:1.125rem;height:1.125rem}
-main{max-width:30rem;margin:0 auto;padding:2rem 1rem}
-.card{background:#fff;border:1px solid #e6e6e6;border-radius:14px;padding:1.5rem;margin:0 0 1rem}
-h1{font-size:2rem;line-height:1.1;letter-spacing:-.03em;font-weight:800;margin:0 0 1rem;text-wrap:balance}
-h2{font-size:1.25rem;line-height:1.3;letter-spacing:-.01em;margin:0 0 .75rem;text-wrap:balance}
-p{margin:0 0 1rem}
-.muted{color:#5c5c5c}
-label{display:block;font-weight:600;margin:0 0 .25rem}
-input[type=email]{width:100%;font:inherit;padding:.75rem;border:1.5px solid #767676;border-radius:10px}
-button,.button{display:inline-block;font:inherit;font-weight:600;padding:.75rem 1.25rem;border-radius:10px;border:2px solid #111111;background:#111111;color:#fff;cursor:pointer;text-decoration:none}
-button.secondary{background:#fff;color:#111111;border-color:#d4d4d4}
-button.danger{background:#8a1c1c;border-color:#8a1c1c}
-form{margin:0 0 1rem}
-:focus-visible{outline:3px solid #1a4fd6;outline-offset:2px}
-.error{background:#fdf1f1;color:#8a1c1c;border-left:4px solid #8a1c1c;padding:.75rem 1rem;border-radius:4px}
-.check{display:flex;gap:.5rem;align-items:flex-start;font-weight:400}
-.row{display:flex;flex-wrap:wrap;gap:.5rem}
-.sep{text-align:center;margin:1rem 0}
-a.button{margin:0 0 .5rem}
-a.button.secondary{background:#fff;color:#111111;border-color:#d4d4d4}
-.wide{display:block;width:100%;text-align:center}
-.events{list-style:none;padding:0;margin:0}
-.events li{padding:.875rem 0;border-top:1px solid #ececec}
-.events li:first-child{border-top:0}
-.when{display:block;font-size:.95rem;color:#5c5c5c}
-details summary{cursor:pointer;font-weight:600;padding:.5rem 0}
-textarea,input.copy,select.copy{width:100%;font:inherit;padding:.75rem;border:1.5px solid #767676;border-radius:10px;background:#fff;color:#111111}
-mark{background:#fff0a8;color:inherit;padding:0 .1em}
-blockquote{margin:0 0 1rem}
-.qr svg{width:12rem;height:12rem;display:block;margin:0 auto}
-@media print{body{background:#fff}.no-print{display:none}.card{padding:0}}
+
+/* Sharing */
+.qr svg{width:12rem;height:12rem;display:block;margin:0 auto;background:#fff;border-radius:8px}
 .flyer-controls{margin:0 0 1rem}
-.flyer{text-align:center;border:1px solid #e6e6e6;border-radius:14px;padding:1.5rem;margin:0 0 1rem;background:#fff}
+.flyer{text-align:center;border:1px solid var(--line);border-radius:var(--radius);padding:1.5rem;margin:0 0 1rem;background:#fff;color:#111}
 .flyer h1{font-size:2.25rem;margin:0 0 .5rem}
 .flyer .lead{font-size:1.125rem;margin:0 0 1rem}
 .flyer .qr svg{width:14rem;height:14rem}
 .flyer .steps{display:inline-block;text-align:left;margin:1rem auto;padding-left:1.25rem;font-size:1.0625rem}
 .flyer .steps li{margin:0 0 .25rem}
-.flyer .assure{font-weight:600;margin:0 0 .5rem}
+.flyer .assure{font-weight:600;font-size:1rem;color:#111;margin:0 0 .5rem;overflow-wrap:normal}
 .flyer .link{font-size:.8125rem;color:#5c5c5c;overflow-wrap:anywhere;margin:0}
 .cut{border-top:2px dashed #767676;margin:1rem 0;position:relative;height:0}
-.cut span{position:absolute;left:50%;top:-.7rem;transform:translateX(-50%);background:#fff;padding:0 .5rem;font-size:.75rem;color:#5c5c5c}
+.cut span{position:absolute;left:50%;top:-.7rem;transform:translateX(-50%);background:var(--paper);padding:0 .5rem;font-size:.75rem;color:var(--soft)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}button:active,.button:active{transform:none}}
 @media print{
   @page{size:letter;margin:.5in}
+  body{background:#fff;color:#000}
+  .no-print,.site,footer{display:none}
   main{max-width:none;padding:0}
-  .site,footer{display:none}
+  .card{padding:0;border:0;background:#fff}
+  .cut span{background:#fff}
   .flyer{border:0;border-radius:0;padding:0;margin:0;height:10in;display:flex;flex-direction:column;align-items:center;justify-content:center;break-inside:avoid}
   .flyer h1{font-size:40pt}
   .flyer .lead{font-size:18pt}
@@ -199,7 +300,7 @@ function shortHash(s: string): string {
 
 // Phase 18 (D38): "PWA first". A manifest and an icon so the site can be added to a phone's home
 // screen. No service worker: calendars come from the calendar app, so there's nothing to cache.
-export const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#1d1d1b"/><rect x="12" y="16" width="40" height="36" rx="5" fill="#fff"/><rect x="12" y="16" width="40" height="10" rx="5" fill="#e8533f"/><rect x="20" y="10" width="5" height="12" rx="2" fill="#1d1d1b"/><rect x="39" y="10" width="5" height="12" rx="2" fill="#1d1d1b"/><path d="M22 39l7 7 13-14" fill="none" stroke="#1d1d1b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+export const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#1c1813"/><rect x="12" y="16" width="40" height="36" rx="5" fill="#fffaf0"/><rect x="12" y="16" width="40" height="10" rx="5" fill="#c2410c"/><rect x="20" y="10" width="5" height="12" rx="2" fill="#1c1813"/><rect x="39" y="10" width="5" height="12" rx="2" fill="#1c1813"/><path d="M22 39l7 7 13-14" fill="none" stroke="#1c1813" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 export const MANIFEST = JSON.stringify({
   name: "Calantern",
@@ -208,8 +309,8 @@ export const MANIFEST = JSON.stringify({
   start_url: "/",
   scope: "/",
   display: "standalone",
-  background_color: "#f6f6f4",
-  theme_color: "#1d1d1b",
+  background_color: "#f6efe2",
+  theme_color: "#f6efe2",
   icons: [{ src: "/assets/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
 });
 

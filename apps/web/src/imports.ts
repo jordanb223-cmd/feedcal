@@ -50,7 +50,7 @@ async function form(c: Context<AppEnv>): Promise<Record<string, string>> {
 export function registerImportRoutes(app: Hono<AppEnv>): void {
   app.post("/feeds/:id/import", async (c) => {
     const id = FeedId.safeParse(c.req.param("id"));
-    if (!id.success) return c.html(messagePage("Feed not found", "That feed doesn't exist."), 404);
+    if (!id.success) return c.html(messagePage("Calendar not found", "That calendar doesn't exist."), 404);
     if (!(await currentUser(c))) return c.redirect("/login", 303);
     const body = await form(c);
     const back = body.back === "setup" ? `/feeds/${id.data}/setup` : `/feeds/${id.data}/settings`;
@@ -65,7 +65,7 @@ export function registerImportRoutes(app: Hono<AppEnv>): void {
 
   app.post("/feeds/:id/import/stop", async (c) => {
     const id = FeedId.safeParse(c.req.param("id"));
-    if (!id.success) return c.html(messagePage("Feed not found", "That feed doesn't exist."), 404);
+    if (!id.success) return c.html(messagePage("Calendar not found", "That calendar doesn't exist."), 404);
     if (!(await currentUser(c))) return c.redirect("/login", 303);
     const body = await form(c);
     if (!csrfValid(c, body.csrf)) return c.html(messagePage("Please try again", MESSAGES.badForm, { href: `/feeds/${id.data}/settings`, text: "Back" }), 403);

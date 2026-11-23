@@ -79,7 +79,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
       <form method="post" action="/admin/alert-drill">${csrf}<button type="submit" class="secondary">Run the alert drill</button></form>
       <p class="muted" style="font-size:.875rem">The drill fires every alert once (each admin gets the emails, marked as a drill), then clears them.</p></div>` : "";
     const actions = (feed: { id: string; hidden: boolean; owner_id: string }, item: { kind: "report" | "flag"; id: string }) => html`<div class="row" style="margin-top:.5rem">
-      ${feed.hidden ? html`<span class="muted">Feed hidden</span>` : html`<form method="post" action="/admin/feeds/${feed.id}/hide">${csrf}<input type="hidden" name="reason" value="${item.kind}:${item.id}"><button type="submit" class="danger">Hide feed</button></form>`}
+      ${feed.hidden ? html`<span class="muted">Calendar hidden</span>` : html`<form method="post" action="/admin/feeds/${feed.id}/hide">${csrf}<input type="hidden" name="reason" value="${item.kind}:${item.id}"><button type="submit" class="danger">Hide calendar</button></form>`}
       <form method="post" action="/admin/${item.kind}s/${item.id}/dismiss">${csrf}<button type="submit" class="secondary">Dismiss</button></form>
       <form method="post" action="/admin/users/${feed.owner_id}/suspend">${csrf}<input type="hidden" name="reason" value="${item.kind}:${item.id}"><button type="submit" class="secondary">Suspend owner</button></form>
     </div>`;
@@ -188,8 +188,8 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
     const { data, error } = await c.get("supabase").rpc("verify_feed_by_domain", { p_feed_id: id.data });
     if (error) return c.html(messagePage("Not allowed", "Only the owner can ask for verification."), 403);
     return c.html(data === true
-      ? messagePage("Verified", "Your feed now shows a verified badge: your email address is at the same organisation that sends its emails.", { href: `/feeds/${id.data}/settings`, text: "Back to settings" })
-      : messagePage("Not verified automatically", "We verify automatically when you sign in with your organisation's email (not Gmail, Yahoo and so on) and that organisation's address is a trusted sender for this feed. Otherwise, reply to any Calantern email and we'll check by hand.", { href: `/feeds/${id.data}/settings`, text: "Back to settings" }));
+      ? messagePage("Verified", "Your calendar now shows a verified badge: your email address is at the same organisation that sends its emails.", { href: `/feeds/${id.data}/settings`, text: "Back to settings" })
+      : messagePage("Not verified automatically", "We verify automatically when you sign in with your organisation's email (not Gmail, Yahoo and so on) and that organisation's address is a trusted sender for this calendar. Otherwise, reply to any Calantern email and we'll check by hand.", { href: `/feeds/${id.data}/settings`, text: "Back to settings" }));
   });
 }
 

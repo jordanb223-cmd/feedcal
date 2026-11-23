@@ -63,7 +63,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     const notFound = () => {
       c.header("cache-control", "no-store");
       c.header("x-robots-tag", "noindex");
-      return c.text("Feed not found.", 404);
+      return c.text("Calendar not found.", 404);
     };
     const match = /^(.+)\.ics$/.exec(c.req.param("file"));
     const token = FeedToken.safeParse(match?.[1]);
@@ -138,7 +138,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
   // Make a new link; the old one stops working at once. Owner only (enforced in the database).
   app.post("/feeds/:id/rotate-token", async (c) => {
     const id = FeedId.safeParse(c.req.param("id"));
-    if (!id.success) return c.html(messagePage("Feed not found", "That feed doesn't exist."), 404);
+    if (!id.success) return c.html(messagePage("Calendar not found", "That calendar doesn't exist."), 404);
     const user = await currentUser(c);
     if (!user) return c.redirect("/login", 303);
     const body = await c.req.parseBody();
@@ -147,7 +147,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     if (body.confirm !== "yes") return c.html(messagePage("Nothing changed", "Tick the box to confirm, then press Make a new link again.", { href: `/feeds/${id.data}/share`, text: "Back" }), 400);
     const { data: token, error } = await c.get("supabase").rpc("rotate_feed_token", { p_feed_id: id.data });
     if (error || typeof token !== "string") {
-      return c.html(messagePage("Not allowed", "Only the feed's owner can make a new link."), 403);
+      return c.html(messagePage("Not allowed", "Only the calendar's owner can make a new link."), 403);
     }
     c.get("log").info("feed_token_rotated", { feed_id: id.data });
     // Redirect after POST, so refreshing the page can't rotate the link a second time.

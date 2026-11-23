@@ -8,8 +8,8 @@ import { visibilityChoice } from "./visibility.js";
 describe("Private / Public choice", () => {
   it("offers exactly two big options, Private by default", async () => {
     const html = String(await visibilityChoice(undefined));
-    expect(html).toContain("🔒 Private");
-    expect(html).toContain("🌐 Public");
+    expect(html).toContain("<strong>Private</strong>");
+    expect(html).toContain("<strong>Public</strong>");
     expect(html).toContain('value="unlisted" checked');
     expect(html).toContain("Find a calendar");
     expect((html.match(/type="radio"/g) ?? []).length).toBe(2);

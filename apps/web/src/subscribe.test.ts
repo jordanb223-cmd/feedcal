@@ -197,7 +197,7 @@ describe("share kit", () => {
     expect(body).toContain(`value="${BASE}/f/${TOKEN}.ics"`);
     expect(body).toMatch(/<svg[^>]*>/);
     expect(body).toContain(`Get Room 12 in your phone&#39;s calendar. It updates on its own: ${BASE}/c/room-12-ab12cd34`);
-    expect(body).toContain("≈ 12 calendars checked this feed");
+    expect(body).toContain("≈ 12 calendar apps checked it");
     expect(body).toContain("tapped 5 times");
     expect(body).toContain(`action="/feeds/${FEED_ID}/rotate-token"`);
   });
@@ -205,7 +205,7 @@ describe("share kit", () => {
   it("a private feed's kit has no page link, and its QR points at the calendar link", async () => {
     const { request } = setup(kitRpc, { user: true, feedRow: { id: FEED_ID, name: "Drafts", slug: "drafts", visibility: "private" } });
     const body = await (await request(`/feeds/${FEED_ID}/share`)).text();
-    expect(body).toContain("This feed is private");
+    expect(body).toContain("This calendar is private");
     expect(body).not.toContain("/c/drafts");
     expect(body).toContain(`aria-label="QR code for ${BASE}/f/${TOKEN}.ics"`);
   });

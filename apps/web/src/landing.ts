@@ -11,26 +11,31 @@ export function landingPage(head: ReturnType<typeof html> | string = DEFAULT_HEA
   return publicLayout(
     "Events that add themselves",
     html`<section class="hero">
-  <span class="kicker">Free for you, your family and friends</span>
-  <h1>Events that add themselves.</h1>
-  <p class="lead">Stop adding events one by one. Calantern reads the emails you already get from school, the team or the club, and keeps putting every new event on your calendar. Share it, and your friends and family stay up to date too.</p>
-  <p><a class="button wide" href="/login?next=/feeds/new">Make a calendar</a></p>
-  <p><a class="button secondary wide" href="/directory">Find a calendar</a></p>
-  <p class="muted" style="text-align:center;font-size:.9375rem">Already have one? <a href="/login">Sign in</a></p>
+  <div class="pitch">
+  <h1>Events that <span>add themselves.</span></h1>
+  <p class="lead">Keep emailing like you always do. Calantern finds the dates and puts every event on everyone's calendar, yours included, so nobody types anything in.</p>
+  <p class="actions"><a class="button" href="/login?next=/feeds/new">Make a calendar</a></p>
+  <p class="assure">Free. No app. Works with iPhone, Google Calendar and Outlook. Already have one? <a href="/login">Sign in</a></p>
+  </div>
+  <div class="demo" aria-label="An example: a line in a school email becomes a calendar event">
+    <p class="slip"><small>From: Room F &lt;office@school&gt;</small>Reminder: our pumpkin patch trip is <mark>Wednesday the 25th at 9:00</mark>. Please send a jacket.</p>
+    <p class="becomes" aria-hidden="true">↓ becomes</p>
+    <ul class="cal"><li class="next"><span class="day" aria-hidden="true"><span class="dow">Wed</span><span class="num">25</span></span><span class="what"><strong>Pumpkin patch field trip</strong><span class="when">Wed, Nov 25 · 9:00 AM</span></span></li></ul>
+  </div>
 </section>
 <section class="card">
   <h2>How it works</h2>
   <ol class="how">
     <li><span class="n" aria-hidden="true">1</span><span><strong>Name it.</strong> "Room F", "Hawks U10", "Choir".</span></li>
-    <li><span class="n" aria-hidden="true">2</span><span><strong>Connect your email.</strong> Pick one example email from the school or coach, and Calantern reads only that sender. Or forward emails to it.</span></li>
-    <li><span class="n" aria-hidden="true">3</span><span><strong>Share it.</strong> Add it to your own phone, or send the link or print the QR code for friends and family. New events show up on their own.</span></li>
+    <li><span class="n" aria-hidden="true">2</span><span><strong>Keep emailing like normal.</strong> Sending the emails? Add the calendar's address in CC. Getting them? Connect Gmail, or forward them. Calantern asks you once before it trusts a new sender.</span></li>
+    <li><span class="n" aria-hidden="true">3</span><span><strong>Everyone's calendar fills itself.</strong> Share the link or QR code once. From then on, new events appear on their phones, and yours, without anyone typing them in.</span></li>
   </ol>
 </section>
 <section class="card">
   <h2>Got a flyer?</h2>
   <p>Point your phone's camera at the code, tap the link, then tap <strong>Add to Calendar</strong>. No app, no sign-up.</p>
 </section>
-<p class="assure-line">Works with iPhone, Android, Google Calendar and Outlook. Free, no ads, and we don't sell data.</p>`,
+<p class="assure-line">No ads, and we don't sell data.</p>`,
     head,
   );
 }

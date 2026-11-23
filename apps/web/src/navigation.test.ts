@@ -1,5 +1,5 @@
 // No dead ends (2026-11-21): every HTML page the site serves has the site header. Public pages
-// show no organizer links; organizer pages link to Your feeds and Account.
+// show no organizer links; organizer pages link to Your calendars and Account.
 import { describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
 import type { Bindings } from "./env.js";
@@ -37,12 +37,12 @@ describe("every page has a way to move on", () => {
       const html = await res.text();
       expect(html, path).toContain('aria-label="Site"');
       expect(html, path).toContain('<a class="skip" href="#main">Skip to content</a>');
-      expect(html, path).toContain('<meta name="theme-color" content="#ffffff">');
-      if (res.status === 200) expect(html, path).not.toContain('href="/feeds">Your feeds');
+      expect(html, path).toContain('<meta name="theme-color" content="#f6efe2">');
+      if (res.status === 200) expect(html, path).not.toContain('href="/feeds">Your calendars');
     }
   });
 
-  it("organizer pages (signed in): a header with Your feeds and Account", async () => {
+  it("organizer pages (signed in): a header with Your calendars and Account", async () => {
     const get = app(true);
     for (const path of ORGANIZER) {
       const res = await get(path);
@@ -50,7 +50,7 @@ describe("every page has a way to move on", () => {
       const html = await res.text();
       expect(html, path).toContain('aria-label="Site"');
       if (res.status === 200) {
-        expect(html, path).toContain('<a href="/feeds">Your feeds</a>');
+        expect(html, path).toContain('<a href="/feeds">Your calendars</a>');
         expect(html, path).toContain('<a href="/account">Account</a>');
       }
     }

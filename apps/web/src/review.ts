@@ -120,7 +120,7 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       .insert({ name: parsed.data.name, category: parsed.data.category, visibility: wantsPublic ? "unlisted" : parsed.data.visibility, slug,
         zip_code: parsed.data.zip_code || null } as never)
       .select("id").single();
-    if (error || !data) return c.html(newFeedPage({ csrf: csrfToken(c), error: "We couldn't create the feed. Please try again.", values: form }), 400);
+    if (error || !data) return c.html(newFeedPage({ csrf: csrfToken(c), error: "We couldn't create the calendar. Please try again.", values: form }), 400);
     c.get("log").info("feed_created", { feed_id: data.id });
     // D47: next, the one question that matters: where do the emails come from?
     return c.redirect(`/feeds/${data.id}/setup${wantsPublic ? "?public_later=1" : ""}`, 303);
@@ -402,7 +402,7 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     if (user instanceof Response) return user;
     if (form.confirm !== "yes") return renderSettings(c, id.data, user, "Please tick the box to confirm.");
     const { data, error } = await c.get("supabase").rpc("request_feed_deletion", { p_feed_id: id.data });
-    if (error) return renderSettings(c, id.data, user, "Only the owner can delete this feed.");
+    if (error) return renderSettings(c, id.data, user, "Only the owner can delete this calendar.");
     c.get("log").info("feed_deletion_requested", { feed_id: id.data });
     return c.redirect(`/feeds?done=deleted&undo=${String(data)}`, 303);
   });
