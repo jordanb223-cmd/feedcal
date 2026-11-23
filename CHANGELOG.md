@@ -7,6 +7,21 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.8.6] - 2026-11-23
+
+### Added
+- A page that shows how to stop following a calendar in Apple Calendar, Google Calendar and Outlook. Every email from Calantern links to it, and so does the last line of every event. Your calendar app shows the new line after its next refresh.
+
+### Changed
+- Emails from Calantern are friendlier and easier to read. The weekly email starts with what needs you, and the follower number is now a small line marked as a rough guess. The "10, 50 or 100 followers" email is a thank-you first.
+- Your calendars now show as Private or Public everywhere.
+
+### Fixed
+- Photo thumbnails on the Email page, and pictures on review cards, now load.
+- "Trust" and "Stop using" in Settings keep you on Settings.
+- An email with an unreadable date no longer gets stuck; Calantern uses the time it arrived.
+- Bounce messages and the data export file name say Calantern.
+
 ## [0.8.5] - 2026-11-22
 
 ### Fixed
