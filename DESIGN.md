@@ -222,9 +222,10 @@ longer clips.
 
 ### Still to do
 
-- Organizer pages on a wide screen are still one narrow column.
-- The Share and Account pages have the new look but still carry too much: Share has five
-  sections, Account six. They need a content pass, not more styling.
 - The home page's second line is SavvyCal's idea (ink line, then accent line). The reviewer
   called it derivative. Worth a second idea of our own.
-- A broken-image box shows on the Email page when a photo's file is missing from storage.
+
+Done since (D69): on wide screens Share, Account and Review use two columns, and other organizer
+pages are a little wider (36rem). Share and Account each fold their rare, risky action away, and
+Account no longer repeats the calendar list. A picture that fails to load is hidden instead of
+showing a broken box. Still one column on wide screens: Email, Settings, Add event.

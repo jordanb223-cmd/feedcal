@@ -55,6 +55,13 @@ const doneOf = (c: Context<AppEnv>) => {
 };
 
 // D44: only ZIPs in the loaded list (public.zip_codes) are accepted, so a typo can't place a calendar.
+/** The next coming date of a repeating event, as an ISO instant, or null when none is left. */
+export function nextOccurrence(occurrences: string[] | null | undefined, now: Date): string | null {
+  const t = now.getTime();
+  const coming = (occurrences ?? []).map((o) => Date.parse(o)).filter((ms) => Number.isFinite(ms) && ms >= t).sort((a, b) => a - b);
+  return coming[0] === undefined ? null : new Date(coming[0]).toISOString();
+}
+
 async function knownZip(c: Context<AppEnv>, zip: string): Promise<boolean> {
   const { data } = await c.get("supabase").from("zip_codes").select("zip").eq("zip", zip).maybeSingle();
   return Boolean(data);
@@ -135,14 +142,20 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     const feed = await loadFeed(c, id.data);
     if (!feed) return notFound(c);
     const sb = c.get("supabase");
-    const [{ data: cands }, { data: drafts }, { data: upcoming }] = await Promise.all([
+    const since = new Date(Date.now() - 86_400_000).toISOString();
+    const [{ data: cands }, { data: drafts }, { data: listed }] = await Promise.all([
       sb.from("event_candidates").select("id, message_id, title, starts_at, all_day, timezone, location, confidence, outcome, change_kind, review_reasons, evidence_quote, source_kind, attachment_id, page_index, from_transcription, event_id")
         .eq("feed_id", id.data).eq("state", "needs_review").order("created_at").limit(50),
       sb.from("events").select("id, title, starts_at, all_day, timezone, location, confidence, evidence_quote")
         .eq("feed_id", id.data).eq("published", false).eq("status", "tentative").order("starts_at").limit(50),
-      sb.from("events").select("id, title, starts_at, all_day, timezone, location, status")
-        .eq("feed_id", id.data).eq("published", true).gte("starts_at", new Date(Date.now() - 86_400_000).toISOString()).order("starts_at").limit(50),
+      // Repeating events (imports) carry their coming dates; they stay listed after their first date.
+      sb.from("events").select("id, title, starts_at, all_day, timezone, location, status, occurrences")
+        .eq("feed_id", id.data).eq("published", true).or(`starts_at.gte.${since},occurrences.neq.{}`).order("starts_at").limit(200),
     ]);
+    const upcoming = (listed ?? []).flatMap((e) => {
+      const next = Date.parse(e.starts_at) >= Date.parse(since) ? e.starts_at : nextOccurrence(e.occurrences, new Date());
+      return next ? [{ ...e, starts_at: next }] : [];
+    }).sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at)).slice(0, 50);
     const list = cands ?? [];
     const msgIds = [...new Set(list.map((x) => x.message_id))];
     const evIds = [...new Set(list.flatMap((x) => (x.event_id ? [x.event_id] : [])))];
@@ -184,7 +197,7 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     const draftCards: DraftCard[] = (drafts ?? []).map((d) => ({ id: d.id, title: d.title, when: { starts_at: d.starts_at, all_day: d.all_day, timezone: d.timezone }, location: d.location, confidence: d.confidence === null ? null : Number(d.confidence), quote: d.evidence_quote }));
     return c.html(feedHomePage({
       csrf: csrfToken(c), feedId: feed.id, name: feed.name, cards, drafts: draftCards,
-      upcoming: (upcoming ?? []).map((e) => ({ id: e.id, title: e.title, when: { starts_at: e.starts_at, all_day: e.all_day, timezone: e.timezone }, location: e.location, status: e.status })),
+      upcoming: upcoming.map((e) => ({ id: e.id, title: e.title, when: { starts_at: e.starts_at, all_day: e.all_day, timezone: e.timezone }, location: e.location, status: e.status })),
       done: doneOf(c), undo: undoOf(c, `/feeds/${feed.id}`),
     }));
   });

@@ -7,6 +7,22 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Fixed
+- Emails that had to wait (your daily limit was reached, or AI reading was paused) are now picked up again on their own, every hour. Before, they waited until someone restarted them by hand.
+- With Gmail connected, an email that arrived after the day's limit was reached is no longer skipped for good. Calantern tries it again an hour later.
+- Calendars copied from a calendar link: a repeating event now stays on your public page and your "Coming up" list, shown at its next date and marked "Repeats". Before, it disappeared after its first date.
+- Calendars copied from a calendar link: when one date in a repeating event was moved or removed at the source, Calantern now keeps the series and shows the change. Before, the moved date replaced the whole series.
+- A photo your browser can't show no longer leaves a broken-image box on the Email page.
+- The takedown page pointed to a report option that doesn't exist. It now points to the contact form.
+
+### Changed
+- On a computer screen, the Share, Account and Review pages use two columns instead of one narrow one.
+- The Share page tucks "Make a new calendar link" away until you open it. The Account page does the same for "Delete your account", and no longer repeats your list of calendars.
+- The privacy page says which country Calantern's data is stored in.
+
+### Added
+- Admins can show a hidden calendar again from the admin page.
+
 ## [0.9.0] - 2026-11-23
 
 ### Changed

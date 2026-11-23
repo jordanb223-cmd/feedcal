@@ -91,6 +91,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
   </ul>
   <h2>Who processes it</h2>
   <p>Supabase (database), Cloudflare (website and email receiving), Anthropic (the AI that reads forwarded emails), and Resend (emails we send). If you donate, Buy Me a Coffee handles the payment. See <a href="/about/costs">what Calantern costs</a>.</p>
+  <p>Calantern's database, sign-in records and stored files are kept in the United States. The other companies above may handle data in other places as part of their own service.</p>
   <h2 id="cookies">Cookies and trackers</h2>
   <p>Calantern only uses the cookies it needs to work:</p>
   <ul>

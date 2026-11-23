@@ -30,6 +30,8 @@ export const PublicFeedPage = z.object({
       all_day: z.boolean(),
       timezone: z.string(),
       rrule: z.string().nullable(),
+      /** A repeating event: `starts_at` is then its next coming date, not its first. */
+      repeats: z.boolean().optional(),
       status: z.enum(["tentative", "confirmed", "cancelled"]),
     }),
   ),

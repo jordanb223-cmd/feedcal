@@ -132,6 +132,8 @@ export function feedHomePage(opts: {
   done?: string | undefined; undo?: { id: string; back: string } | null | undefined;
 }): Html {
   const sure = opts.cards.filter(isSure).length + opts.drafts.filter((d) => (d.confidence ?? 0) >= 0.85).length;
+  // On a wide screen, things to review sit beside "Coming up". With nothing to review there is one column.
+  const hasWork = opts.cards.length + opts.drafts.length > 0;
   const t = opts.csrf;
   return layout(opts.name, html`${banner(opts.done, opts.undo ?? null, t)}
 <div class="card">
@@ -142,6 +144,7 @@ export function feedHomePage(opts: {
     : html`<p>${opts.cards.length + opts.drafts.length} to review.</p>
   ${sure > 0 ? html`<form method="post" action="/feeds/${opts.feedId}/approve-sure">${csrf(t)}<button type="submit">Approve all ${sure} marked Sure</button></form>` : ""}`}
 </div>
+${hasWork ? html`<div class="split"><div>` : ""}
 ${opts.cards.map((c) => html`<div class="card panel">
   <span class="kicker">${isSure(c) ? "Calantern is sure" : "Check this one"}</span>
   <h2 dir="auto">${c.title}</h2>
@@ -181,6 +184,7 @@ ${opts.drafts.map((d) => html`<div class="card panel">
     <form method="post" action="/feeds/${opts.feedId}/drafts/${d.id}/discard">${csrf(t)}<button type="submit" class="secondary">Discard</button></form>
   </div>
 </div>`)}
+${hasWork ? html`</div><aside>` : ""}
 <div class="card">
   <h2>Coming up</h2>
   ${opts.upcoming.length === 0
@@ -189,7 +193,8 @@ ${opts.drafts.map((d) => html`<div class="card panel">
         const d = dayParts(e.when);
         return html`<li class="${i === 0 ? "next" : ""}"><span class="day" aria-hidden="true"><span class="dow">${d.dow}</span><span class="num">${d.num}</span></span><span class="what"><a href="/feeds/${opts.feedId}/events/${e.id}"><strong dir="auto">${e.title}</strong></a>${e.status === "cancelled" ? html` <span class="muted">(cancelled)</span>` : ""}<span class="when">${formatWhen(e.when)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></span></li>`;
       })}</ul>`}
-</div>`);
+</div>
+${hasWork ? html`</aside></div>` : ""}`);
 }
 
 // ---------------------------------------------------------------- event editor
