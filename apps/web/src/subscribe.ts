@@ -85,11 +85,11 @@ export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
   // The owner's share kit [Rev 1]: page link, calendar link, QR, group-chat text, stats, rotation.
   app.get("/feeds/:id/share", async (c) => {
     const id = FeedId.safeParse(c.req.param("id"));
-    if (!id.success) return c.html(messagePage("Feed not found", "That feed doesn't exist."), 404);
+    if (!id.success) return c.html(messagePage("Calendar not found", "That calendar doesn't exist."), 404);
     const user = await currentUser(c);
     if (!user) return c.redirect(`/login?next=${encodeURIComponent(`/feeds/${id.data}/share`)}`, 303);
     const kit = await loadShareKit(c, id.data);
-    if (!kit) return c.html(messagePage("Feed not found", "That feed doesn't exist, or it isn't yours."), 404);
+    if (!kit) return c.html(messagePage("Calendar not found", "That calendar doesn't exist, or it isn't yours."), 404);
     const notice = c.req.query("rotated") === "1" ? "New link made. The old link has stopped working; anyone using it needs the new one." : undefined;
     const ready = c.req.query("ready") === "gmail"; // D47: the end of Gmail setup
     return c.html(shareKitPage({ csrf: csrfToken(c), ...kit, ...(notice ? { notice } : {}), ready }));
@@ -97,11 +97,11 @@ export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
 
   app.get("/feeds/:id/flyer", async (c) => {
     const id = FeedId.safeParse(c.req.param("id"));
-    if (!id.success) return c.html(messagePage("Feed not found", "That feed doesn't exist."), 404);
+    if (!id.success) return c.html(messagePage("Calendar not found", "That calendar doesn't exist."), 404);
     const user = await currentUser(c);
     if (!user) return c.redirect(`/login?next=${encodeURIComponent(`/feeds/${id.data}/flyer`)}`, 303);
     const kit = await loadShareKit(c, id.data);
-    if (!kit) return c.html(messagePage("Feed not found", "That feed doesn't exist, or it isn't yours."), 404);
+    if (!kit) return c.html(messagePage("Calendar not found", "That calendar doesn't exist, or it isn't yours."), 404);
     const url = kit.pageUrl ?? kit.feedUrl;
     return c.html(flyerPage({ name: kit.name, url, qrSvg: kit.qrSvg, feedId: id.data, half: c.req.query("half") === "1" }));
   });
@@ -109,7 +109,7 @@ export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
   // Old address for the link page; the share kit replaces it.
   app.get("/feeds/:id/link", (c) => {
     const id = FeedId.safeParse(c.req.param("id"));
-    return id.success ? c.redirect(`/feeds/${id.data}/share`, 301) : c.html(messagePage("Feed not found", "That feed doesn't exist."), 404);
+    return id.success ? c.redirect(`/feeds/${id.data}/share`, 301) : c.html(messagePage("Calendar not found", "That calendar doesn't exist."), 404);
   });
 }
 

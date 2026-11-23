@@ -40,7 +40,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     const { data } = await c.get("supabase").rpc("export_my_data");
     const feeds = z.array(ExportFeed).safeParse((data as { feeds?: unknown } | null)?.feeds);
     const found = feeds.success ? feeds.data.find((f) => f.feed.id === id) : undefined;
-    if (!found) return c.html(messagePage("Feed not found", "That feed doesn't exist, or it isn't yours."), 404);
+    if (!found) return c.html(messagePage("Calendar not found", "That calendar doesn't exist, or it isn't yours."), 404);
     const events: CalendarEvent[] = found.events.map((e) => ({
       uid: e.uid ?? `${e.id}@feedcal.app`, title: e.title, description: e.description ?? null, location: e.location ?? null,
       startsAt: e.starts_at, endsAt: e.ends_at ?? null, allDay: e.all_day ?? false, timeZone: e.timezone ?? found.feed.timezone ?? "America/Los_Angeles",

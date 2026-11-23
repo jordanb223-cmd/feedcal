@@ -8,12 +8,11 @@ import type { HtmlEscapedString } from "hono/utils/html";
 
 type Html = HtmlEscapedString | Promise<HtmlEscapedString>;
 
-// Look C, "crisp calendar" (owner's pick, 2026-11-21, D46). Contrast on white (WCAG AA 4.5:1):
-// text #111111 (18.9:1), muted #5c5c5c (6.7:1), accent #c2410c (5.2:1), white on #111111 buttons
-// (18.9:1), field borders #767676 (4.5:1), error #8a1c1c on #fdf1f1 (8.4:1). Computed, not estimated.
+// "Lantern paper" (DESIGN.md part 4, D67): cream page, serif headlines, the lantern orange.
+// The colours and their computed contrast are listed at the top of the stylesheet (assets.ts).
 
 /**
- * Every page has a way to move on (2026-11-21). Organizer pages: Feedcal · Your feeds · Account.
+ * Every page has a way to move on (2026-11-21). Organizer pages: Feedcal · Your calendars · Account.
  * Public pages (what families and visitors see): Feedcal · Find a calendar, with no organizer
  * links. Messages and errors: just the Feedcal home link.
  */
@@ -26,7 +25,7 @@ function siteHeader(audience: Audience): Html {
   if (audience === "minimal") {
     return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Calantern</a></nav>`;
   }
-  return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Calantern</a><a href="/feeds">Your feeds</a><a href="/account">Account</a></nav>`;
+  return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Calantern</a><a href="/feeds">Your calendars</a><a href="/account">Account</a></nav>`;
 }
 
 /** For pages anyone can see without signing in. */
@@ -45,11 +44,11 @@ ${head}
 <link rel="stylesheet" href="${ASSET_PATHS.css}">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#f6efe2">
 <script src="${ASSET_PATHS.js}" defer></script>
 </head>
 <body><a class="skip" href="#main">Skip to content</a><main id="main">${siteHeader(audience)}${body}
-<footer class="muted no-print" style="font-size:.875rem;text-align:center;margin-top:2rem"><p style="margin:0 0 .5rem">${FOOTER_DISCLAIMER}</p><a href="/directory">Find a calendar</a> · <a href="/rules">Community rules</a> · <a href="/terms">Terms</a> · <a href="/takedown">Reports</a> · <a href="/privacy">Privacy</a> · <a href="/contact">Contact</a> · <a href="/about/costs">Support Calantern</a></footer></main></body>
+<footer class="no-print"><p>${FOOTER_DISCLAIMER}</p><nav aria-label="Footer"><a href="/directory">Find a calendar</a><a href="/rules">Community rules</a><a href="/terms">Terms</a><a href="/takedown">Reports</a><a href="/privacy">Privacy</a><a href="/contact">Contact</a><a href="/about/costs">Support Calantern</a></nav></footer></main></body>
 </html>`;
 }
 
@@ -58,7 +57,7 @@ const csrfField = (token: string) => html`<input type="hidden" name="csrf" value
 export function loginPage(opts: { csrf: string; googleEnabled: boolean; error?: string; email?: string; next?: string }): Html {
   return publicLayout(
     "Sign in",
-    html`<div class="card">
+    html`<div class="card panel">
   <h1>Sign in to Calantern</h1>
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
   <form method="post" action="/login">
@@ -160,10 +159,10 @@ export function accountPage(opts: {
   </div>
 </div>
 <div class="card">
-  <h2>Your feeds</h2>
-  <p><a href="/feeds">Open your feeds dashboard</a></p>
+  <h2>Your calendars</h2>
+  <p><a href="/feeds">Open your calendars</a></p>
   ${opts.feeds.length === 0
-    ? html`<p class="muted">You don't have any feeds yet. <a href="/feeds/new">Create one</a>.</p>`
+    ? html`<p class="muted">You don't have any calendars yet. <a href="/feeds/new">Create one</a>.</p>`
     : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${visibilityLabel(f.visibility)})</span><span class="when"><a href="/feeds/${f.id}">Review and events</a> · <a href="/feeds/${f.id}/share">Share</a> · <a href="/feeds/${f.id}/email">Email forwarding</a></span></li>`)}</ul>`}
 </div>
 <div class="card">
@@ -172,8 +171,8 @@ export function accountPage(opts: {
     ${csrfField(opts.csrf)}
     <p><label class="check"><input type="checkbox" name="weekly_digest" value="1" ${n.weekly_digest ? "checked" : ""}> A weekly summary every Monday</label></p>
     <p><label class="check"><input type="checkbox" name="instant_reports" value="1" ${n.instant_reports ? "checked" : ""}> Right away when a subscriber reports a problem</label></p>
-    <p><label class="check"><input type="checkbox" name="staleness" value="1" ${n.staleness ? "checked" : ""}> A reminder when a feed goes quiet</label></p>
-    <p><label class="check"><input type="checkbox" name="milestones" value="1" ${n.milestones ? "checked" : ""}> A thank-you when a feed reaches 10, 50 or 100 followers</label></p>
+    <p><label class="check"><input type="checkbox" name="staleness" value="1" ${n.staleness ? "checked" : ""}> A reminder when a calendar goes quiet</label></p>
+    <p><label class="check"><input type="checkbox" name="milestones" value="1" ${n.milestones ? "checked" : ""}> A thank-you when a calendar reaches 10, 50 or 100 followers</label></p>
     <button type="submit" class="secondary">Save email choices</button>
   </form>
 </div>
@@ -192,7 +191,7 @@ export function accountPage(opts: {
   ${opts.deletionDate
     ? html`<p class="error" role="alert">Your account will be deleted on <strong>${opts.deletionDate}</strong>.</p>
   <form method="post" action="/account/cancel-delete">${csrfField(opts.csrf)}<button type="submit">Keep my account</button></form>`
-    : html`<p>We wait ${opts.graceDays ? `${opts.graceDays} days` : "a short grace period"}, then delete your personal data. Feeds you own go to a co-editor if they have one; otherwise they're deleted.</p>
+    : html`<p>We wait ${opts.graceDays ? `${opts.graceDays} days` : "a short grace period"}, then delete your personal data. Calendars you own go to a co-editor if they have one; otherwise they're deleted.</p>
   <form method="post" action="/account/delete">
     ${csrfField(opts.csrf)}
     <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand my account will be deleted ${opts.graceDays ? `in ${opts.graceDays} days` : "after the grace period"}.</label></p>

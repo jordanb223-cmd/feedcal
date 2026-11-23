@@ -73,15 +73,19 @@ export const EMAIL_NOTICES = {
   released: "Done. That email will be read for events.",
   ignored: "Done. That email was ignored.",
   rotated: "Your calendar has a new email address. The old one no longer works, so update any forwarding rules.",
-  created: "Your feed is ready. Forward emails to the address below, or add events by hand from the feed's page.",
+  created: "Your calendar is ready. Forward emails to the address below, or add events by hand from the calendar's page.",
   chosen: "Got it. Calantern will read that file, and will pick files like it from this sender from now on.",
   never: "Got it. Calantern will skip files like that from this sender.",
   large: "Got it. Big attachments from this sender will be read.",
 } as const;
 export type EmailNotice = keyof typeof EMAIL_NOTICES;
 
-const when = (iso: string) =>
-  new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) + " UTC";
+/** "Nov 22, 6:43 PM" in the calendar's own time zone (falls back to Pacific if the zone is bad). */
+const when = (iso: string, tz: string) => {
+  const opts = { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" } as const;
+  try { return new Date(iso).toLocaleString("en-US", { ...opts, timeZone: tz }); }
+  catch { return new Date(iso).toLocaleString("en-US", { ...opts, timeZone: "America/Los_Angeles" }); }
+};
 
 export function emailSetupPage(opts: {
   csrf: string;
@@ -96,7 +100,10 @@ export function emailSetupPage(opts: {
   suspicious: SuspiciousMessage[];
   recent?: RecentEmail[];
   notice?: EmailNotice;
+  /** The calendar's time zone, for the times shown on this page. */
+  timezone?: string;
 }): Html {
+  const tz = opts.timezone ?? "America/Los_Angeles";
   const csrf = html`<input type="hidden" name="csrf" value="${opts.csrf}">`;
   const nothingWaiting = opts.senders.length === 0 && opts.suspicious.length === 0;
   return layout(
@@ -105,7 +112,7 @@ export function emailSetupPage(opts: {
   <h1>Email for <span dir="auto">${opts.name}</span></h1>
   ${feedNav(opts.feedId, "email")}
   ${opts.notice ? html`<p role="status">${EMAIL_NOTICES[opts.notice]}</p>` : ""}
-  <p>Forward school or team emails to this address. Calantern reads them and finds the events.</p>
+  <p>Forward school or team emails to this address, or add it in CC when you send them. Calantern reads them and finds the events. <a href="/feeds/${opts.feedId}/gmail">Use Gmail instead</a></p>
   ${opts.address
     ? html`<p><label for="intake">This calendar's email address</label><input class="copy" id="intake" readonly spellcheck="false" value="${opts.address}"></p>
   <p><button type="button" class="secondary" data-copy="intake">Copy address</button></p>`
@@ -137,7 +144,7 @@ ${opts.confirmation
   )}
   ${opts.suspicious.map(
     (m) => html`<div style="margin:0 0 1rem">
-    <p><strong>This email didn't pass the sender's security checks.</strong><span class="when">From ${m.sender ?? "an unknown sender"} · ${when(m.receivedAt)}${m.subject ? html` · "<span dir="auto">${m.subject}</span>"` : ""}</span></p>
+    <p><strong>This email didn't pass the sender's security checks.</strong><span class="when">From ${m.sender ?? "an unknown sender"} · ${when(m.receivedAt, tz)}${m.subject ? html` · "<span dir="auto">${m.subject}</span>"` : ""}</span></p>
     <p class="muted">It may be forged. Only use it if you expected it.</p>
     <div class="row">
       <form method="post" action="/feeds/${opts.feedId}/messages/${m.id}">${csrf}<input type="hidden" name="decision" value="release"><button type="submit" class="secondary">Use it anyway</button></form>
@@ -150,29 +157,28 @@ ${opts.confirmation
   <h2>Recent emails</h2>
   ${!opts.recent?.length
     ? html`<p class="muted">No emails yet. Once you forward one, you'll see here what Calantern read from it.</p>`
-    : opts.recent.map(
-      (m) => html`<div style="margin:0 0 1.25rem">
-    <p><strong dir="auto">${m.subject ?? "(no subject)"}</strong><span class="when">${m.sender ?? "unknown sender"} · ${when(m.receivedAt)}</span></p>
+    : html`<ul class="mail">${opts.recent.map(
+      (m) => html`<li>
+    <p><strong dir="auto">${m.subject ?? "(no subject)"}</strong><span class="when">${m.sender ?? "unknown sender"} · ${when(m.receivedAt, tz)}${m.attachments.length === 0 ? " · email text read" : ""}</span></p>
     ${m.attachments.length === 0
-      ? html`<p class="muted">No attachments; the email text is read.</p>`
-      : html`<ul class="events">${m.attachments.map(
+      ? ""
+      : html`<ul class="files">${m.attachments.map(
         (a) => html`<li>
-      ${a.thumbnailUrl ? html`<img src="${a.thumbnailUrl}" alt="" width="64" height="64" style="object-fit:cover;border-radius:6px;float:right;margin-left:.5rem">` : ""}
-      <strong dir="auto">${a.filename ?? "(unnamed file)"}</strong>${a.chosen ? html` <span class="muted">(your pick)</span>` : ""}
+      ${a.thumbnailUrl ? html`<img src="${a.thumbnailUrl}" alt="" width="44" height="44">` : ""}
+      <span dir="auto">${a.filename ?? "(unnamed file)"}</span>${a.chosen ? html`<span class="chip">Your pick</span>` : ""}
       <span class="when">${attachmentOutcome(a)}</span>
-      <div class="row" style="margin-top:.5rem">
-        ${a.chosen ? "" : html`<form method="post" action="/feeds/${opts.feedId}/attachments/${a.id}/choose">${csrf}<button type="submit" class="secondary">This one has the schedule</button></form>`}
-        ${a.reason === "owner_never" || a.reason === "rule_never" ? "" : html`<form method="post" action="/feeds/${opts.feedId}/attachments/${a.id}/never">${csrf}<button type="submit" class="secondary">Never use files like this</button></form>`}
+      <div class="acts">
+        ${a.chosen ? "" : html`<form method="post" action="/feeds/${opts.feedId}/attachments/${a.id}/choose">${csrf}<button type="submit" class="link">This one has the schedule</button></form>`}
+        ${a.reason === "owner_never" || a.reason === "rule_never" ? "" : html`<form method="post" action="/feeds/${opts.feedId}/attachments/${a.id}/never">${csrf}<button type="submit" class="link">Never use files like this</button></form>`}
         ${(a.reason === "too_large" || a.reason === "too_many_pages") && m.sourceId
-          ? html`<form method="post" action="/feeds/${opts.feedId}/senders/${m.sourceId}/large">${csrf}<button type="submit" class="secondary">Read big files from this sender</button></form>`
+          ? html`<form method="post" action="/feeds/${opts.feedId}/senders/${m.sourceId}/large">${csrf}<button type="submit" class="link">Read big files from this sender</button></form>`
           : ""}
       </div></li>`,
       )}</ul>`}
-  </div>`,
-    )}
+  </li>`,
+    )}</ul>`}
 </div>
-<div class="card">
-  <h2>How to forward</h2>
+<details class="more card"><summary>How to forward automatically</summary>
   <p class="muted">Menu names change from time to time; if a step doesn't match, look for "Forwarding" or "Rules" in your mail settings.</p>
   <details><summary>Gmail: forward automatically</summary>
     <ol>
@@ -208,17 +214,16 @@ ${opts.confirmation
     <p class="muted">Mac rules only run while Mail is open on that Mac. For iCloud addresses, the iCloud Mail rule above is more reliable.</p>
   </details>
   <p class="muted">The first email from a new sender waits here until you say yes. Emails over 20 MB or with more than 10 attachments are returned to the sender. Copies are deleted after 30 days.</p>
-</div>
+</details>
 ${opts.isOwner
-  ? html`<div class="card">
-  <h2>Getting spam at this address?</h2>
+  ? html`<details class="more card"><summary>Getting spam at this address?</summary>
   <p>Get a new address. The old one stops working right away, so you'll need to update your forwarding.</p>
   <form method="post" action="/feeds/${opts.feedId}/rotate-intake">${csrf}
     <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand the old address stops working right away</label></p>
     <button type="submit" class="danger">Get a new address</button></form>
-</div>`
+</details>`
   : ""}
-<p><a href="/account">Back to your account</a></p>`,
+`,
   );
 }
 

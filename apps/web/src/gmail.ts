@@ -141,10 +141,10 @@ function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { n
 export function registerGmailRoutes(app: Hono<AppEnv>): void {
   const owner = async (c: Context<AppEnv>) => {
     const id = FeedId.safeParse(c.req.param("id"));
-    if (!id.success) return { res: c.html(messagePage("Feed not found", "That feed doesn't exist."), 404) };
+    if (!id.success) return { res: c.html(messagePage("Calendar not found", "That calendar doesn't exist."), 404) };
     if (!(await currentUser(c))) return { res: c.redirect(`/login?next=${encodeURIComponent(`/feeds/${id.data}/gmail`)}`, 303) };
     const loaded = await load(c, id.data);
-    if (!loaded) return { res: c.html(messagePage("Only the owner can do this", "Only the feed's owner can connect Gmail."), 403) };
+    if (!loaded) return { res: c.html(messagePage("Only the owner can do this", "Only the calendar's owner can connect Gmail."), 403) };
     return { id: id.data, ...loaded };
   };
 
@@ -158,6 +158,7 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
     return c.html(layout(`Set up ${o.name}`, html`<div class="card">
       <span class="kicker">New calendar</span>
       <h1>Where do <span dir="auto">${o.name}</span>'s emails come from?</h1>
+      <p class="lead">Choose how emails reach Calantern. After that, keep emailing like normal: events go onto your calendar and everyone else's by themselves.</p>
       ${later ? html`<p class="muted">It starts Private. You can make it Public in Settings once it has an event.</p>` : ""}
       ${gmailOn ? html`<div class="pick">
         <h2>Connect Gmail <span class="tag">Easiest</span></h2>
@@ -166,7 +167,7 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
       </div>` : ""}
       <div class="pick">
         <h2>Forward emails</h2>
-        <p class="muted">Works with any email app. Calantern gives this calendar its own address to forward to.</p>
+        <p class="muted">Works with any email app. Sending the emails yourself? Just add this calendar's address in CC. Getting them? Forward them to it. You'll approve each new sender once.</p>
         <a class="button ${gmailOn ? "secondary " : ""}wide" href="/feeds/${o.id}/email?done=created">Get the forwarding address</a>
       </div>
       <details class="more"><summary>More ways to add events</summary>

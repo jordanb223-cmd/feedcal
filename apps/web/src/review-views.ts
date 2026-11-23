@@ -1,7 +1,7 @@
 // Phase 11 pages: dashboard, new feed, feed home with the review queue, event editor, settings.
 // Mobile-first: one column, big buttons, plain words.
 import { html } from "hono/html";
-import { formatWhen } from "./subscribe-views.js";
+import { dayParts, formatWhen } from "./subscribe-views.js";
 import { feedNav } from "./nav.js";
 import { visibilityChoice, visibilityLabel } from "./visibility.js";
 import { importStatus, type ImportStatus } from "./imports.js";
@@ -43,7 +43,7 @@ export const DONE: Record<string, string> = {
   editor_removed: "Editor removed.",
   rule_cleared: "Attachment rule cleared.",
   sender: "Sender updated.",
-  deleted: "Feed deleted.",
+  deleted: "Calendar deleted.",
   undone: "Undone.",
   too_late: "Too late to undo (10 seconds have passed).",
 };
@@ -64,17 +64,17 @@ function banner(done: string | undefined, undo: { id: string; back: string } | n
 export interface DashboardFeed { id: string; name: string; visibility: string; lastUpdated: string; reviewCount: number; subscribers: number | null }
 
 export function dashboardPage(opts: { csrf: string; feeds: DashboardFeed[]; done?: string | undefined; undo?: { id: string; back: string } | null | undefined }): Html {
-  return layout("Your feeds", html`${banner(opts.done, opts.undo ?? null, opts.csrf)}
+  return layout("Your calendars", html`${banner(opts.done, opts.undo ?? null, opts.csrf)}
 <div class="card">
-  <h1>Your feeds</h1>
+  <h1>Your calendars</h1>
   ${opts.feeds.length === 0
-    ? html`<p>You don't have a feed yet. A feed is one calendar that families subscribe to, like "Room 12" or "U10 Hawks".</p>`
+    ? html`<p>You don't have a calendar yet. Make one for each group families follow, like "Room 12" or "U10 Hawks".</p>`
     : html`<ul class="events">${opts.feeds.map((f) => html`<li>
       <a href="/feeds/${f.id}"><strong dir="auto">${f.name}</strong></a>
-      ${f.reviewCount > 0 ? html` <span class="error" style="padding:.1rem .5rem">${f.reviewCount} to review</span>` : ""}
+      ${f.reviewCount > 0 ? html` <span class="badge">${f.reviewCount} to review</span>` : ""}
       <span class="when">${f.subscribers === null ? "" : `≈ ${f.subscribers} ${f.subscribers === 1 ? "calendar follows" : "calendars follow"} · `}updated ${new Date(f.lastUpdated).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} · ${visibilityLabel(f.visibility)}</span>
     </li>`)}</ul>`}
-  <p><a class="button" href="/feeds/new">New feed</a></p>
+  <p><a class="button" href="/feeds/new">New calendar</a></p>
   <p><a href="/account">Your account</a></p>
 </div>`);
 }
@@ -142,12 +142,13 @@ export function feedHomePage(opts: {
     : html`<p>${opts.cards.length + opts.drafts.length} to review.</p>
   ${sure > 0 ? html`<form method="post" action="/feeds/${opts.feedId}/approve-sure">${csrf(t)}<button type="submit">Approve all ${sure} marked Sure</button></form>` : ""}`}
 </div>
-${opts.cards.map((c) => html`<div class="card">
-  <h2 dir="auto">${c.title} <span class="muted" style="font-size:1rem">${isSure(c) ? "Sure" : "Check this"}</span></h2>
+${opts.cards.map((c) => html`<div class="card panel">
+  <span class="kicker">${isSure(c) ? "Calantern is sure" : "Check this one"}</span>
+  <h2 dir="auto">${c.title}</h2>
   ${what(c)}
   ${c.reviewReasons.map((r) => html`<p class="${r === "possible_injection" ? "error" : "muted"}">${REVIEW_LABELS[r] ?? r}</p>`)}
   ${c.imageUrl ? html`<p><img src="${c.imageUrl}" alt="The page this came from" style="max-width:100%;border-radius:8px"></p>` : ""}
-  <blockquote class="muted" dir="auto" style="margin:0 0 1rem;border-left:4px solid #e3e3df;padding-left:.75rem">…${c.evidence.before}<mark>${c.evidence.quote}</mark>${c.evidence.after}…<br><small>${c.evidence.where}</small></blockquote>
+  <blockquote class="muted" dir="auto">…${c.evidence.before}<mark>${c.evidence.quote}</mark>${c.evidence.after}…<br><small>${c.evidence.where}</small></blockquote>
   ${c.originalUrl ? html`<p><a href="${c.originalUrl}" target="_blank" rel="noopener">Open the original file</a></p>` : ""}
   <div class="row">
     <form method="post" action="/feeds/${opts.feedId}/candidates/${c.id}/approve">${csrf(t)}<button type="submit">Approve</button></form>
@@ -169,8 +170,9 @@ ${opts.cards.map((c) => html`<div class="card">
     </form>
   </details>
 </div>`)}
-${opts.drafts.map((d) => html`<div class="card">
-  <h2 dir="auto">${d.title} <span class="muted" style="font-size:1rem">Draft${(d.confidence ?? 0) >= 0.85 ? " · Sure" : ""}</span></h2>
+${opts.drafts.map((d) => html`<div class="card panel">
+  <span class="kicker">Draft${(d.confidence ?? 0) >= 0.85 ? " · Calantern is sure" : ""}</span>
+  <h2 dir="auto">${d.title}</h2>
   <p>${formatWhen(d.when)}${d.location ? html` · <span dir="auto">${d.location}</span>` : ""}</p>
   ${d.quote ? html`<blockquote class="muted" dir="auto"><mark>${d.quote}</mark></blockquote>` : ""}
   <div class="row">
@@ -183,7 +185,10 @@ ${opts.drafts.map((d) => html`<div class="card">
   <h2>Coming up</h2>
   ${opts.upcoming.length === 0
     ? html`<p class="muted">No upcoming events yet. <a href="/feeds/${opts.feedId}/events/new">Add one</a>, or forward an email.</p>`
-    : html`<ul class="events">${opts.upcoming.map((e) => html`<li><a href="/feeds/${opts.feedId}/events/${e.id}"><strong dir="auto">${e.title}</strong></a>${e.status === "cancelled" ? html` <span class="muted">(cancelled)</span>` : ""}<span class="when">${formatWhen(e.when)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></li>`)}</ul>`}
+    : html`<ul class="cal">${opts.upcoming.map((e, i) => {
+        const d = dayParts(e.when);
+        return html`<li class="${i === 0 ? "next" : ""}"><span class="day" aria-hidden="true"><span class="dow">${d.dow}</span><span class="num">${d.num}</span></span><span class="what"><a href="/feeds/${opts.feedId}/events/${e.id}"><strong dir="auto">${e.title}</strong></a>${e.status === "cancelled" ? html` <span class="muted">(cancelled)</span>` : ""}<span class="when">${formatWhen(e.when)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></span></li>`;
+      })}</ul>`}
 </div>`);
 }
 
@@ -265,7 +270,7 @@ ${s.isOwner ? html`<div class="card">
 </div>` : ""}
 ${s.isOwner ? html`<div class="card">
   <h2>Verified badge</h2>
-  <p>Families trust calendars from verified organizers. We verify automatically when you sign in with your organisation's email and it sends this feed's emails.</p>
+  <p>Families trust calendars from verified organizers. We verify automatically when you sign in with your organisation's email and it sends this calendar's emails.</p>
   <form method="post" action="/feeds/${opts.feedId}/verify">${csrf(t)}<button type="submit" class="secondary">Check verification</button></form>
 </div>` : ""}
 <div class="card">
@@ -291,10 +296,10 @@ ${s.isOwner ? html`<div class="card">
 </div>
 </details>
 ${s.isOwner ? html`<div class="card">
-  <h2>Delete this feed</h2>
+  <h2>Delete this calendar</h2>
   <p>Subscribers stop getting updates at once. You'll have 10 seconds to undo.</p>
   <form method="post" action="/feeds/${opts.feedId}/delete">${csrf(t)}
-    <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> Delete this feed and all its events</label></p>
-    <button type="submit" class="danger">Delete feed</button></form>
+    <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> Delete this calendar and all its events</label></p>
+    <button type="submit" class="danger">Delete calendar</button></form>
 </div>` : ""}`);
 }
