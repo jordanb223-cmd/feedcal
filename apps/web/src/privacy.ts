@@ -28,7 +28,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     if (error || !data) return c.html(messagePage("Something went wrong", "Please try again in a minute.", { href: "/account", text: "Back" }), 503);
     c.get("log").info("data_exported");
     c.header("content-type", "application/json; charset=utf-8");
-    c.header("content-disposition", `attachment; filename="feedcal-export-${new Date().toISOString().slice(0, 10)}.json"`);
+    c.header("content-disposition", `attachment; filename="calantern-export-${new Date().toISOString().slice(0, 10)}.json"`);
     c.header("cache-control", "private, no-store");
     return c.body(JSON.stringify(data, null, 2));
   });
@@ -48,7 +48,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
       createdAt: e.created_at ?? e.starts_at, updatedAt: e.updated_at ?? e.starts_at, source: null,
     }));
     const { ics } = buildCalendar({ name: found.feed.name, description: found.feed.description ?? null }, events, {
-      defaultTimeZone: found.feed.timezone ?? "America/Los_Angeles", reportUrl: (uid) => `${originOf(c)}/report/${encodeURIComponent(uid)}`, product: "Calantern", signOff: eventSignOff(found.feed.name),
+      defaultTimeZone: found.feed.timezone ?? "America/Los_Angeles", reportUrl: (uid) => `${originOf(c)}/report/${encodeURIComponent(uid)}`, product: "Calantern", signOff: eventSignOff(found.feed.name, originOf(c)),
     });
     c.header("content-type", "text/calendar; charset=utf-8");
     c.header("content-disposition", `attachment; filename="${found.feed.slug}-export.ics"`);

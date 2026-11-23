@@ -46,7 +46,7 @@ describe.skipIf(!enabled)("privacy, end to end", { timeout: 60_000 }, () => {
     const app = createApp({ version: "it", commit: "it", supabase: () => alice as unknown as Supa, logSink: () => {} });
     const res = await app.request("http://localhost:8788/account/export", {}, env);
     expect(res.status).toBe(200);
-    expect(res.headers.get("content-disposition")).toMatch(/^attachment; filename="feedcal-export-/);
+    expect(res.headers.get("content-disposition")).toMatch(/^attachment; filename="calantern-export-/);
     const body = await res.text();
     const data = JSON.parse(body) as { account: { email: string }; feeds: { feed: { owner_id: string } }[] };
     expect(data.account.email).toBe("alice@example.test");

@@ -127,6 +127,7 @@ export function registerEmailRoutes(app: Hono<AppEnv>): void {
     const { error } = await c.get("supabase").rpc("decide_sender", { p_source_id: sourceId.data, p_trust: trust });
     if (error) return notFound(c);
     c.get("log").info("sender_decided", { feed_id: id.data, trust });
+    if (body.back === "settings") return c.redirect(`/feeds/${id.data}/settings?done=sender`, 303);
     return c.redirect(`/feeds/${id.data}/email?done=${trust ? "approved" : "declined"}`, 303);
   });
 

@@ -62,7 +62,7 @@ export function registerUploadRoutes(app: Hono<AppEnv>): void {
     return c.html(layout(`Upload to ${feed.name}`, html`<div class="card">
   <span class="kicker">Add events</span>
   <h1>Upload a file to <span dir="auto">${feed.name}</span></h1>
-  ${done ? html`<p class="notice" role="status">Got it. Calantern is reading your file now. New events show up on the calendar within a few minutes, and anything it isn't sure about waits for you to check.</p>` : ""}
+  ${done ? html`<p role="status">Got it. Calantern is reading your file now. New events show up on the calendar within a few minutes, and anything it isn't sure about waits for you to check.</p>` : ""}
   <p>A school newsletter, a team schedule or a photo of a flyer. Calantern finds the dates in it, the same way it reads emails.</p>
   <form id="upload-form" method="post" action="/feeds/${id.data}/upload/start" data-feed="${id.data}">
     <input type="hidden" name="csrf" value="${csrfToken(c)}">

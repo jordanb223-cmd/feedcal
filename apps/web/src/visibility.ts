@@ -6,6 +6,9 @@
 // event places when there is one. Private calendars are never asked.
 import { html } from "hono/html";
 
+/** The word people see: "unlisted" and the older "private" are both shown as Private. */
+export const visibilityLabel = (v: string) => (v === "public" ? "Public" : "Private");
+
 export interface AreaChoice {
   zip: string | null;                                       // what's saved now
   suggestion?: { zip: string; places: number } | null;      // found in emails/events (feed_zip_suggestion)

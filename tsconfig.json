@@ -3,7 +3,6 @@
   "references": [
     { "path": "packages/shared" },
     { "path": "packages/ics" },
-    { "path": "packages/extract" },
     { "path": "apps/web" },
     { "path": "apps/email-worker" },
     { "path": "tests" }

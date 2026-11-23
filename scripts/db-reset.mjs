@@ -5,7 +5,7 @@
 import { spawnSync } from "node:child_process";
 
 const args = process.argv.slice(2);
-const remote = args.find((a) => a === "--linked" || a.startsWith("--db-url") || a.startsWith("--project-ref"));
+const remote = args.find((a) => a === "--linked" || a.startsWith("--remote") || a.startsWith("--db-url") || a.startsWith("--project-ref"));
 if (remote) {
   process.stderr.write(`REFUSING: "${remote.split("=")[0]}" would reset a HOSTED database and DELETE all its data. db:reset is for the local stack only.\n`);
   process.exit(1);

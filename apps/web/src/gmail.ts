@@ -65,7 +65,7 @@ async function load(c: Context<AppEnv>, id: string): Promise<{ name: string; sta
 function page(c: Context<AppEnv>, id: string, name: string, s: Status, opts: { notice?: string; error?: string; candidates?: Cand[] } = {}) {
   const t = csrfToken(c);
   const enabled = Boolean(c.env.GMAIL_CLIENT_ID);
-  const head = html`${feedNav(id, "gmail")}<h1>Gmail for <span dir="auto">${name}</span></h1>
+  const head = html`<h1>Gmail for <span dir="auto">${name}</span></h1>${feedNav(id, "gmail")}
     ${opts.notice ? html`<p role="status">${opts.notice}</p>` : ""}${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}`;
   const disconnect = html`<form method="post" action="/feeds/${id}/gmail/disconnect">${csrfField(t)}
     <p><label class="check"><input type="checkbox" name="confirm" value="yes" required> I understand this deletes Calantern's copies of these emails</label></p>
@@ -231,8 +231,8 @@ export function registerGmailRoutes(app: Hono<AppEnv>): void {
     const lookBack = body.look_back === "1";
     if (!pick) return c.html(page(c, o.id, o.name, o.status, { error: "Pick one of the emails first." }), 400);
     const t = csrfToken(c);
-    return c.html(layout(`Gmail for ${o.name}`, html`<div class="card">${feedNav(o.id, "gmail")}
-      <h1>Here's what Calantern will do for <span dir="auto">${o.name}</span></h1>
+    return c.html(layout(`Gmail for ${o.name}`, html`<div class="card">
+      <h1>Here's what Calantern will do for <span dir="auto">${o.name}</span></h1>${feedNav(o.id, "gmail")}
       <ul>
         <li>Look <strong>only</strong> for emails <strong>from ${pick.from_name ? `${pick.from_name} ` : ""}&lt;${pick.from_email}&gt;</strong>. Nothing else in your Gmail is searched or read.</li>
         <li>Check <strong>every ${interval} days</strong>.</li>

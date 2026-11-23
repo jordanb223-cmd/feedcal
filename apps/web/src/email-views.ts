@@ -74,7 +74,6 @@ export const EMAIL_NOTICES = {
   ignored: "Done. That email was ignored.",
   rotated: "Your calendar has a new email address. The old one no longer works, so update any forwarding rules.",
   created: "Your feed is ready. Forward emails to the address below, or add events by hand from the feed's page.",
-  created_public_later: "Your feed is ready, and private for now: a calendar can be listed publicly once it has a published event (and your account is 7 days old). Add events, then switch it to Public in Settings.",
   chosen: "Got it. Calantern will read that file, and will pick files like it from this sender from now on.",
   never: "Got it. Calantern will skip files like that from this sender.",
   large: "Got it. Big attachments from this sender will be read.",
@@ -103,8 +102,8 @@ export function emailSetupPage(opts: {
   return layout(
     `Email for ${opts.name}`,
     html`<div class="card">
-  ${feedNav(opts.feedId, "email")}
   <h1>Email for <span dir="auto">${opts.name}</span></h1>
+  ${feedNav(opts.feedId, "email")}
   ${opts.notice ? html`<p role="status">${EMAIL_NOTICES[opts.notice]}</p>` : ""}
   <p>Forward school or team emails to this address. Calantern reads them and finds the events.</p>
   ${opts.address

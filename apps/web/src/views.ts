@@ -1,5 +1,6 @@
 import { html } from "hono/html";
 import { ASSET_PATHS } from "./assets.js";
+import { visibilityLabel } from "./visibility.js";
 
 /** D62: shown at the foot of every page (calendar pages also carry the longer notes). */
 export const FOOTER_DISCLAIMER = "Calantern fills calendars in automatically and can make mistakes. It isn't run by any school or team.";
@@ -163,7 +164,7 @@ export function accountPage(opts: {
   <p><a href="/feeds">Open your feeds dashboard</a></p>
   ${opts.feeds.length === 0
     ? html`<p class="muted">You don't have any feeds yet. <a href="/feeds/new">Create one</a>.</p>`
-    : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${f.visibility})</span><span class="when"><a href="/feeds/${f.id}">Review and events</a> · <a href="/feeds/${f.id}/share">Share</a> · <a href="/feeds/${f.id}/email">Email forwarding</a></span></li>`)}</ul>`}
+    : html`<ul class="events">${opts.feeds.map((f) => html`<li><strong dir="auto">${f.name}</strong> <span class="muted">(${visibilityLabel(f.visibility)})</span><span class="when"><a href="/feeds/${f.id}">Review and events</a> · <a href="/feeds/${f.id}/share">Share</a> · <a href="/feeds/${f.id}/email">Email forwarding</a></span></li>`)}</ul>`}
 </div>
 <div class="card">
   <h2>Emails from Calantern</h2>
