@@ -60,7 +60,7 @@ describe.skipIf(!enabled)("notifications, end to end with real delivery (Mailpit
 
     // pg_cron calls the sender every minute; calling it here is the same step, without the wait.
     expect((await send()).provider).toBe("mailpit");
-    const mail = await inbox("alice@example.test", `Someone reported a problem with "${ev?.title}"`, started);
+    const mail = await inbox("alice@example.test", `Someone spotted a problem with "${ev?.title}"`, started);
     expect(mail).toBeTruthy();
     expect(Date.parse(mail?.Created ?? "") - started).toBeLessThan(60_000);
 
@@ -85,7 +85,8 @@ describe.skipIf(!enabled)("notifications, end to end with real delivery (Mailpit
     expect(mail).toBeTruthy();
     const full = (await (await fetch(`${MAILPIT}/api/v1/message/${mail?.ID}`)).json()) as { Text: string };
     expect(full.Text).toContain("Sutterville Kindergarten");
-    expect(full.Text).toMatch(/About \d+ calendars follow it \((up from|down from|same as last week)/);
-    expect(full.Text).toMatch(/\d+ events added\. \d+ to review\. \d+ reports\./);
+    expect(full.Text).toMatch(/\d+ events? waiting for your OK\.|Nothing waiting for you\./);
+    expect(full.Text).toMatch(/\d+ new events? this week/);
+    expect(full.Text).toContain("/help/unsubscribe");
   });
 });
