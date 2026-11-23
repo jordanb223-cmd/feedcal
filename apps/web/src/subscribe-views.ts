@@ -71,7 +71,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
 
   return publicLayout(
     feed.name,
-    html`<div class="card">
+    html`<div class="two-up"><div class="card panel">
   ${kicker(feed.category, feed.zip_code)}
   <h1 dir="auto">${feed.name}${feed.verified ? html` <span title="Verified organizer" style="font-size:1rem">✓ Verified</span>` : ""}</h1>
   ${feed.may_be_out_of_date ? html`<p class="error" role="alert">This calendar hasn't been updated in over 90 days, so it may be out of date.</p>` : ""}
@@ -100,7 +100,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
         const d = dayParts(e);
         return html`<li class="${i === 0 ? "next" : ""}"><span class="day" aria-hidden="true"><span class="dow">${d.dow}</span><span class="num">${d.num}</span></span><span class="what"><strong dir="auto">${e.title}</strong><span class="when">${formatWhen(e)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></span></li>`;
       })}</ul>`}
-</div>
+</div></div>
 ${subscriberNotes(feed.verified === true)}
 <p class="muted no-print" style="text-align:center"><a href="/c/${feed.slug}/report">Report this calendar</a></p>`,
     head,
@@ -139,7 +139,7 @@ export function shareKitPage(opts: {
     ? html`<p>Send people this page. It has a one-tap subscribe button for their phone.</p>
   <p><label for="page-link">Page link</label><input class="copy" id="page-link" readonly spellcheck="false" value="${opts.pageUrl}"></p>
   ${opts.ready ? "" : html`<p><button type="button" class="wide" data-copy="page-link" aria-live="polite">Copy page link</button></p>`}`
-    : html`<p>This feed is private, so it has no public page. Share the calendar link directly with the people who should see it.</p>`}
+    : html`<p>This calendar is private, so it has no public page. Share the calendar link directly with the people who should see it.</p>`}
   <p><label for="feed-url">Calendar link (for calendar apps)</label><input class="copy" id="feed-url" readonly spellcheck="false" value="${opts.feedUrl}"></p>
   <p><button type="button" class="secondary" data-copy="feed-url">Copy calendar link</button></p>
   ${opts.ready ? html`</details>` : ""}
@@ -158,7 +158,7 @@ export function shareKitPage(opts: {
 ${opts.stats
   ? html`<div class="card">
   <h2>Who's following</h2>
-  <p>≈ ${opts.stats.subscribers_at_least} ${opts.stats.subscribers_at_least === 1 ? "calendar" : "calendars"} checked this feed in the last 7 days. Subscribe buttons were tapped ${clicks} ${clicks === 1 ? "time" : "times"} in the last 30 days.</p>
+  <p>≈ ${opts.stats.subscribers_at_least} ${opts.stats.subscribers_at_least === 1 ? "calendar app" : "calendar apps"} checked it in the last 7 days. Subscribe buttons were tapped ${clicks} ${clicks === 1 ? "time" : "times"} in the last 30 days.</p>
   <p class="muted" style="font-size:.875rem">Google checks once for all its users, so the real number is often higher.</p>
 </div>`
   : ""}

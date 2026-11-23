@@ -26,6 +26,8 @@ describe("security headers", () => {
     expect(csp).toContain("form-action 'self' https://ref.supabase.co https://accounts.google.com");
     // Attachment thumbnails and review images are signed links on the storage origin.
     expect(csp).toContain("img-src 'self' data: https://ref.supabase.co;");
+    // The one web font is served from this site's own /fonts (DESIGN.md); nothing loads from elsewhere.
+    expect(csp).toContain("font-src 'self'");
     expect(res.headers.get("strict-transport-security")).toBe("max-age=31536000; includeSubDomains");
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(res.headers.get("x-frame-options")).toBe("DENY");

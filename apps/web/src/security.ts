@@ -51,6 +51,7 @@ export function securityHeaders(c: Context, supabaseUrl: string | undefined, hst
     "style-src-attr 'unsafe-inline'",
     `img-src 'self' data:${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`, // attachment thumbnails and review images are signed storage links
     `connect-src 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`, // D61: the browser sends uploads straight to storage
+    "font-src 'self'", // the headline face, served from /fonts (DESIGN.md)
     "manifest-src 'self'",
     `form-action 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""} https://accounts.google.com`,
     "frame-ancestors 'none'",

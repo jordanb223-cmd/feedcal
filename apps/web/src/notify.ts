@@ -19,7 +19,7 @@ const KINDS: Record<z.infer<typeof Kind>, string> = {
 };
 const UnsubKind = z.enum(["weekly_digest", "report", "stale_nudge", "milestone", "supporter_thanks", "all"]);
 const UNSUB_LABELS: Record<z.infer<typeof UnsubKind>, string> = {
-  weekly_digest: "the weekly summary", report: "instant report notices", stale_nudge: "reminders about quiet feeds", milestone: "milestone thank-yous", supporter_thanks: "supporter thank-yous (sent only once)", all: "all Calantern emails",
+  weekly_digest: "the weekly summary", report: "instant report notices", stale_nudge: "reminders about quiet calendars", milestone: "milestone thank-yous", supporter_thanks: "supporter thank-yous (sent only once)", all: "all Calantern emails",
 };
 
 async function form(c: Context<AppEnv>): Promise<Record<string, string>> {
@@ -104,7 +104,7 @@ export function registerNotifyRoutes(app: Hono<AppEnv>): void {
     return c.redirect("/account?done=notifications", 303);
   });
 
-  // A thank-you card to share when a feed reaches 10, 50 or 100 followers. No streaks.
+  // A thank-you card to share when a calendar reaches 10, 50 or 100 followers. No streaks.
   app.get("/feeds/:id/milestones/:n", async (c) => {
     const id = z.uuid().safeParse(c.req.param("id"));
     const n = z.coerce.number().int().refine((x) => [10, 50, 100].includes(x)).safeParse(c.req.param("n"));
@@ -116,12 +116,12 @@ export function registerNotifyRoutes(app: Hono<AppEnv>): void {
       sb.from("feeds").select("name").eq("id", id.data).maybeSingle(),
       sb.from("feed_milestones").select("reached_at").eq("feed_id", id.data).eq("milestone", n.data).maybeSingle(),
     ]);
-    if (!feed || !m) return c.html(messagePage("Not yet", "This feed hasn't reached that milestone yet."), 404);
-    return c.html(layout(`${n.data} calendars`, html`<div class="card" style="text-align:center;padding:2.5rem 1.5rem;border:3px solid #1f5f3f">
+    if (!feed || !m) return c.html(messagePage("Not yet", "This calendar hasn't reached that milestone yet."), 404);
+    return c.html(layout(`${n.data} calendars`, html`<div class="card" style="text-align:center;padding:2.5rem 1.5rem;border:3px solid #c2410c">
       <p class="muted">Thank you</p>
       <h1 style="font-size:3rem;margin:.25rem 0">${n.data}</h1>
       <p style="font-size:1.25rem">calendars follow <strong dir="auto">${feed.name}</strong></p>
       <p class="muted">That's ${n.data} families who don't copy dates by hand. Thanks for keeping it up to date.</p>
-    </div><p class="no-print"><a href="/feeds/${id.data}">Back to the feed</a> · Take a screenshot or print this page to share it.</p>`));
+    </div><p class="no-print"><a href="/feeds/${id.data}">Back to the calendar</a> · Take a screenshot or print this page to share it.</p>`));
   });
 }

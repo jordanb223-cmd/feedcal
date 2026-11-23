@@ -54,10 +54,10 @@ async function relay(c: Context<AppEnv>, body: Record<string, unknown>) {
 export function registerUploadRoutes(app: Hono<AppEnv>): void {
   app.get("/feeds/:id/upload", async (c) => {
     const id = FeedId.safeParse(c.req.param("id"));
-    if (!id.success) return c.html(messagePage("Feed not found", "That feed doesn't exist."), 404);
+    if (!id.success) return c.html(messagePage("Calendar not found", "That calendar doesn't exist."), 404);
     if (!(await currentUser(c))) return c.redirect(`/login?next=${encodeURIComponent(`/feeds/${id.data}/upload`)}`, 303);
     const feed = await editable(c, id.data);
-    if (!feed) return c.html(messagePage("Feed not found", "That feed doesn't exist, or you can't edit it."), 404);
+    if (!feed) return c.html(messagePage("Calendar not found", "That calendar doesn't exist, or you can't edit it."), 404);
     const done = c.req.query("done") === "1";
     return c.html(layout(`Upload to ${feed.name}`, html`<div class="card">
   <span class="kicker">Add events</span>
@@ -78,7 +78,7 @@ export function registerUploadRoutes(app: Hono<AppEnv>): void {
 
   const step = (action: "start" | "finish") => async (c: Context<AppEnv>) => {
     const id = FeedId.safeParse(c.req.param("id"));
-    if (!id.success) return c.json({ error: "That feed doesn't exist." }, 404);
+    if (!id.success) return c.json({ error: "That calendar doesn't exist." }, 404);
     if (!(await currentUser(c))) return c.json({ error: "Please sign in again." }, 401);
     const body = await c.req.parseBody();
     if (!csrfValid(c, body.csrf)) return c.json({ error: "Please reload the page and try again." }, 403);

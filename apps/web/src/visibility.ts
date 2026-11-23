@@ -27,9 +27,9 @@ export function visibilityChoice(current: string | undefined, area: AreaChoice =
   return html`<fieldset class="choice">
   <legend>Who can find it</legend>
   <label><input type="radio" name="visibility" value="${privateValue}" ${isPublic ? "" : "checked"}>
-    <span><strong>🔒 Private</strong><br>Only people with the link or QR code can see and subscribe.</span></label>
+    <span><strong>Private</strong><br>Only people with the link or QR code can see and subscribe.</span></label>
   <label><input type="radio" name="visibility" value="public" ${isPublic ? "checked" : ""}>
-    <span><strong>🌐 Public</strong><br>Same link and QR code, and it can show up in <a href="/directory">Find a calendar</a> search.</span></label>
+    <span><strong>Public</strong><br>Same link and QR code, and it can show up in <a href="/directory">Find a calendar</a> search.</span></label>
 </fieldset>
 <div class="area">
   <p><label for="zip_code">Area (ZIP code), for Public calendars</label>
