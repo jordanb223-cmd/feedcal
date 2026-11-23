@@ -7,6 +7,19 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-23
+
+### Changed
+- Calantern has a new look: a warm paper background, one orange accent, and a new headline typeface. Buttons are flat and there is one main button per page.
+- Each calendar now has a row of five tabs: Review, Add event, Share, Email and Settings.
+- The Email page is shorter. Recent emails are a compact list, the how-to and spam sections are folded away until you open them, and times show in your calendar's timezone.
+- Upcoming events show as date tiles on your calendar's page and on the public page.
+- The home page shows an email turning into a calendar event, with one "Make a calendar" button.
+
+### Security
+- Calantern's background jobs now refuse to start for a signed-in person's own session. Only the scheduler can start them.
+- Visitors can no longer read the internal id of a public calendar's owner. It was never a name or an email address.
+
 ## [0.8.6] - 2026-11-23
 
 ### Added

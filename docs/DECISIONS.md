@@ -595,3 +595,24 @@ What was checked, against what, and what changed:
   - Same release, from a full read of the project: the content security policy now allows images from the storage origin (thumbnails and review images were blocked); the Settings sender buttons return to Settings; an unparseable `Date:` header falls back to arrival time; `db:reset` refuses `--remote`; bounce messages and the export file name say Calantern; the empty `packages/extract` package is deleted.
 - **Tests.** `notify.test.ts` (wording, the leave line, the guess line, no trend), `feed.test.ts` (sign-off link), `hardening.test.ts` (image origin), `seo`/`navigation` tests (new page), `tests/integration/notifications.test.ts` (real delivery with the new wording).
 - **Not verified yet.** The steps on real devices; whether each calendar app makes the link in an event's notes tappable; no test covers the unparseable-date fallback. The sign-in email template says Calantern in the repo, but hosted projects only use it once it is pasted into Supabase (SETUP "Branded template").
+
+## D67 — A new look, "Lantern paper", chosen from real reference sites (2026-11-23)
+
+- **Why.** The owner asked for a design pass in five steps: collect ten real sites in the niche, show three mockups, ban the "AI look", have a stranger judge it, then polish at phone width. The owner then said to choose on their behalf.
+- **What.**
+  - `DESIGN.md` at the repo root holds the ten references, the rules taken from them, the banned patterns, and the chosen direction with its colour, type and shape tokens. It is the source for design questions from now on.
+  - Direction A, "Lantern paper": paper background `#f6efe2`, ink `#1c1813`, one accent `#c2410c`, 12px radius, flat buttons, one main button per page.
+  - Headlines use Young Serif, served from this site (`/fonts/young-serif-latin-400.woff2`, copied at build time from the pinned `@fontsource/young-serif` package). Body text stays the system sans. The content security policy gains `font-src 'self'`; nothing loads from another origin.
+  - Calendar pages get a five-tab bar (`apps/web/src/nav.ts`). The Email page is compacted (`email-views.ts`). "Coming up" and the public page use date tiles.
+  - The request named shadcn/ui and Magic UI. Both are React libraries and this app renders HTML on the server with one stylesheet and no React, so neither is installed. Their conventions were followed in plain CSS, and the small animations are CSS only.
+- **Tests.** `landing`, `nav`, `navigation`, `footer`, `subscribe`, `visibility`, `feed`, `seo` and `hardening` tests updated for the new markup and the font rule. A headless-Chrome tour opened 39 pages at 375px wide and 10 at 1280px with no console errors and no horizontal overflow.
+- **Not verified yet.** Real phones. The stranger's score (5.5 of 10) was given before the three changes it asked for were made and was not repeated after. `DESIGN.md` lists what is still to do: organizer pages are narrow on desktop, and Share and Account are long.
+
+## D68 — Scheduler-only functions refuse a person's token; visitors cannot read the owner id (2026-11-23)
+
+- **Why.** A pre-launch security check found two gaps. Neither exposed anyone's data.
+- **What.**
+  - D26 has the scheduler call `storage-trash` with the project's public anon key, because it "only deletes files already queued, so a stranger calling it changes nothing". Seven functions added later are called the same way (`private.call_edge_function`), and each only works through rows the database queued. That stays. What changes: `carriesUser` in `supabase/functions/_shared/http.ts` makes each of them answer 403 to a token whose role is not `anon` or `service_role`, so a signed-in person cannot start queue runs with their own session. A project API key that is not a JWT passes, because the key format the deploy stores was not confirmed and refusing it could stop the scheduler.
+  - Migration `20261123000100_anon_no_owner_id.sql` revokes `select (owner_id)` on `public.feeds` from `anon`. The web app's only direct visitor query on that table selects `slug` and `last_updated_at`.
+- **Tests.** `supabase/functions/_shared/http.test.ts` (five cases), a new case in `tests/integration/triage.test.ts` (a signed-in user gets 403 from all eight; the public key gets 200), two new lines in `supabase/tests/001_rls_isolation.test.sql`. `tests/integration/upload.test.ts` now clears rows left by earlier runs.
+- **Not verified yet.** The hosted project: whether the scheduler's calls still pass there after the deploy. Check `cron.job_run_details` and the function logs after releasing (see `docs/runbooks/queue-backlog.md`).
