@@ -4,6 +4,7 @@
 // a valid project JWT (verify_jwt).
 import { createClient } from "npm:@supabase/supabase-js@2.119.2";
 import { runPurge, type PurgeClient } from "./purge.ts";
+import { carriesUser, notScheduler } from "../_shared/http.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
@@ -13,6 +14,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const url = Deno.env.get("SUPABASE_URL");
   if (req.method !== "POST") return json({ error: "Use POST." }, 405);
+  if (carriesUser(req)) return notScheduler();
   if (!url || !serviceKey) return json({ error: "Not configured." }, 500);
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });

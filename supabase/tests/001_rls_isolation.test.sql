@@ -142,6 +142,8 @@ select throws_ok($$ select count(*) from public.feed_fetch_daily $$, '42501', nu
 select throws_ok($$ select count(*) from public.subscribe_clicks $$, '42501', null, 'anon has no access to click stats');
 select throws_ok($$ select count(*) from public.supporters $$, '42501', null, 'anon has no access to supporters');
 select throws_ok($$ select public.get_feed_token('f0000000-0000-4000-8000-000000000003') $$, '42501', null, 'anon cannot call get_feed_token');
+select throws_ok($$ select owner_id from public.feeds $$, '42501', null, 'anon cannot read who owns a public feed');
+select lives_ok($$ select slug, last_updated_at from public.feeds where visibility = 'public' $$, 'anon can still list public feeds (the sitemap)');
 
 select is((public.public_feed_page(current_setting('test.unlisted_slug'))->'feed'->>'name'), 'Unlisted feed',
   'anon reads an unlisted feed through public_feed_page with the exact slug');
