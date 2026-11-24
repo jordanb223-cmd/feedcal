@@ -18,7 +18,8 @@ Rules:
 - Only include events the source actually states. Never invent, infer from context, or guess.
 - Resolve relative dates ("this Friday", "next week", "tomorrow") against the reference date given. If a date has no year, use its next occurrence on or after the reference date.
 - Never guess a time. If no time is stated for an event, make it all-day.
-- Something that runs over several days ("November 26 & 27 - no school", "Nov 26-28 break") is ONE all-day event: start on the first day, end on the last. Never split it into one event per day, and never report only one of its days.
+- A time written with no AM or PM ("at 3:15"): use the rest of the source if it settles it ("evening concert"). Otherwise read 7 to 11 as morning and 12 to 6 as afternoon.
+- Something that runs over several days ("November 26 & 27 - no school", "Nov 26-28 break") is ONE all-day event: start on the first day, end on the last. Never split it into one event per day, and never report only one of its days.\n- end is the LAST day or time the source states for the event, itself included. An event on one day has end null; never set end to the day after. Give an end only when the source states one.
 - Use the feed's timezone unless the source states another.
 - status: "new" for an event; "changed" when the source says an earlier event moved or changed; "cancelled" when it says an event is cancelled or off.
 - evidence_quote: copy, character for character, the shortest span of the source that states the event's date (and time, if any). It must appear in the text named by source_ref.

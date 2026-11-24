@@ -7,6 +7,16 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Changed
+- Times are checked more strictly before an event goes on a calendar by itself.
+  - In "6:30-8 PM", the PM now counts for both times.
+  - A time with no AM or PM, like "at 3:15", is read by the usual hours: 7 to 11 is morning, 12 to 6 is afternoon. Words like "morning", "evening" or "tonight" in the same sentence settle it. Such a time is never treated as proof, and if Calantern reads it the unusual way (3:15 in the morning), the event waits for you.
+  - An end time is kept only when the email states one. Calantern no longer keeps a made-up length.
+- An event with a start time and no end time now shows as a one-hour block in followers' calendars.
+
+### Fixed
+- A one-day event could show up on two days in followers' calendars. When Calantern read an event, it sometimes stored "the next day" as the day it ended. It now keeps a second day only when the email's own words say so, like "November 26 & 27" or "Nov 26-28".
+
 ## [0.14.0] - 2026-11-24
 
 ### Changed

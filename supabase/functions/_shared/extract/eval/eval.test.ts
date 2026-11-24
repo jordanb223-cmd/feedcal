@@ -107,7 +107,9 @@ Deno.test({ name: "evaluation: 50 labelled fixtures, no metric drops more than 3
   assertEquals(reasons("34-wrong-page"), ["unknown_source"]);
   assertEquals(reasons("38-bad-timezone"), ["bad_timezone"]);
   assertEquals(reasons("39-far-future-year"), ["date_out_of_range"]);
-  assertEquals(reasons("40-end-before-start"), ["end_before_start"]);
+  // D83: the end time here (5 PM) isn't in the words, so it is dropped and the event kept.
+  assertEquals(reasons("40-end-before-start"), []);
+  assertEquals(results.get("40-end-before-start")!.candidates.map((c) => c.end), [null]);
   assertEquals(reasons("41-past-event-mention"), ["date_out_of_range"]);
   assertEquals(results.get("35-low-confidence-escalates")!.model, "claude-sonnet-5-5");
   assertEquals(results.get("37-malformed-twice-escalates")!.calls.map((c) => c.valid), [false, false, true]);

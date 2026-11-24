@@ -2,7 +2,7 @@
 // a time the words don't state turns the event into an all-day one.
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { type Extractor, LARGE_MODEL, type ModelReply } from "./extractor.ts";
-import { alreadyPast, extractEvents, moveToDate, withoutUnstatedTime } from "./pipeline.ts";
+import { alreadyPast, extractEvents, moveToDate, withoutUnstatedEnd, withoutUnstatedTime } from "./pipeline.ts";
 import type { ExtractInput } from "./prompt.ts";
 import { DATE_DECISION_SCHEMA, RESOLVE_SYSTEM } from "./resolve.ts";
 import type { ExtractedEvent } from "./schema.ts";
@@ -117,7 +117,30 @@ Deno.test("D77: an event dated before today is dropped, whenever the email is re
   assertEquals(alreadyPast({ ...e, start: "2026-11-20", end: "2026-11-27" }, Date.parse("2026-11-24T02:00:00Z")), false, "a range that is still running is kept");
 });
 
+Deno.test("D82: an end day the words don't state is dropped, so a one-day event stays one day", async () => {
+  // What production stored on 23 Nov: one day in the newsletter, "the next day" as its end.
+  const musical = event({ start: "2026-12-18", end: "2026-12-19", confidence: 0.9, evidence_quote: "DECEMBER 18 – DINO CHRISTMAS MUSICAL & STUFFY EXCHANGE" });
+  assertEquals(withoutUnstatedEnd(musical).end, null);
+  const noSchool = event({ start: "2026-11-26", end: "2026-11-27", evidence_quote: "NOVEMBER 26 & 27 – NO SCHOOL" });
+  assertEquals(withoutUnstatedEnd(noSchool).end, "2026-11-27", "a stated second day is kept");
+  assertEquals(withoutUnstatedEnd(event({ start: "2026-11-20", end: "2026-11-20" })).end, null, "an all-day end on the same day says nothing");
+  const timed = event({ all_day: false, start: "2026-11-20T18:30", end: "2026-11-20T20:00", evidence_quote: "Friday, November 20, 6:30-8 PM" });
+  assertEquals(withoutUnstatedEnd(timed).end, "2026-11-20T20:00", "an end time on the same day is kept");
+  const page: ExtractInput = { ...input, body: "DECEMBER 18 – DINO CHRISTMAS MUSICAL & STUFFY EXCHANGE" };
+  const r = await extractEvents(page, scripted([extraction(musical)]), AS_OF);
+  assertEquals([r.candidates[0]?.start, r.candidates[0]?.end, r.candidates[0]?.ends_at], ["2026-12-18", null, null]);
+});
+
 Deno.test("moving an event keeps its time of day and its length", () => {
   const e = event({ all_day: false, start: "2026-11-20T15:00", end: "2026-11-21T09:30" });
   assertEquals([moveToDate(e, "2026-11-27").start, moveToDate(e, "2026-11-27").end], ["2026-11-27T15:00", "2026-11-28T09:30"]);
+});
+
+Deno.test("D83: an end time the words don't state is dropped", () => {
+  const timed = (end: string, quote: string) => withoutUnstatedEnd(event({ all_day: false, start: "2026-11-20T19:00", end, evidence_quote: quote })).end;
+  assertEquals(timed("2026-11-20T21:00", "Movie night Friday, November 20, 7 PM"), null, "a guessed two-hour length");
+  assertEquals(timed("2026-11-20T17:00", "Movie night Friday, November 20, 7 PM"), null, "an end the words don't give, even a wrong one");
+  assertEquals(timed("2026-11-20T21:00", "Movie night Friday, November 20, 7-9 PM"), "2026-11-20T21:00");
+  assertEquals(timed("2026-11-20T21:00", "Movie night Friday, November 20, 7 PM - 9:00"), "2026-11-20T21:00", "no AM/PM on the end: the start fixes the half");
+  assertEquals(timed("2026-11-20T21:30", "Movie night Friday, November 20, 7-9 PM"), null);
 });

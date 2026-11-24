@@ -13,7 +13,7 @@ export interface DateGateInput {
   quote: string;          // the model's evidence_quote
   referenceDate: string;  // ISO; when the original email was sent
 }
-export type DateReview = "ambiguous_date" | "date_mismatch" | "weekday_mismatch" | "time_mismatch" | "before_email";
+export type DateReview = "ambiguous_date" | "date_mismatch" | "weekday_mismatch" | "time_mismatch" | "time_unlikely" | "before_email";
 export interface DateGate {
   confirmed: boolean;
   review: DateReview[];
@@ -62,19 +62,115 @@ export function writtenDates(text: string): { m: number; d: number; y?: number }
   return out.filter((v) => v.m >= 1 && v.m <= 12 && v.d >= 1 && v.d <= 31);
 }
 
-/** Written times as minutes after midnight: "3pm", "3:30 p.m.", "15:30", "noon". */
-export function writtenTimes(text: string): number[] {
-  const t = text.toLowerCase();
-  const out: number[] = [];
-  for (const x of t.matchAll(/\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s?m\b\.?/g)) {
-    let h = Number(x[1]) % 12;
-    if (x[3] === "p") h += 12;
-    out.push(h * 60 + Number(x[2] ?? 0));
+/**
+ * A time written in a text. `definite` is false when it has no AM/PM and nothing else settles the
+ * half of the day; `minutes` is then the likely reading (D84) and `other` the unlikely one.
+ */
+export interface WrittenTime { minutes: number; definite: boolean; other?: number }
+
+/** D84: with no AM/PM, 7 to 11 is morning and 12 to 6 is afternoon (school and team hours). */
+function likely(h12: number, min: number): number {
+  return ((h12 % 12) + (h12 >= 7 && h12 <= 11 ? 0 : 12)) * 60 + min;
+}
+
+/**
+ * The times a text states: "3pm", "3:30 p.m.", "15:30", "noon", "midnight", "at 3:15".
+ * - D83: in a range, an AM/PM on the end applies to the start too: "6:30-8 PM" is 6:30 PM to 8 PM
+ *   (and "11-1 PM" is 11 AM to 1 PM, since the start can't be after the end).
+ * - D84: a clock time with no AM/PM ("at 3:15") is read by the usual hours: 7 to 11 morning,
+ *   12 to 6 afternoon. That reading is likely, not certain, so it is not `definite` unless the
+ *   text also says morning, afternoon, evening or night. In a range with no AM/PM ("6:30-8"),
+ *   the end is the first such time after the start.
+ */
+export function timesIn(text: string): WrittenTime[] {
+  let t = text.toLowerCase();
+  const out: WrittenTime[] = [];
+  const at = (h12: number, min: number, pm: boolean) => ((h12 % 12) + (pm ? 12 : 0)) * 60 + min;
+  const am = /\bmorning\b/.test(t);
+  const pm = /\b(afternoon|evening|tonight|night)\b/.test(t);
+  const hint = am === pm ? null : pm;
+  const loose = (h12: number, min: number): WrittenTime => {
+    if (hint !== null) return { minutes: at(h12, min, hint), definite: true };
+    const minutes = likely(h12, min);
+    return { minutes, definite: false, other: (minutes + 720) % 1440 };
+  };
+  const blank = (whole: string) => " ".repeat(whole.length);
+  // Ranges first; what they use is blanked so the single-time patterns below don't read it again.
+  t = t.replace(/\b(\d{1,2})(?::(\d{2}))?\s*(?:-|–|—|to|until)\s*(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s?m\b\.?/g, (whole, h1, m1, h2, m2, ap) => {
+    const isPm = ap === "p";
+    const end = at(Number(h2), Number(m2 ?? 0), isPm);
+    let start = at(Number(h1), Number(m1 ?? 0), isPm);
+    if (start > end) start = at(Number(h1), Number(m1 ?? 0), !isPm);
+    out.push({ minutes: start, definite: true }, { minutes: end, definite: true });
+    return blank(whole);
+  });
+  t = t.replace(/\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s?m\b\.?/g, (whole, h, m, ap) => {
+    out.push({ minutes: at(Number(h), Number(m ?? 0), ap === "p"), definite: true });
+    return blank(whole);
+  });
+  // A range with no AM/PM. At least one side must be written H:MM, so "Nov 20-21" is not a time.
+  t = t.replace(/(?<![\d/:])(\d{1,2})(?::([0-5]\d))?\s*(?:-|–|—|to|until)\s*(\d{1,2})(?::([0-5]\d))?(?![\d/:])/g, (whole, h1, m1, h2, m2) => {
+    const [a, b] = [Number(h1), Number(h2)];
+    if ((m1 === undefined && m2 === undefined) || a < 1 || a > 12 || b < 1 || b > 12) return whole;
+    const start = loose(a, Number(m1 ?? 0));
+    let end = (b % 12) * 60 + Number(m2 ?? 0);
+    if (end <= start.minutes) end += 720;
+    if (end <= start.minutes) return whole;
+    out.push(start, { minutes: end, definite: start.definite, ...(start.definite ? {} : { other: (end + 720) % 1440 }) });
+    return blank(whole);
+  });
+  for (const x of t.matchAll(/\b([01]?\d|2[0-3]):([0-5]\d)\b/g)) {
+    const h = Number(x[1]);
+    out.push(h === 0 || h > 12 ? { minutes: h * 60 + Number(x[2]), definite: true } : h === 12 ? (hint === false ? loose(12, Number(x[2])) : { minutes: 720 + Number(x[2]), definite: true }) : loose(h, Number(x[2])));
   }
-  for (const x of t.matchAll(/\b([01]?\d|2[0-3]):([0-5]\d)\b(?!\s*[ap]\.?\s?m)/g)) out.push(Number(x[1]) * 60 + Number(x[2]));
-  if (/\bnoon\b/.test(t)) out.push(12 * 60);
-  if (/\bmidnight\b/.test(t)) out.push(0);
+  if (/\bnoon\b/.test(t)) out.push({ minutes: 12 * 60, definite: true });
+  if (/\bmidnight\b/.test(t)) out.push({ minutes: 0, definite: true });
   return out;
+}
+
+/** Written times as minutes after midnight. A time with no AM/PM is given by its likely reading (D84). */
+export function writtenTimes(text: string): number[] {
+  return timesIn(text).map((x) => x.minutes);
+}
+
+/**
+ * How a text's times bear on a clock time. "yes": the words state it outright. "maybe": the words
+ * give it with no AM/PM and this is the likely half of the day. "unlikely": the same, but this is
+ * the unusual half (3:15 read as 3:15 AM). "no": the words give other times. "silent": no time.
+ */
+export function timeStated(text: string, minutes: number): "yes" | "maybe" | "unlikely" | "no" | "silent" {
+  const times = timesIn(text);
+  if (times.length === 0) return "silent";
+  if (times.some((x) => x.definite && x.minutes === minutes)) return "yes";
+  if (times.some((x) => !x.definite && x.minutes === minutes)) return "maybe";
+  return times.some((x) => !x.definite && x.other === minutes) ? "unlikely" : "no";
+}
+
+/**
+ * D82: every calendar day a text states, as month and day. Written dates, plus the later days of
+ * a range or list that follow one: "November 26 & 27", "Nov 26-28", "Nov 26 through 28", "11/26-28".
+ */
+export function statedDays(text: string): { m: number; d: number }[] {
+  const t = text.toLowerCase();
+  const out: { m: number; d: number }[] = writtenDates(t).map((v) => ({ m: v.m, d: v.d }));
+  const more = String.raw`((?:\s*(?:&|and|to|through|thru|until|-|–|—)\s*\d{1,2}(?:st|nd|rd|th)?(?![\d/]|:\d))+)`;
+  const later = (month: number, tail: string) => {
+    for (const x of tail.matchAll(/(\d{1,2})(?:st|nd|rd|th)?/g)) out.push({ m: month, d: Number(x[1]) });
+  };
+  for (const x of t.matchAll(new RegExp(String.raw`\b(${MONTH_RE})\.?\s+\d{1,2}(?:st|nd|rd|th)?${more}`, "g"))) later(MONTHS[x[1]!]!, x[2]!);
+  for (const x of t.matchAll(new RegExp(String.raw`(?<![\d/])(\d{1,2})\/\d{1,2}${more}`, "g"))) later(Number(x[1]), x[2]!);
+  return out.filter((v) => v.m >= 1 && v.m <= 12 && v.d >= 1 && v.d <= 31);
+}
+
+/**
+ * D82: does the text itself say the event runs to this later day? A written or ranged date for
+ * that day counts. So does a range of weekdays ("Monday through Wednesday") that ends on its weekday.
+ */
+export function endDayStated(text: string, end: string): boolean {
+  const [y, m, d] = end.slice(0, 10).split("-").map(Number) as [number, number, number];
+  if (statedDays(text).some((v) => v.m === m && v.d === d)) return true;
+  const days = [...text.toLowerCase().matchAll(new RegExp(`\\b(${DAY_RE})\\b`, "g"))].map((x) => WEEKDAYS[x[1]!]!);
+  return new Set(days).size >= 2 && days.includes(weekday({ y, m, d }));
 }
 
 export function dateGate(i: DateGateInput): DateGate {
@@ -121,15 +217,16 @@ export function dateGate(i: DateGateInput): DateGate {
     }
   }
 
-  // A written time must match a timed event's start.
+  // A written time must match a timed event's start. A time with no AM/PM proves nothing (D83):
+  // read the usual way it needs the feed's bar like any unproven event; read the unusual way
+  // (3:15 as 3:15 AM) it waits for the owner (D84).
   let timeOk = i.allDay;
   if (!i.allDay) {
     const [hh, mm] = i.start.slice(11, 16).split(":").map(Number) as [number, number];
-    const times = writtenTimes(q);
-    if (times.length > 0) {
-      timeOk = times.includes(hh * 60 + mm);
-      if (!timeOk) review.add("time_mismatch");
-    }
+    const said = timeStated(q, hh * 60 + mm);
+    if (said === "yes") timeOk = true;
+    else if (said === "no") review.add("time_mismatch");
+    else if (said === "unlikely") review.add("time_unlikely");
   }
 
   const iso = (n: number) => { const v = fromDays(n); return `${v.y}-${String(v.m).padStart(2, "0")}-${String(v.d).padStart(2, "0")}`; };

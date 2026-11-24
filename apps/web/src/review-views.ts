@@ -26,6 +26,7 @@ const REVIEW_LABELS: Record<string, string> = {
   date_mismatch: "The date doesn't match what the email says. Check the date.",
   weekday_mismatch: "The weekday and the date in the email don't agree. Check which one is right.",
   time_mismatch: "The time doesn't match the time written in the email.",
+  time_unlikely: "The email gives the time with no AM or PM, and this reading is the less usual one. Check the time.",
   before_email: "This date is before the email was sent. It may be a recap, or a misread.",
 };
 

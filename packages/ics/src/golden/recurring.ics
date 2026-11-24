@@ -123,6 +123,7 @@ SEQUENCE:0
 STATUS:CONFIRMED
 SUMMARY:Bad rule
 DTSTART;TZID=America/Los_Angeles:20270223T173000
+DTEND;TZID=America/Los_Angeles:20270223T183000
 DESCRIPTION:Report a problem: https://feedcal.example/report/rr-2@feedcal.a
  pp
 END:VEVENT
