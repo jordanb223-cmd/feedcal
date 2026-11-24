@@ -74,7 +74,7 @@ export async function extractEvents(input: ExtractInput, extractor: Extractor): 
     return { output: null, refused: false, error: "invalid_output" };
   }
 
-  const imageOnly = !input.body.trim() && input.pages.length > 0 && input.pages.every((p) => p.source === "transcription");
+  const imageOnly = !input.body.trim() && input.pages.length > 0 && input.pages.every((p) => p.source !== "text_layer");
   let model = imageOnly ? LARGE_MODEL : SMALL_MODEL;
   let result = await attempt(model);
   const unsure = result.output?.events.some((e) => e.confidence < ESCALATE_BELOW) ?? false;

@@ -214,7 +214,7 @@ ${opts.confirmation
     </ol>
     <p class="muted">Mac rules only run while Mail is open on that Mac. For iCloud addresses, the iCloud Mail rule above is more reliable.</p>
   </details>
-  <p class="muted">The first email from a new sender waits here until you say yes. Emails over 20 MB or with more than 10 attachments are returned to the sender. Copies are deleted after 30 days.</p>
+  <p class="muted">The first email from a new sender waits here until you say yes. Emails over 20 MB or with more than 20 attachments are returned to the sender. Copies are deleted after 30 days.</p>
 </details>
 ${opts.isOwner
   ? html`<details class="more card"><summary>Getting spam at this address?</summary>

@@ -109,7 +109,7 @@ Deno.test({ name: "evaluation: 50 labelled fixtures, no metric drops more than 3
   assertEquals(reasons("39-far-future-year"), ["date_out_of_range"]);
   assertEquals(reasons("40-end-before-start"), ["end_before_start"]);
   assertEquals(reasons("41-past-event-mention"), ["date_out_of_range"]);
-  assertEquals(results.get("35-low-confidence-escalates")!.model, "claude-opus-5-5");
+  assertEquals(results.get("35-low-confidence-escalates")!.model, "claude-sonnet-5-5");
   assertEquals(results.get("37-malformed-twice-escalates")!.calls.map((c) => c.valid), [false, false, true]);
   assertEquals(results.get("20-transcribed-flyer")!.candidates[0]?.from_transcription, true);
   for (const id of ["43-injection-1", "48-fake-closing-tag", "50-subject-injection"]) assertEquals(results.get(id)!.state, "needs_review", id);

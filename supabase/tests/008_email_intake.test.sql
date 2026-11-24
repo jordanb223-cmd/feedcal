@@ -76,8 +76,8 @@ select is(pg_temp.commit(pg_temp.start('feed-aliceschoolfeed23456'), '<f1@school
 select is(pg_temp.queued(), 1::bigint, 'nothing quarantined is queued');
 
 -- ---------------------------------------------------------------- limits
-select is(pg_temp.commit(pg_temp.start('feed-aliceschoolfeed23456'), '<a1@school.example.test>', 'office@school.example.test', 'att', 11) ->> 'reject',
-  'too_many_attachments', 'more than 10 attachments is rejected');
+select is(pg_temp.commit(pg_temp.start('feed-aliceschoolfeed23456'), '<a1@school.example.test>', 'office@school.example.test', 'att', 21) ->> 'reject',
+  'too_many_attachments', 'more than 20 attachments is rejected (D75; it was 10)');
 
 -- ---------------------------------------------------------------- Gmail confirmation
 select is(pg_temp.commit(pg_temp.start('feed-aliceschoolfeed23456'), '<g1@google.com>', 'forwarding-noreply@google.com', 'gmail',

@@ -1,6 +1,6 @@
 // The prompt. The email and its pages are DATA, wrapped in tags the email can't close (any
 // look-alike tags inside it are neutralised), and the instructions say to ignore anything in them.
-export interface PageInput { attachment_id: string; page_index: number; text: string; source: "text_layer" | "transcription"; filename: string | null }
+export interface PageInput { attachment_id: string; page_index: number; text: string; source: "text_layer" | "transcription" | "transcription_unsure"; filename: string | null }
 export interface ExtractInput {
   referenceDate: string; // ISO, the original email's sent date
   timezone: string;      // the feed's default zone

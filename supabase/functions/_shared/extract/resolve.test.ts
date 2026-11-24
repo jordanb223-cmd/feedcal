@@ -40,7 +40,7 @@ Deno.test("an unclear day the model settles with certainty is no longer held, an
   assertEquals(r.candidates[0]?.date_confirmed, true);
   assertEquals(r.candidates[0]?.start, "2026-11-20");
   const question = ex.seen.at(-1)!;
-  assertEquals([question.model, question.system, question.opts?.schema, question.opts?.effort], [LARGE_MODEL, RESOLVE_SYSTEM, DATE_DECISION_SCHEMA, "high"]);
+  assertEquals([question.model, question.system, question.opts?.schema, question.opts?.effort], [LARGE_MODEL, RESOLVE_SYSTEM, DATE_DECISION_SCHEMA, "medium"]);
   assert(question.user.includes("Candidate dates: 2026-11-20 (Friday), 2026-11-27 (Friday)"));
   assert(question.user.includes("sent on Friday, 2026-11-20"));
   assertEquals(r.calls.length, 2, "the question is counted as a call, so its cost is tracked");
@@ -95,6 +95,13 @@ Deno.test("D72: an event read from a photo or scan is not held for that, but get
   const fromPage = event({ confidence: 0.9, evidence_quote: "Dinosgiving is on Friday, November 20.", source_ref: { kind: "page", attachment_id: "11111111-1111-4111-8111-111111111111", page_index: 0 } });
   const r = await extractEvents(flyer, scripted([extraction(fromPage)]));
   assertEquals([r.candidates[0]?.review, r.candidates[0]?.from_transcription, r.candidates[0]?.date_confirmed], [[], true, false]);
+});
+
+Deno.test("D75: a page the two readers disagreed on sends its events to review", async () => {
+  const flyer: ExtractInput = { ...input, body: "", pages: [{ attachment_id: "11111111-1111-4111-8111-111111111111", page_index: 0, source: "transcription_unsure", filename: "flyer.jpg", text: "Dinosgiving is on Friday, November 20." }] };
+  const fromPage = event({ confidence: 0.95, evidence_quote: "Dinosgiving is on Friday, November 20.", source_ref: { kind: "page", attachment_id: "11111111-1111-4111-8111-111111111111", page_index: 0 } });
+  const r = await extractEvents(flyer, scripted([extraction(fromPage)]));
+  assertEquals([r.candidates[0]?.review, r.candidates[0]?.from_transcription], [["from_transcription"], true]);
 });
 
 Deno.test("moving an event keeps its time of day and its length", () => {

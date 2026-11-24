@@ -1,5 +1,5 @@
 // D70: when the words could mean more than one day ("this Friday" in an email sent on a Friday),
-// the large model is asked to reason about which one, from the whole email. It may only pick one
+// the larger model (Sonnet 5.5, D75) is asked to reason about which one, from the whole email. It may only pick one
 // of the dates the rules already allow, and it must say when the email does not settle it. In that
 // case the event still waits for the owner, as before.
 import { z } from "npm:zod@4.6.7";
@@ -55,7 +55,7 @@ export interface DateResolution { date: string | null; reply: ModelReply; valid:
 
 /** Asks the large model. Returns a date only when it is one of `options` and the model is certain. */
 export async function resolveDate(input: ExtractInput, e: Pick<ExtractedEvent, "title" | "evidence_quote" | "timezone">, options: string[], sentLocal: string, extractor: Extractor): Promise<DateResolution> {
-  const reply = await extractor.run(LARGE_MODEL, RESOLVE_SYSTEM, buildResolvePrompt(input, e, options, sentLocal), { schema: DATE_DECISION_SCHEMA, effort: "high" });
+  const reply = await extractor.run(LARGE_MODEL, RESOLVE_SYSTEM, buildResolvePrompt(input, e, options, sentLocal), { schema: DATE_DECISION_SCHEMA, effort: "medium" });
   const parsed = DateDecision.safeParse(reply.json);
   if (reply.refused || !parsed.success) return { date: null, reply, valid: false };
   const d = parsed.data;

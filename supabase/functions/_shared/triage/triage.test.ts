@@ -57,7 +57,7 @@ function fakeTranscriber(text: string | ((i: TranscribeInput) => string)) {
   const t: Transcriber = {
     transcribe: async (input) => {
       calls.push(input);
-      return { text: typeof text === "string" ? text : text(input), inputTokens: 1500, outputTokens: 120, model: "fake" };
+      return { text: typeof text === "string" ? text : text(input), inputTokens: 1500, outputTokens: 120, model: "fake", costUsd: 0.0084 };
     },
   };
   return { t, calls };
@@ -155,7 +155,7 @@ Deno.test("a flyer photo is transcribed (vision last), and its events are in the
   assert(r?.pages[0]?.text.includes("Saturday, October 18 | 11 AM - 3 PM"), "the event's quote is findable in the stored text");
   assertEquals(calls[0]?.kind, "image");
   assertEquals(r?.triage.visionTokens, { input: 1500, output: 120 });
-  assertEquals(r?.triage.costUsd, 0.0084); // 1500 × $4/M + 120 × $20/M
+  assertEquals(r?.triage.costUsd, 0.0084); // what the transcriber reported
 });
 
 Deno.test("without a vision key, images wait (pending) instead of failing", async () => {
@@ -267,4 +267,65 @@ Deno.test("a file that isn't what it claims is refused before reading (D61)", as
   const html = new TextEncoder().encode("%PDX<html><script>alert(1)</script>");
   const results = await triageMessage([att("exe", { chosen: true }), att("htm", { chosen: true })], null, deps({ "f/m/exe": exe, "f/m/htm": html }).d);
   assertEquals(results.map((r) => [r.id, r.status, r.triage.reason]), [["exe", "failed", "type_mismatch"], ["htm", "failed", "type_mismatch"]]);
+});
+
+// ---------------------------------------------------------------- D75: two-pass reading
+import { CHECK_MODEL, dateFacts, FIRST_MODEL, mentionsWhen, type PageRead, RefusedError as Refused, twoPassTranscriber } from "./transcriber.ts";
+
+function reader(replies: Record<string, string | "refuse" | "throw">) {
+  const calls: string[] = [];
+  const read = (model: string): Promise<PageRead> => {
+    calls.push(model);
+    const r = replies[model];
+    if (r === "throw") return Promise.reject(new Error("image input not supported"));
+    return Promise.resolve({ text: r === "refuse" ? "" : (r ?? ""), inputTokens: 5000, outputTokens: 200, model, refused: r === "refuse" });
+  };
+  return { t: twoPassTranscriber(read), calls };
+}
+const PICTURE: TranscribeInput = { kind: "image", mime: "image/jpeg", bytes: jpeg(10) };
+
+Deno.test("D75: a picture with no text, or no day or time, costs one small-model read", async () => {
+  const none = reader({ [FIRST_MODEL]: "" });
+  assertEquals([(await none.t.transcribe(PICTURE)).text, none.calls], ["", [FIRST_MODEL]]);
+  const caption = reader({ [FIRST_MODEL]: "Room F loves science" });
+  const r = await caption.t.transcribe(PICTURE);
+  assertEquals([r.text, r.unsure, caption.calls, r.costUsd], ["Room F loves science", undefined, [FIRST_MODEL], 0.0006]); // 5000 × $0.10/M + 200 × $0.50/M
+});
+
+Deno.test("D75: a picture that shows a date is read again, and agreeing reads are trusted", async () => {
+  const both = reader({ [FIRST_MODEL]: "Fall Festival - Sat, Oct 18 at 11 AM", [CHECK_MODEL]: "FALL FESTIVAL\nSaturday, October 18 | 11 AM" });
+  const r = await both.t.transcribe(PICTURE);
+  assertEquals([r.text, r.unsure, both.calls, r.model], ["FALL FESTIVAL\nSaturday, October 18 | 11 AM", undefined, [FIRST_MODEL, CHECK_MODEL], CHECK_MODEL]);
+  assertEquals(r.costUsd, 0.0126); // 0.0006 + 5000 × $2/M + 200 × $10/M
+});
+
+Deno.test("D75: when the two reads disagree on a date or a time, the page is marked unsure", async () => {
+  const day = reader({ [FIRST_MODEL]: "Musical Dec 18 at 6 PM", [CHECK_MODEL]: "Musical Dec 16 at 6 PM" });
+  assertEquals((await day.t.transcribe(PICTURE)).unsure, true);
+  const time = reader({ [FIRST_MODEL]: "Musical Dec 18 at 6 PM", [CHECK_MODEL]: "Musical Dec 18 at 8 PM" });
+  assertEquals((await time.t.transcribe(PICTURE)).unsure, true);
+});
+
+Deno.test("D75: if the small model can't read pictures or declines, the larger one reads alone and the page is unsure", async () => {
+  for (const first of ["throw", "refuse"] as const) {
+    const solo = reader({ [FIRST_MODEL]: first, [CHECK_MODEL]: "Picture day Fri Nov 21 at 8:30 AM" });
+    const r = await solo.t.transcribe(PICTURE);
+    assertEquals([r.text, r.unsure, solo.calls], ["Picture day Fri Nov 21 at 8:30 AM", true, [FIRST_MODEL, CHECK_MODEL]], first);
+  }
+  const declined = reader({ [FIRST_MODEL]: "Fri Nov 21", [CHECK_MODEL]: "refuse" });
+  let threw = false;
+  try { await declined.t.transcribe(PICTURE); } catch (e) { threw = e instanceof Refused; }
+  assert(threw, "a refusal by the check model is reported, as before");
+});
+
+Deno.test("D75: dates and times are compared, not wording", () => {
+  assertEquals(dateFacts("Sat, Oct 18 at 11 AM"), dateFacts("Saturday October 18th | 11:00 am"));
+  assert(dateFacts("Dec 18") !== dateFacts("Dec 16"));
+  assertEquals([mentionsWhen("See you Friday!"), mentionsWhen("Room F loves science")], [true, false]);
+});
+
+Deno.test("D75: an unsure page reaches triage's output marked as such", async () => {
+  const day = reader({ [FIRST_MODEL]: "Musical Dec 18 at 6 PM", [CHECK_MODEL]: "Musical Dec 16 at 6 PM" });
+  const [r] = await triageMessage([att("flyer", { mime: "image/jpeg", filename: "flyer.jpg" })], null, deps({ "f/m/flyer": jpeg(100) }, { transcriber: day.t }).d);
+  assertEquals([r?.status, r?.pages[0]?.source], ["transcribed", "transcription_unsure"]);
 });

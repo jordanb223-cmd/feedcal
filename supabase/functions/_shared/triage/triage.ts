@@ -10,7 +10,7 @@ import { bytesMatchType, DOCX_MIME, docxPages } from "./docx.ts";
 import { extractText, getDocumentProxy } from "npm:unpdf@2.1.0";
 import { isNever, preferredMatch, readRule } from "./rule.ts";
 import { KEEP_THRESHOLD, scorePage, type PageScore } from "./score.ts";
-import { PRICE_PER_INPUT_TOKEN, PRICE_PER_OUTPUT_TOKEN, RefusedError, type Transcriber, type TranscribeInput } from "./transcriber.ts";
+import { RefusedError, type Transcriber, type TranscribeInput } from "./transcriber.ts";
 
 // D74: no page limit per email. Per file, at most 30 pages are read: the 30 most likely to hold
 // dates from a file with text, the first 30 of a scan. Size: a single file over 15 MB is skipped,
@@ -44,7 +44,8 @@ export interface AttachmentIn {
   owner_never: boolean;
 }
 
-export interface KeptPage { index: number; text: string; source: "text_layer" | "transcription" }
+/** "transcription_unsure": two models read the page and disagreed on a date or time (D75). */
+export interface KeptPage { index: number; text: string; source: "text_layer" | "transcription" | "transcription_unsure" }
 
 export interface AttachmentResult {
   id: string;
@@ -243,6 +244,7 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
       const kept: KeptPage[] = [];
       let input = 0;
       let output = 0;
+      let spent = 0;
       for (const index of wanted.slice(0, allowed)) {
         const request: TranscribeInput = IMAGE_TYPES.has(att.mime)
           ? { kind: "image", mime: att.mime as "image/jpeg", bytes }
@@ -250,9 +252,10 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
         const t = await deps.transcriber.transcribe(request);
         input += t.inputTokens;
         output += t.outputTokens;
-        if (t.text) kept.push({ index, text: t.text, source: "transcription" });
+        spent += t.costUsd;
+        if (t.text) kept.push({ index, text: t.text, source: t.unsure ? "transcription_unsure" : "transcription" });
       }
-      const costUsd = Math.round((input * PRICE_PER_INPUT_TOKEN + output * PRICE_PER_OUTPUT_TOKEN) * 10000) / 10000;
+      const costUsd = Math.round(spent * 10000) / 10000;
       results.set(att.id, {
         id: att.id,
         status: kept.length ? "transcribed" : "skipped",
