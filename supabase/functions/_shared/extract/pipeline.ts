@@ -110,7 +110,7 @@ export async function extractEvents(input: ExtractInput, extractor: Extractor): 
         e = moveToDate(e, answer.date);
         review = review.filter((r) => r !== "ambiguous_date");
         const timeProven = e.all_day || writtenTimes(e.evidence_quote).includes(Number(e.start.slice(11, 13)) * 60 + Number(e.start.slice(14, 16)));
-        dateConfirmed = timeProven && !review.some((r) => DATE_REASONS.includes(r));
+        dateConfirmed = timeProven && !check.fromTranscription && !review.some((r) => DATE_REASONS.includes(r));
       }
     }
     candidates.push({ ...e, starts_at: zonedToUtc(e.start, e.timezone), ends_at: ends(e), review, from_transcription: check.fromTranscription, date_confirmed: dateConfirmed });

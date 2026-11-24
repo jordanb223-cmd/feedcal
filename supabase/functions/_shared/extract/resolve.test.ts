@@ -90,6 +90,13 @@ Deno.test("a time the words don't state makes the event all-day instead of dropp
   assertEquals([r.rejected.length, r.candidates[0]?.all_day, r.candidates[0]?.start], [0, true, "2026-11-20"]);
 });
 
+Deno.test("D72: an event read from a photo or scan is not held for that, but gets no proven-date shortcut", async () => {
+  const flyer: ExtractInput = { ...input, body: "", pages: [{ attachment_id: "11111111-1111-4111-8111-111111111111", page_index: 0, source: "transcription", filename: "flyer.jpg", text: "Dinosgiving is on Friday, November 20." }] };
+  const fromPage = event({ confidence: 0.9, evidence_quote: "Dinosgiving is on Friday, November 20.", source_ref: { kind: "page", attachment_id: "11111111-1111-4111-8111-111111111111", page_index: 0 } });
+  const r = await extractEvents(flyer, scripted([extraction(fromPage)]));
+  assertEquals([r.candidates[0]?.review, r.candidates[0]?.from_transcription, r.candidates[0]?.date_confirmed], [[], true, false]);
+});
+
 Deno.test("moving an event keeps its time of day and its length", () => {
   const e = event({ all_day: false, start: "2026-11-20T15:00", end: "2026-11-21T09:30" });
   assertEquals([moveToDate(e, "2026-11-27").start, moveToDate(e, "2026-11-27").end], ["2026-11-27T15:00", "2026-11-28T09:30"]);

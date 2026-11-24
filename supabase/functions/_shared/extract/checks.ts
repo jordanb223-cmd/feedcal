@@ -100,7 +100,10 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   // Below this, always ask the owner. Between it and the feed's own setting (70% unless the owner
   // lowers it), the reconciler decides. Lowered from 0.7 so an owner's 50-60% setting can work (D40).
   if (e.confidence < LOW_CONFIDENCE) review.push("low_confidence");
-  if (source.fromTranscription) review.push("from_transcription");
+  // D72: an event read from a photo or scan no longer waits just for that (owner's decision). It
+  // publishes under the feed's bar like any other. What it does not get is the "proven date"
+  // shortcut below: the quote is checked against the transcription, not the picture, so a misread
+  // digit would "prove" itself.
   if (personalDetails(e).length) review.push("personal_details");
   // D41: the date rules. A contradiction or ambiguity always waits for the owner; a date the
   // quote proves lets a trusted sender's event publish at 50% instead of the feed's bar.
@@ -108,5 +111,5 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   review.push(...gate.review);
   // Changes and cancellations aren't flagged here: from a trusted sender at high confidence they
   // apply automatically (D31), so subscribers see a moved practice without the owner stepping in.
-  return { review, fromTranscription: source.fromTranscription, dateConfirmed: gate.confirmed, dateOptions: gate.options };
+  return { review, fromTranscription: source.fromTranscription, dateConfirmed: gate.confirmed && !source.fromTranscription, dateOptions: gate.options };
 }
