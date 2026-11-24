@@ -73,7 +73,7 @@ export async function extractEvents(input: ExtractInput, extractor: Extractor, o
     let prompt = user;
     for (let tryNo = 0; tryNo < 2; tryNo++) {
       const reply = await extractor.run(model, SYSTEM_PROMPT, prompt);
-      const price = PRICES[model] ?? PRICES[LARGE_MODEL]!;
+      const price = PRICES[reply.model] ?? PRICES[model] ?? PRICES[LARGE_MODEL]!; // the model that answered, which can be the backup
       const parsed = ExtractionOutput.safeParse(reply.json);
       calls.push({ model: reply.model, inputTokens: reply.inputTokens, outputTokens: reply.outputTokens, costUsd: reply.inputTokens * price.input + reply.outputTokens * price.output, valid: parsed.success });
       if (reply.refused) return { output: null, refused: true, error: "refused" };
@@ -115,7 +115,7 @@ export async function extractEvents(input: ExtractInput, extractor: Extractor, o
     if (!injection && review.includes("ambiguous_date") && check.dateOptions && dateQuestions < MAX_DATE_QUESTIONS) {
       dateQuestions++;
       const answer = await resolveDate(input, e, check.dateOptions, ymd(localDate(input.referenceDate, e.timezone)), extractor);
-      const price = PRICES[LARGE_MODEL]!;
+      const price = PRICES[answer.reply.model] ?? PRICES[LARGE_MODEL]!;
       calls.push({ model: answer.reply.model, inputTokens: answer.reply.inputTokens, outputTokens: answer.reply.outputTokens, costUsd: answer.reply.inputTokens * price.input + answer.reply.outputTokens * price.output, valid: answer.valid });
       if (answer.date) {
         e = moveToDate(e, answer.date);

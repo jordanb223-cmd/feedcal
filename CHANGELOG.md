@@ -7,6 +7,15 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Changed
+- Calantern can read up to 100 pictures a day for you. The limit was 20, set when reading a picture cost much more.
+- When the two AI readings of a picture disagree, a third reads it and settles it. Before, any disagreement came to you. Now it only comes to you when all three read it differently.
+- If one AI model is busy or down, another takes its place, so an email doesn't sit unread.
+- If Calantern reads an email again and gets a different day for an event that is already on your calendar, it asks you with a "Different time?" card. Before, the calendar's version won without telling you.
+
+### Fixed
+- A scanned file is now read whole or left for the next day. Before, if the day's limit ran out partway through, the remaining pages were never read.
+
 ## [0.12.0] - 2026-11-23
 
 ### Added
