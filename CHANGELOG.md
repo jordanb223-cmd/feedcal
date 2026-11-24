@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-24
+
 ### Changed
 - Calantern can read up to 100 pictures a day for you. The limit was 20, set when reading a picture cost much more.
 - When the two AI readings of a picture disagree, a third reads it and settles it. Before, any disagreement came to you. Now it only comes to you when all three read it differently.
