@@ -51,6 +51,20 @@ set local role service_role;
 select is(public.requeue_parked_attachments(50), 0, 'an email already back in the queue is not queued twice');
 reset role;
 
+-- D80: a picture first found blank, then parked by a retry, is really marked as waiting and is retried.
+select pgmq.purge_queue('triage_message');
+select pg_temp.parked('d3100000-0000-4000-8000-000000000009', 'no_text_on_page', now() - interval '20 minutes', now(), 'skipped');
+select public.record_triage('d3100000-0000-4000-8000-000000000009', (select jsonb_agg(jsonb_build_object('id', a.id, 'status', 'pending', 'pages', '[]'::jsonb,
+  'triage', jsonb_build_object('stage', 4, 'reason', 'daily_vision_limit'))) from public.attachments a where a.message_id = 'd3100000-0000-4000-8000-000000000009'));
+select is((select status from public.attachments where message_id = 'd3100000-0000-4000-8000-000000000009'), 'pending',
+  'a retry that parks a file marks it pending (it used to stay "skipped")');
+update public.attachments set triaged_at = now() - interval '20 minutes' where message_id = 'd3100000-0000-4000-8000-000000000009';
+select pgmq.purge_queue('triage_message');
+set local role service_role;
+select public.requeue_parked_attachments(50);
+reset role;
+select is(pg_temp.queued('d3100000-0000-4000-8000-000000000009'), 1, 'so it is retried when pages are free');
+
 -- D79: no pages left for the owner today: the file keeps waiting.
 select pgmq.purge_queue('triage_message');
 update public.attachments set triaged_at = now() - interval '20 minutes' where message_id = 'd3100000-0000-4000-8000-000000000008';
