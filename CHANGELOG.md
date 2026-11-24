@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-24
+
 ### Changed
 - Times are checked more strictly before an event goes on a calendar by itself.
   - In "6:30-8 PM", the PM now counts for both times.
