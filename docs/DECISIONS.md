@@ -743,3 +743,12 @@ What was checked, against what, and what changed:
 - **Still a clock.** The daily count itself resets at midnight UTC (4 PM Pacific in winter), because `usage_daily` is keyed by UTC date. That was not changed. It now only decides when a full allowance returns, not when a waiting file may be tried.
 - **Tests.** `031_parked_attachments.test.sql`: a file parked earlier the same day is retried when pages are free; one tried a moment ago is not; with no pages left, neither it nor one from yesterday is retried.
 - **Not verified yet.** On production: Room F's two photos are the first case.
+
+## D80 — A file parked by a retry is really marked as waiting (2026-11-24)
+
+- **Why.** After v0.13.1 (D79) went live, Room F's two waiting photos were still not retried. The Email page showed them as waiting, and the function log showed no `parked_requeued` line in the last hour.
+- **Cause.** `record_triage` left an attachment's status unchanged when the new result's status was `pending` and a direct move to `pending` was allowed. Both photos had been read once and found blank (`skipped`, `no_text_on_page`), then parked on the daily limit by a retry: the reason became `daily_vision_limit` but the status stayed `skipped`. `requeue_parked_attachments` looks for `pending`. Reproduced on the local database before the change: the status read `skipped` after parking, and `pending` after the fix.
+- **Correction.** D71 and D79 each said waiting files would be retried. For a file in this state that was not true, and the assistant told the owner twice that these two photos would be read after a deploy. The claim rested on the reason shown on the page, not on the row's status, which was never checked.
+- **What.** `record_triage` now sets the status whenever it differs from the result's. The migration also repairs rows already in that state (`skipped` with reason `daily_vision_limit` or `needs_vision_not_configured` become `pending`).
+- **Tests.** `031_parked_attachments.test.sql`: a file found blank, then parked, is `pending` and is retried.
+- **Not verified yet.** On production. The production rows themselves were not read; the cause is inferred from the code and the local reproduction.
