@@ -81,7 +81,7 @@ export type RejectReason = "quote_not_found" | "unknown_source" | "bad_timezone"
 export const LOW_CONFIDENCE = 0.5;
 
 /** Hard failures reject the event; soft ones keep it but send it to review. */
-export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: RejectReason; review?: string[]; fromTranscription: boolean; dateConfirmed?: boolean } {
+export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: RejectReason; review?: string[]; fromTranscription: boolean; dateConfirmed?: boolean; dateOptions?: string[] } {
   const source = sourceFor(e, input);
   if (!source) return { reject: "unknown_source", fromTranscription: false };
   if (!quoteFound(e.evidence_quote, source.text)) return { reject: "quote_not_found", fromTranscription: source.fromTranscription };
@@ -97,10 +97,14 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   const day = 86_400_000;
   if (start < ref - 31 * day || start > ref + 550 * day) return { reject: "date_out_of_range", fromTranscription: source.fromTranscription };
   const review: string[] = [];
-  // Below this, always ask the owner. Between it and the feed's own setting (85% unless the owner
+  // Below this, always ask the owner. Between it and the feed's own setting (70% unless the owner
   // lowers it), the reconciler decides. Lowered from 0.7 so an owner's 50-60% setting can work (D40).
   if (e.confidence < LOW_CONFIDENCE) review.push("low_confidence");
-  if (source.fromTranscription) review.push("from_transcription");
+  // D72: an event read from a photo or scan no longer waits just for that (owner's decision). It
+  // publishes under a higher bar, 85% or the feed's own if higher (D73, in reconcile_candidate).
+  // What it does not get is the "proven date"
+  // shortcut below: the quote is checked against the transcription, not the picture, so a misread
+  // digit would "prove" itself.
   if (personalDetails(e).length) review.push("personal_details");
   // D41: the date rules. A contradiction or ambiguity always waits for the owner; a date the
   // quote proves lets a trusted sender's event publish at 50% instead of the feed's bar.
@@ -108,5 +112,5 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   review.push(...gate.review);
   // Changes and cancellations aren't flagged here: from a trusted sender at high confidence they
   // apply automatically (D31), so subscribers see a moved practice without the owner stepping in.
-  return { review, fromTranscription: source.fromTranscription, dateConfirmed: gate.confirmed };
+  return { review, fromTranscription: source.fromTranscription, dateConfirmed: gate.confirmed && !source.fromTranscription, dateOptions: gate.options };
 }

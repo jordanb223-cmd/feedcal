@@ -1,5 +1,5 @@
 -- D41: a trusted sender's event publishes at 50% when the email's words prove the date (checked in
--- code: event_candidates.date_confirmed); otherwise the feed's bar (85%) applies; review reasons
+-- code: event_candidates.date_confirmed); otherwise the feed's bar (70% since D70) applies; review reasons
 -- (ambiguous date, mismatch, before the email) always wait; strangers always wait.
 begin;
 select * from no_plan();
@@ -28,14 +28,23 @@ select pg_temp.cand('Charlie field trip', 3, 0.90, false);
 select pg_temp.cand('Delta picture day', 4, 0.45, true, '{low_confidence}');
 select pg_temp.cand('Echo pajama day', 5, 0.90, false, '{ambiguous_date}');
 select pg_temp.cand('Foxtrot book fair', 6, 0.95, true, '{}', false);
+select pg_temp.cand('Golf game night', 7, 0.72, false);
+select pg_temp.cand('Hotel spirit week', 8, 0.68, false);
+-- D73: read from a picture.
+create temp table pics as select pg_temp.cand('India flyer night', 9, 0.80, false) as id union all select pg_temp.cand('Juliet poster day', 10, 0.90, false);
+update public.event_candidates set from_transcription = true where id in (select id from pics);
 select public.reconcile_pending(100);
 
 select is(pg_temp.published('Alpha recital'), true, 'a date the email proves publishes at 55%');
-select is(pg_temp.published('Bravo bake sale'), false, 'an unproven date at 55% waits (the feed''s 85% bar)');
+select is(pg_temp.published('Bravo bake sale'), false, 'an unproven date at 55% waits (the feed''s 70% bar)');
 select is(pg_temp.published('Charlie field trip'), true, 'an unproven date above the bar still publishes');
 select is(pg_temp.published('Delta picture day'), false, 'below 50% always waits');
 select is(pg_temp.published('Echo pajama day'), false, 'an ambiguous date waits however sure the model is');
 select is(pg_temp.published('Foxtrot book fair'), false, 'an unapproved sender always waits');
+select is(pg_temp.published('Golf game night'), true, 'D70: an unproven date at 72% publishes (the standard bar is 70%)');
+select is(pg_temp.published('Hotel spirit week'), false, 'D70: at 68% it waits');
+select is(pg_temp.published('India flyer night'), false, 'D73: read from a picture at 80% waits (pictures need 85%)');
+select is(pg_temp.published('Juliet poster day'), true, 'D73: read from a picture at 90% publishes');
 
 select * from finish();
 rollback;

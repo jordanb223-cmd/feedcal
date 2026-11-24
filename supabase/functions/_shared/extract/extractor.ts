@@ -13,16 +13,17 @@ export const PRICES: Record<string, { input: number; output: number }> = {
 
 export interface ModelReply { json: unknown; refused: boolean; inputTokens: number; outputTokens: number; model: string }
 export interface Extractor {
-  run(model: string, system: string, user: string): Promise<ModelReply>;
+  /** `opts.schema` replaces the event-list schema for a different question (D70's date step). */
+  run(model: string, system: string, user: string, opts?: { schema?: unknown; effort?: "low" | "medium" | "high" }): Promise<ModelReply>;
 }
 
 export function claudeExtractor(apiKey: string, client = new Anthropic({ apiKey })): Extractor {
   return {
-    async run(model, system, user) {
+    async run(model, system, user, opts) {
       const response = await client.beta.messages.create({
         model,
         max_tokens: 16000,
-        output_config: { effort: model === SMALL_MODEL ? "low" : "medium", format: { type: "json_schema", schema: OUTPUT_JSON_SCHEMA } },
+        output_config: { effort: opts?.effort ?? (model === SMALL_MODEL ? "low" : "medium"), format: { type: "json_schema", schema: (opts?.schema ?? OUTPUT_JSON_SCHEMA) as typeof OUTPUT_JSON_SCHEMA } },
         // Haiku has no server-side refusal fallback; Opus 5.5 does.
         ...(model === LARGE_MODEL ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
         system,

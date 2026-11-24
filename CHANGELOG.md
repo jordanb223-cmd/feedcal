@@ -7,6 +7,15 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Fixed
+- Photos, scans and picture-only PDFs that arrived before image reading was switched on are now read on their own. Before, they stayed on "Waiting" for good unless you tapped "This one has the schedule". The same goes for files that hit the day's page limit: they are tried again the next day.
+
+### Changed
+- Calantern now publishes an event on its own when it is at least 70% sure, down from 85%. This is the standard setting; a calendar that chose its own level keeps it. The same level now applies to changes, so a moved or cancelled event from a trusted sender at 70% or more updates without asking.
+- When an email's wording fits more than one day ("this Friday", sent on a Friday), Calantern now reasons it out from the rest of the email. If the email settles it, the event is published. If it doesn't, the event still waits for you.
+- When an email gives no time for an event, the event is kept as an all-day event. Before, an event with a guessed time was dropped.
+- Events read from a photo, a scan or a picture-only PDF can now be published without asking you, but only when Calantern is at least 85% sure (or your calendar's own level, if you set it higher). Typed text needs 70%. Pictures get the higher level because reading one can misread a date. Before, these events always waited for you.
+
 ## [0.9.1] - 2026-11-23
 
 ### Fixed
