@@ -11,7 +11,7 @@ Deno.test("personal details in event text are found; venues and times are not", 
 
 // D40: the fixed "not sure" flag sits at 50%, so an owner who lowers their feed's auto-publish
 // setting to 50-60% gets it. (The Room F wording, "This Friday" sent on a Friday, is in dates.test.ts.)
-Deno.test("checkEvent: 55% isn't flagged, 45% is", async () => {
+Deno.test("checkEvent: 45% and up isn't flagged, 40% is (D85)", async () => {
   const { checkEvent } = await import("./checks.ts");
   const input = { referenceDate: "2026-11-13T21:16:00Z", timezone: "America/Los_Angeles", feedName: "Room F", feedCategory: null,
     subject: "Dinos-giving", sender: "roomf@school.example", body: "Friday, Nov 20 is Dinos-giving! Bring a dish to share.", pages: [] };
@@ -20,5 +20,6 @@ Deno.test("checkEvent: 55% isn't flagged, 45% is", async () => {
     source_ref: { kind: "body" as const, attachment_id: null, page_index: null } });
   assertEquals(checkEvent(ev(0.55), input).review, []);
   assertEquals(checkEvent(ev(0.55), input).dateConfirmed, true);
-  assertEquals(checkEvent(ev(0.45), input).review, ["low_confidence"]);
+  assertEquals(checkEvent(ev(0.45), input).review, []);
+  assertEquals(checkEvent(ev(0.4), input).review, ["low_confidence"]);
 });

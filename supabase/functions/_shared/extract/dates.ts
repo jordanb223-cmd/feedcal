@@ -4,7 +4,7 @@
 //              exactly one date) and, for timed events, any written time matches.
 //   review:    the quote contradicts the event, or the day is genuinely ambiguous, or the event
 //              is before the email was sent. These always wait for the owner.
-// Anything else is "unconfirmed" and falls back to the feed's normal bar (70% unless changed, D70).
+// Anything else is "unconfirmed" and falls back to the feed's normal bar (45% unless changed, D85).
 
 export interface DateGateInput {
   start: string;          // local wall time "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM"

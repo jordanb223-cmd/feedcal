@@ -48,6 +48,7 @@ main:has(.notes) footer>p:first-child{display:none}
 .mailcard h2{font-size:1.25rem;margin:0 0 .25rem}
 .mailcard .from{font-size:.875rem;color:var(--soft);margin:0}
 .mailcard .sum{margin:.625rem 0 0}
+.mailcard .addall{margin:.75rem 0 0}
 .part{border-top:1px solid var(--line);padding:.875rem 1.25rem}
 .part>h3{font:700 .8125rem/1.2 system-ui,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);margin:0 0 .625rem}
 .part.ask{background:#fff6e6}

@@ -808,3 +808,17 @@ What was checked, against what, and what changed:
 - **Effect on existing events.** Every timed event with no end, on every calendar, is served with the one-hour end from the next time its feed is built. Read from the code; no calendar app was checked for how it redraws an event whose end appears without a new `SEQUENCE`.
 - **Tests.** `extract/dates.test.ts` (the hours, ranges, the settling words, the review reason), `packages/ics/src/calendar.test.ts` and the golden files.
 - **Not covered.** Events at unusual hours for the rule (a 7:00 evening concert with no "evening" in the quoted words) will wait for the owner. That is the intended cost.
+
+## D85 — Bars lowered to 45%, pictures included; "Add all"; the sent day is given to the model in the calendar's zone (2026-11-24)
+
+- **Owner's words.** Of three events waiting on Room F's Review page (55%, 60% and 80% sure): "both should have been way more confident in adding them automatically, lets smooth out the confidence level thresholds ... should probably only get flagged if below 45%, or thereabout", "2 tile with add all or fix should be there", and "ensure we are using the emails date to ground it all, so when it says this friday you have the reference of while the email was sent."
+- **Bars.** Migration `20261124001100_publish_bar_45.sql`: the default bar goes from 0.70 to 0.45 in every function that carries it, and the picture bar in `reconcile_candidate` from 0.85 to 0.45, the same as typed text. `LOW_CONFIDENCE` (`extract/checks.ts`) goes from 0.5 to 0.45, so 45 to 50% is no longer flagged. A calendar's own setting is kept. Settings now offers 45%.
+  - The owner gave one number, 45%. A first build kept pictures at 55%; asked, the owner chose 45% for pictures too ("Pictures at 45% first"). This ends D73's higher picture bar. An event read from a picture still never counts as having a proven date (D72). All three Room F examples clear the new bar.
+  - Unchanged: the date and time checks (D41, D82 to D84), the hold on anything flagged as aimed at the AI, re-read rules (D76), no past events (D77), the owner's email on every automatic change (D77), and escalation to the larger model below 70%.
+  - Not measured: how often an event between 45% and 70% is wrong. The only evidence is the three Room F items, which the owner judged correct.
+- **Events already waiting are not published by this change.** The bar is applied when an email is read.
+- **"Add all".** A card with two or more new events waiting gets one button (`POST /feeds/:id/add-all`). It calls the same `approve_candidate` and `publish_draft` as the single buttons, one at a time. Changes, cancellations and items flagged as aimed at the AI are left out of it.
+- **Sent day.** Checked in the code: the reference date is the forwarded message's date, else the `Date` header, else the time received (`parse/parse.ts`), stored as `messages.reference_date`; `dateGate` and the date question already turn it into a day in the event's zone. Two gaps were found and closed:
+  - The model was given the reference date only as a UTC timestamp. An email sent Friday at 7 PM Pacific read as Saturday 03:00Z. The prompt now carries `sent_on="Friday, November 20, 2026"` in the feed's zone and tells the model to count from that day.
+  - The Review page showed the day Calantern received the email. It now shows "Sent" and the sent day.
+- **Not checked.** Whether Room F's stored `reference_date` values are the emails' true sent dates: production rows were not read.
