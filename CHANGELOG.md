@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-11-24
+
 ### Fixed
 - A photo that was first found to have no text, and was then set to wait on the daily limit during a retry, was shown as waiting but never actually retried. It is now retried like any other waiting file. Files already stuck this way are picked up too.
 
