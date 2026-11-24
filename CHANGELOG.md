@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-23
+
 ### Fixed
 - Photos, scans and picture-only PDFs that arrived before image reading was switched on are now read on their own. Before, they stayed on "Waiting" for good unless you tapped "This one has the schedule". The same goes for files that hit the day's page limit: they are tried again the next day.
 
