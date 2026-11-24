@@ -29,7 +29,7 @@ const ADDRESS = /^feed-[a-z2-7]{20}$/i;
 export const REASONS: Record<string, string> = {
   unknown_address: "This Calantern address doesn't exist. Please check the address on the calendar's email setup page.",
   too_large: "This email is larger than 20 MB, Calantern's limit. Please send the schedule as a smaller file or a link.",
-  too_many_attachments: "This email has more than 10 attachments, Calantern's limit. Please send the schedule on its own.",
+  too_many_attachments: "This email has more than 20 attachments, Calantern's limit. Please send the schedule on its own.",
   daily_limit: "This calendar has received 50 emails today, its daily limit. Please send it again tomorrow.",
 };
 

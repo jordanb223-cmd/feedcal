@@ -59,7 +59,8 @@ export function attachmentOutcome(a: RecentAttachment): string {
     case "unlikely_filename": return "Skipped: looks like a receipt or form";
     case "seen_before": return "Skipped: already read in an earlier email";
     case "unsupported_type": return "Skipped: Calantern can't read this kind of file yet";
-    case "page_budget_used": return "Skipped: this email already has 5 pages to read";
+    case "page_budget_used": return "Waiting to be read";
+    case "size_budget_used": return "Skipped: this email's files add up to more than 15 MB";
     case "too_large_for_vision": return "Skipped: image too large to read";
     case "vision_refused": case "vision_failed": case "unreadable": return "Couldn't read this file";
     case "no_text_on_page": return "No text found on it";
@@ -213,7 +214,7 @@ ${opts.confirmation
     </ol>
     <p class="muted">Mac rules only run while Mail is open on that Mac. For iCloud addresses, the iCloud Mail rule above is more reliable.</p>
   </details>
-  <p class="muted">The first email from a new sender waits here until you say yes. Emails over 20 MB or with more than 10 attachments are returned to the sender. Copies are deleted after 30 days.</p>
+  <p class="muted">The first email from a new sender waits here until you say yes. Emails over 20 MB or with more than 20 attachments are returned to the sender. Copies are deleted after 30 days.</p>
 </details>
 ${opts.isOwner
   ? html`<details class="more card"><summary>Getting spam at this address?</summary>

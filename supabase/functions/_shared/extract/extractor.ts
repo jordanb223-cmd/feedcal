@@ -4,11 +4,13 @@ import Anthropic from "npm:@anthropic-ai/sdk@1.6.0";
 import { OUTPUT_JSON_SCHEMA } from "./schema.ts";
 
 export const SMALL_MODEL = "claude-haiku-5-5";
-export const LARGE_MODEL = "claude-opus-5-5";
+// D75: the second opinion and the unclear-date question run on Sonnet 5.5, not Opus 5.5: half the
+// price, and both are short, well-bounded questions.
+export const LARGE_MODEL = "claude-sonnet-5-5";
 // $/token, from the claude-api reference (cached 2026-11-03). Estimates for logs and caps only.
 export const PRICES: Record<string, { input: number; output: number }> = {
   [SMALL_MODEL]: { input: 0.1 / 1e6, output: 0.5 / 1e6 },
-  [LARGE_MODEL]: { input: 4 / 1e6, output: 20 / 1e6 },
+  [LARGE_MODEL]: { input: 2 / 1e6, output: 10 / 1e6 },
 };
 
 export interface ModelReply { json: unknown; refused: boolean; inputTokens: number; outputTokens: number; model: string }
@@ -24,7 +26,7 @@ export function claudeExtractor(apiKey: string, client = new Anthropic({ apiKey 
         model,
         max_tokens: 16000,
         output_config: { effort: opts?.effort ?? (model === SMALL_MODEL ? "low" : "medium"), format: { type: "json_schema", schema: (opts?.schema ?? OUTPUT_JSON_SCHEMA) as typeof OUTPUT_JSON_SCHEMA } },
-        // Haiku has no server-side refusal fallback; Opus 5.5 does.
+        // Haiku has no server-side refusal fallback; Sonnet 5.5 does (the "default" form).
         ...(model === LARGE_MODEL ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
         system,
         messages: [{ role: "user", content: user }],

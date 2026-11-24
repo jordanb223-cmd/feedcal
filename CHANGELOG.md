@@ -7,6 +7,17 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Changed
+- Pictures are now read in two passes, to cost less and catch misread dates. A fast, low-cost AI model reads every picture. If the picture shows a date or time, a stronger model reads it again, and the two must agree. If they disagree, the event waits for you with the note "Read from an image; compare with the picture."
+- The second opinion on unclear events, and the reasoning about unclear days, now use a mid-priced AI model instead of the most expensive one.
+- An email can carry up to 20 attachments. The limit was 10.
+- There is no longer a limit of five pages per email. From each file Calantern reads up to 30 pages: the 30 most likely to hold dates, or the first 30 of a scanned file. Before, a scanned file got two pages and a file over 40 pages was skipped whole. Size: a single file over 15 MB is skipped, and the files read from one email stop once they add up to 15 MB.
+- When an email has a newsletter and photos, the newsletter is read first.
+- Files that were skipped under the old limits are read again on their own.
+
+### Fixed
+- When a parked email is retried, pictures that were already read are kept as they are and not read (and paid for) a second time.
+
 ## [0.10.0] - 2026-11-23
 
 ### Fixed

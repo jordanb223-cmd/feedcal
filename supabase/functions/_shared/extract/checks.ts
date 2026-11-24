@@ -19,12 +19,12 @@ export function normalise(text: string): string {
     .toLowerCase();
 }
 
-export interface SourceText { text: string; fromTranscription: boolean }
+export interface SourceText { text: string; fromTranscription: boolean; unsureRead?: boolean }
 
 export function sourceFor(e: ExtractedEvent, input: ExtractInput): SourceText | null {
   if (e.source_ref.kind === "body") return { text: input.body, fromTranscription: false };
   const page = input.pages.find((p) => p.attachment_id === e.source_ref.attachment_id && p.page_index === e.source_ref.page_index);
-  return page ? { text: page.text, fromTranscription: page.source === "transcription" } : null;
+  return page ? { text: page.text, fromTranscription: page.source !== "text_layer", unsureRead: page.source === "transcription_unsure" } : null;
 }
 
 export function quoteFound(quote: string, source: string): boolean {
@@ -106,6 +106,8 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   // shortcut below: the quote is checked against the transcription, not the picture, so a misread
   // digit would "prove" itself.
   if (personalDetails(e).length) review.push("personal_details");
+  // D75: two models read this picture and disagreed on a date or time. The owner compares it with the picture.
+  if (source.unsureRead) review.push("from_transcription");
   // D41: the date rules. A contradiction or ambiguity always waits for the owner; a date the
   // quote proves lets a trusted sender's event publish at 50% instead of the feed's bar.
   const gate = dateGate({ start: e.start, allDay: e.all_day, timezone: e.timezone, quote: e.evidence_quote, referenceDate: input.referenceDate });
