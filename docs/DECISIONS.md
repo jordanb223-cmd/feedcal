@@ -662,3 +662,12 @@ What was checked, against what, and what changed:
 - **Risk accepted.** Reading text out of an image can misread a date or time, and nothing downstream can catch that. Other review reasons still apply (personal details, date mismatch, low confidence, injection). Unapproved senders still wait.
 - **Tests.** `extract/resolve.test.ts` (a transcribed page: no review reason, flag kept, no proven date).
 - **Not verified yet.** No real image has been transcribed (D29). The model's confidence on transcribed text, and so how often these clear 70%, is unmeasured.
+
+## D73 — Events read from pictures need 85% (2026-11-23)
+
+- **Why.** Straight after D72 the owner asked: "for the photos and pdfs and pictures where they are more error prone, can we make threshold a bit higher automatically to ensure accuracy?"
+- **What.** In `private.reconcile_candidate`, a candidate with `from_transcription` must reach `greatest(feed bar, 0.85)` to publish or apply on its own. Everything else keeps the feed's bar (70% unless changed, D70). Migration `20261124000300_image_events_higher_bar.sql` rewrites the function in place. D72's limit stays: no proven-date shortcut for these events.
+- **The number.** 85% is the assistant's choice for "a bit higher": it is the bar every event had before D70. It is one constant in that migration if the owner wants another.
+- **Applies to.** Anything triage transcribed with the vision model: photos, scans, and PDF pages with no text layer. A PDF with real text is read as text and keeps the 70% bar.
+- **Tests.** `021_date_gates.test.sql`: a picture-read event at 80% waits, at 90% publishes.
+- **Not verified yet.** As for D72: no real image has been transcribed, so how the model's confidence spreads around 85% on real flyers is unknown.

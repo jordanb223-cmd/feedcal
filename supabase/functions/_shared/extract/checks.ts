@@ -101,7 +101,8 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   // lowers it), the reconciler decides. Lowered from 0.7 so an owner's 50-60% setting can work (D40).
   if (e.confidence < LOW_CONFIDENCE) review.push("low_confidence");
   // D72: an event read from a photo or scan no longer waits just for that (owner's decision). It
-  // publishes under the feed's bar like any other. What it does not get is the "proven date"
+  // publishes under a higher bar, 85% or the feed's own if higher (D73, in reconcile_candidate).
+  // What it does not get is the "proven date"
   // shortcut below: the quote is checked against the transcription, not the picture, so a misread
   // digit would "prove" itself.
   if (personalDetails(e).length) review.push("personal_details");
