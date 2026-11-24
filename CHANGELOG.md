@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-24
+
 ### Changed
 - Calantern adds more events by itself. An event now goes on the calendar when Calantern is at least 45% sure. That was 70%, and 85% for an event read from a picture; pictures now use the same 45%. The date checks still apply: an event whose date or time doesn't match the email's words still waits for you. You can raise the bar under Settings, More settings.
 - When an email has two or more events waiting, its card has one "Add all" button.
