@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-11-24
+
 ### Fixed
 - A picture or scan waiting on the daily reading limit is now read as soon as you have pages left, not when the date changes. Before, it waited until 4 PM Pacific the next day even if there was room.
 
