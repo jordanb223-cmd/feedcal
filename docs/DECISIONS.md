@@ -735,3 +735,11 @@ What was checked, against what, and what changed:
 - **No silent disagreement.** In D76's same-email match: when a re-read gives a different start for an event this email already published, the event is left as it is and the candidate becomes one `conflict` card ("Different time?"). A later re-read replaces the card, and a read that agrees clears it.
 - **Tests.** `triage/triage.test.ts` (tiebreak, stand-ins, whole files), `extract/extractor.test.ts`, `032_reread.test.sql`, `033_trust_safeguards.test.sql`.
 - **Not verified yet.** None of it on real mail. How often the first two models disagree, and so how often Opus is paid for, is unknown. Cost at 100 pages a day is bounded by the monthly budget, not measured.
+
+## D79 — Waiting files are retried when pages are available, not when the date changes (2026-11-24)
+
+- **Why.** After v0.13.0 raised the daily picture limit to 100, two Room F photos still said "Waiting: today's reading limit was reached". `requeue_parked_attachments` retried a `daily_vision_limit` file only if it was parked before the current UTC day, and they had been parked at about 03:00 UTC that same day. The owner: "maybe the clock shouldn't be the limiting factor then?"
+- **What.** A `daily_vision_limit` file is retried when its owner has enough picture pages left today for the whole file (`private.vision_pages_left`: the daily limit minus today's use, or zero while the monthly budget throttle is on), and it was last tried more than 10 minutes ago. The date no longer enters into it. The Email page's wording for these files changes to "Waiting its turn: it will be read as soon as today's reading limit allows".
+- **Still a clock.** The daily count itself resets at midnight UTC (4 PM Pacific in winter), because `usage_daily` is keyed by UTC date. That was not changed. It now only decides when a full allowance returns, not when a waiting file may be tried.
+- **Tests.** `031_parked_attachments.test.sql`: a file parked earlier the same day is retried when pages are free; one tried a moment ago is not; with no pages left, neither it nor one from yesterday is retried.
+- **Not verified yet.** On production: Room F's two photos are the first case.

@@ -22,7 +22,8 @@ create function pg_temp.queued(p_id uuid) returns integer language sql as $$
 
 select pg_temp.parked('d3100000-0000-4000-8000-000000000001', 'needs_vision_not_configured');
 select pg_temp.parked('d3100000-0000-4000-8000-000000000002', 'daily_vision_limit', now() - interval '1 day');
-select pg_temp.parked('d3100000-0000-4000-8000-000000000003', 'daily_vision_limit');
+select pg_temp.parked('d3100000-0000-4000-8000-000000000003', 'daily_vision_limit', now() - interval '20 minutes');
+select pg_temp.parked('d3100000-0000-4000-8000-000000000008', 'daily_vision_limit');
 select pg_temp.parked('d3100000-0000-4000-8000-000000000004', 'owner_never');
 select pg_temp.parked('d3100000-0000-4000-8000-000000000005', 'needs_vision_not_configured', now(), now() - interval '9 days');
 select pg_temp.parked('d3100000-0000-4000-8000-000000000006', 'page_budget_used', now(), now(), 'skipped');
@@ -38,7 +39,8 @@ select ok(public.requeue_parked_attachments(50) >= 3, 'parked emails go back (at
 reset role;
 select is(pg_temp.queued('d3100000-0000-4000-8000-000000000001'), 1, 'parked while image reading was off: queued');
 select is(pg_temp.queued('d3100000-0000-4000-8000-000000000002'), 1, 'parked by yesterday''s page limit: queued');
-select is(pg_temp.queued('d3100000-0000-4000-8000-000000000003'), 0, 'parked by today''s page limit: waits for tomorrow');
+select is(pg_temp.queued('d3100000-0000-4000-8000-000000000003'), 1, 'D79: parked by the page limit earlier today, and pages are free now: queued, no waiting for the date');
+select is(pg_temp.queued('d3100000-0000-4000-8000-000000000008'), 0, 'D79: parked a moment ago: not tried again for 10 minutes');
 select is(pg_temp.queued('d3100000-0000-4000-8000-000000000004'), 0, 'a file the owner said never to use is left alone');
 select is(pg_temp.queued('d3100000-0000-4000-8000-000000000005'), 0, 'an email older than 8 days is left alone (D77)');
 select is(pg_temp.queued('d3100000-0000-4000-8000-000000000006'), 1, 'D74: a file skipped by the old five-page limit: queued');
@@ -48,6 +50,19 @@ select lives_ok($$ update public.messages set pages_for_ai = 37 where id = 'd310
 set local role service_role;
 select is(public.requeue_parked_attachments(50), 0, 'an email already back in the queue is not queued twice');
 reset role;
+
+-- D79: no pages left for the owner today: the file keeps waiting.
+select pgmq.purge_queue('triage_message');
+update public.attachments set triaged_at = now() - interval '20 minutes' where message_id = 'd3100000-0000-4000-8000-000000000008';
+set local role service_role;
+select public.take_quota('aaaaaaaa-0000-4000-8000-000000000001', 'vision_pages', 100);
+reset role;
+select is(private.vision_pages_left('aaaaaaaa-0000-4000-8000-000000000001'), 0, 'the owner has used today''s picture pages');
+set local role service_role;
+select public.requeue_parked_attachments(50);
+reset role;
+select is(pg_temp.queued('d3100000-0000-4000-8000-000000000008'), 0, 'with no pages left, a waiting file is not retried');
+select is(pg_temp.queued('d3100000-0000-4000-8000-000000000002'), 0, 'nor is one from yesterday: pages decide, not the date');
 
 select * from finish();
 rollback;

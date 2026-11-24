@@ -50,7 +50,7 @@ export function attachmentOutcome(a: RecentAttachment): string {
     case "text_layer": return a.keptPages.length ? `Reading ${pageList(a.keptPages)}${a.pages ? ` of ${a.pages}` : ""}` : "Read";
     case "transcribed": return "Read from the image";
     case "needs_vision_not_configured": return "Waiting: reading images and scans isn't switched on yet";
-    case "daily_vision_limit": case "daily_page_limit": return "Waiting: today's reading limit was reached";
+    case "daily_vision_limit": case "daily_page_limit": return "Waiting its turn: it will be read as soon as today's reading limit allows";
     case "no_schedule_found": return "No dates found in it";
     case "rule_other": return "Skipped: you picked a different file from this sender";
     case "rule_never": case "owner_never": return "Skipped: you said never to use files like this";
