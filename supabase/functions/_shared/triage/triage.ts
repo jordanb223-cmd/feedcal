@@ -12,11 +12,15 @@ import { isNever, preferredMatch, readRule } from "./rule.ts";
 import { KEEP_THRESHOLD, scorePage, type PageScore } from "./score.ts";
 import { PRICE_PER_INPUT_TOKEN, PRICE_PER_OUTPUT_TOKEN, RefusedError, type Transcriber, type TranscribeInput } from "./transcriber.ts";
 
-export const PAGES_PER_MESSAGE = 5;
+// D74: no page limit per email. Per file, at most 30 pages are read: the 30 most likely to hold
+// dates from a file with text, the first 30 of a scan. Size: a single file over 15 MB is skipped,
+// and the files read from one email stop once they add up to 15 MB (most useful first). A sender
+// marked "allow large files" is exempt from all three. The owner's daily limits and the monthly
+// budget still apply.
 export const MAX_BYTES = 15 * 1024 * 1024;
-export const MAX_PAGES = 40;
+export const MAX_MESSAGE_BYTES = 15 * 1024 * 1024;
+export const MAX_PAGES_PER_FILE = 30;
 export const MAX_VISION_BYTES = 7 * 1024 * 1024; // 10 MB base64 per image (Claude vision docs)
-const MAX_SCANNED_PAGES = 2;
 const MAX_VISION_TOKENS = 4784; // high-resolution tier cap per image (Claude vision docs)
 const SCANNED_CHARS_PER_PAGE = 40;
 export const PDF_PARSE_MS = 20_000; // per file (D37)
@@ -126,9 +130,14 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
     candidates.push({ att, preferredPages: pref?.pages?.length ? pref.pages : null, preferred: Boolean(pref || att.chosen) });
   }
 
-  // ---- Stage 1: metadata, no file reads.
+  // ---- Stage 1: metadata, no file reads. Most useful first, so the 15 MB goes to the right files:
+  // the owner's pick, then documents (newsletters, schedules), then pictures; smaller before larger.
+  const isImage = (c: Candidate) => IMAGE_TYPES.has(c.att.mime);
+  const ordered = [...candidates].sort((a, b) =>
+    Number(b.preferred) - Number(a.preferred) || Number(isImage(a)) - Number(isImage(b)) || a.att.bytes - b.att.bytes);
   const readable: Candidate[] = [];
-  for (const c of candidates) {
+  let messageBytes = 0;
+  for (const c of ordered) {
     const { att } = c;
     const known = att.mime === "application/pdf" || att.mime === DOCX_MIME || TEXT_TYPES.has(att.mime) || IMAGE_TYPES.has(att.mime); // D61: + Word
     if (!known) { results.set(att.id, skip(att, 1, "unsupported_type")); continue; }
@@ -136,10 +145,12 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
     if (att.bytes > MAX_BYTES && !rule.allowLarge) { results.set(att.id, skip(att, 1, "too_large")); continue; }
     if (!c.preferred && att.filename && UNLIKELY_NAME.test(att.filename)) { results.set(att.id, skip(att, 1, "unlikely_filename")); continue; }
     if (!c.preferred && att.seen_before) { results.set(att.id, skip(att, 1, "seen_before")); continue; }
+    if (messageBytes + att.bytes > MAX_MESSAGE_BYTES && !rule.allowLarge) { results.set(att.id, skip(att, 1, "size_budget_used")); continue; }
+    messageBytes += att.bytes;
     readable.push(c);
   }
 
-  // ---- Stage 2: text. Score every page; pick the best across the message, up to 5.
+  // ---- Stage 2: text. Score every page; keep every page that looks like it holds dates.
   interface Scored { c: Candidate; pages: string[]; scores: PageScore[] }
   const scored: Scored[] = [];
   const visionQueue: { c: Candidate; total: number | null; pages?: number[] }[] = [];
@@ -165,12 +176,11 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
       results.set(att.id, { id: att.id, status: "failed", pages: [], pages_total: null, triage: { stage: 2, reason } });
       continue;
     }
-    if (pages.length > MAX_PAGES && !rule.allowLarge) { results.set(att.id, skip(att, 1, "too_many_pages", { pages_total: pages.length })); continue; }
     const textChars = pages.reduce((n, p) => n + p.length, 0);
     if (att.mime === "application/pdf" && textChars < SCANNED_CHARS_PER_PAGE * pages.length) {
-      // No usable text layer: a scan. Only the preferred pages, or the first couple, go to vision.
-      const wanted = (c.preferredPages ?? [...Array(Math.min(MAX_SCANNED_PAGES, pages.length)).keys()]).filter((i) => i < pages.length);
-      visionQueue.push({ c, total: pages.length, pages: wanted.slice(0, MAX_SCANNED_PAGES) });
+      // No usable text layer: a scan. The preferred pages, or the first 30, go to vision.
+      const wanted = (c.preferredPages ?? [...Array(pages.length).keys()]).filter((i) => i < pages.length);
+      visionQueue.push({ c, total: pages.length, pages: rule.allowLarge ? wanted : wanted.slice(0, MAX_PAGES_PER_FILE) });
       continue;
     }
     scored.push({ c, pages, scores: pages.map((t, i) => scorePage(i, t)) });
@@ -187,11 +197,18 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
     });
   }
   picks.sort((a, b) => b.rank - a.rank || a.index - b.index);
-  let budget = PAGES_PER_MESSAGE;
-  const granted = await deps.quota("text_pages", Math.min(budget, picks.length));
+  // At most 30 pages from any one file: its best 30, since the list is best first.
+  if (!rule.allowLarge) {
+    const perFile = new Map<Scored, number>();
+    for (let i = 0; i < picks.length; i++) {
+      const n = (perFile.get(picks[i]!.s) ?? 0) + 1;
+      perFile.set(picks[i]!.s, n);
+      if (n > MAX_PAGES_PER_FILE) picks.splice(i--, 1);
+    }
+  }
+  const granted = picks.length > 0 ? await deps.quota("text_pages", picks.length) : 0;
   const chosen = picks.slice(0, granted);
-  budget -= chosen.length;
-  const overQuota = picks.length > 0 && granted < Math.min(PAGES_PER_MESSAGE, picks.length);
+  const overQuota = granted < picks.length;
   for (const s of scored) {
     const mine = chosen.filter((p) => p.s === s).map((p) => p.index).sort((a, b) => a - b);
     const triage = { stage: 2 as const, reason: mine.length ? "text_layer" : overQuota ? "daily_page_limit" : "no_schedule_found", keptPages: mine, scores: s.scores };
@@ -200,8 +217,9 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
       : { id: s.c.att.id, status: "skipped", pages: [], pages_total: s.pages.length, triage });
   }
 
-  // ---- Stage 4: images and scans, last and only within what's left.
-  visionQueue.sort((a, b) => Number(b.c.preferred) - Number(a.c.preferred));
+  // ---- Stage 4: images and scans. The owner's pick first, then scanned documents, then pictures,
+  // so a short daily limit is spent on the newsletter before the classroom photos.
+  visionQueue.sort((a, b) => Number(b.c.preferred) - Number(a.c.preferred) || Number(isImage(a.c)) - Number(isImage(b.c)));
   for (const v of visionQueue) {
     const { att } = v.c;
     const pageIndexes = v.pages ?? [0];
@@ -209,9 +227,11 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
       results.set(att.id, { id: att.id, status: "pending", pages: [], pages_total: v.total, triage: { stage: 4, reason: "needs_vision_not_configured" } });
       continue;
     }
-    if (budget <= 0) { results.set(att.id, skip(att, 4, "page_budget_used", { pages_total: v.total })); continue; }
+    // Already read on an earlier pass (a retry, D71): keep what was read, don't pay to read it again.
+    // The owner's "This one has the schedule" resets the status first, so that still re-reads.
+    if (att.status === "transcribed") continue;
     if (att.bytes > MAX_VISION_BYTES && IMAGE_TYPES.has(att.mime)) { results.set(att.id, skip(att, 4, "too_large_for_vision", { pages_total: v.total })); continue; }
-    const wanted = pageIndexes.slice(0, budget);
+    const wanted = pageIndexes;
     const allowed = await deps.quota("vision_pages", wanted.length);
     if (allowed === 0) { results.set(att.id, { id: att.id, status: "pending", pages: [], pages_total: v.total, triage: { stage: 4, reason: "daily_vision_limit" } }); continue; }
     try {
@@ -232,7 +252,6 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
         output += t.outputTokens;
         if (t.text) kept.push({ index, text: t.text, source: "transcription" });
       }
-      budget -= kept.length;
       const costUsd = Math.round((input * PRICE_PER_INPUT_TOKEN + output * PRICE_PER_OUTPUT_TOKEN) * 10000) / 10000;
       results.set(att.id, {
         id: att.id,

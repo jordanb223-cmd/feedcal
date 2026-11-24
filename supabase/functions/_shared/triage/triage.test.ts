@@ -1,4 +1,4 @@
-// Phase 8 "passes when": a 40-page newsletter sends at most 5 pages to the AI; a flyer photo's
+// Phase 8 "passes when": a 40-page newsletter sends only its schedule pages to the AI (D74: no page cap); a flyer photo's
 // transcription holds its events (here with a fake transcriber: no paid API in tests); and a
 // learned "this one" rule sends the next email straight to the right file.
 import { assert, assertEquals } from "jsr:@std/assert@1";
@@ -71,34 +71,78 @@ Deno.test("scoring: a schedule page beats a page of prose", () => {
   assert(scorePage(1, PROSE.join("\n")).score < 3);
 });
 
-Deno.test("a 40-page newsletter sends at most 5 pages, and they are the schedule pages", async () => {
+Deno.test("a 40-page newsletter sends only its schedule pages", async () => {
   const pages = Array.from({ length: 40 }, (_, i) => (i === 16 ? SCHEDULE_A : i === 17 ? SCHEDULE_B : PROSE));
   const { d, asked } = deps({ "f/m/newsletter": await pdf(pages) });
   const [r] = await triageMessage([att("newsletter")], null, d);
   assertEquals(r?.status, "text_layer");
   assertEquals(r?.pages_total, 40);
-  assert((r?.pages.length ?? 99) <= 5, `kept ${r?.pages.length}`);
   assertEquals(r?.triage.keptPages, [16, 17]);
   assert(r?.pages[0]?.text.includes("Picture day"));
   assertEquals(r?.triage.scores?.length, 40);
-  assert(asked.every((a) => a.wanted <= 5));
+  assertEquals(asked, [{ kind: "text_pages", wanted: 2 }]);
 });
 
-Deno.test("over 40 pages is skipped, unless the sender's schedules come as big attachments", async () => {
+Deno.test("D74: a long file is read however many pages it has", async () => {
   const pages = Array.from({ length: 41 }, (_, i) => (i === 3 ? SCHEDULE_A : PROSE));
-  const files = { "f/m/big": await pdf(pages) };
-  const [skipped] = await triageMessage([att("big")], null, deps(files).d);
-  assertEquals([skipped?.status, skipped?.triage.reason], ["skipped", "too_many_pages"]);
-  const [read] = await triageMessage([att("big")], { version: 1, allowLarge: true }, deps(files).d);
-  assertEquals([read?.status, read?.triage.keptPages], ["text_layer", [3]]);
+  const [read] = await triageMessage([att("big")], null, deps({ "f/m/big": await pdf(pages) }).d);
+  assertEquals([read?.status, read?.triage.keptPages, read?.pages_total], ["text_layer", [3], 41]);
 });
 
-Deno.test("the 5-page budget is shared across a message's attachments, best pages first", async () => {
+Deno.test("D74: every page that holds dates is kept; there is no five-page cap", async () => {
   const many = Array.from({ length: 4 }, () => SCHEDULE_A);
   const files = { "f/m/a": await pdf(many), "f/m/b": await pdf([...many, PROSE]) };
   const results = await triageMessage([att("a"), att("b")], null, deps(files).d);
-  const kept = results.reduce((n, r) => n + r.pages.length, 0);
-  assertEquals(kept, 5);
+  assertEquals(results.reduce((n, r) => n + r.pages.length, 0), 8);
+});
+
+Deno.test("D74: at most 30 pages are read from one file, unless the sender is marked for large files", async () => {
+  const dates = Array.from({ length: 34 }, () => SCHEDULE_A);
+  const text = { "f/m/long": await pdf(dates) };
+  const [capped] = await triageMessage([att("long")], null, deps(text).d);
+  assertEquals([capped?.status, capped?.pages.length, capped?.pages_total], ["text_layer", 30, 34]);
+  const [all] = await triageMessage([att("long")], { version: 1, allowLarge: true }, deps(text).d);
+  assertEquals(all?.pages.length, 34);
+
+  const scan = { "f/m/scan": await pdf(Array.from({ length: 33 }, () => [""])) };
+  const reader = fakeTranscriber("Practice Tuesdays 5 PM");
+  const [s] = await triageMessage([att("scan")], null, deps(scan, { transcriber: reader.t, visionQuota: 100 }).d);
+  assertEquals([s?.pages_total, reader.calls.length, s?.triage.keptPages?.at(-1)], [33, 30, 29]);
+});
+
+Deno.test("D74: files from one email are read up to 15 MB, documents before pictures", async () => {
+  const MB = 1024 * 1024;
+  const { t, calls } = fakeTranscriber("Field day Friday, May 8 at 9 AM");
+  const files = { "f/m/photo1": jpeg(100), "f/m/photo2": jpeg(100), "f/m/news": await pdf([SCHEDULE_A]) };
+  const results = await triageMessage([
+    att("photo1", { mime: "image/jpeg", filename: "photo1.jpg", bytes: 6 * MB }),
+    att("photo2", { mime: "image/jpeg", filename: "photo2.jpg", bytes: 6 * MB }),
+    att("news", { filename: "newsletter.pdf", bytes: 5 * MB }),
+  ], null, deps(files, { transcriber: t }).d);
+  const by = Object.fromEntries(results.map((r) => [r.id, [r.status, r.triage.reason]]));
+  assertEquals(by.news, ["text_layer", "text_layer"], "the newsletter is read first although it came last");
+  assertEquals(by.photo1, ["transcribed", "transcribed"]);
+  assertEquals(by.photo2, ["skipped", "size_budget_used"], "5 + 6 + 6 MB is over 15");
+  assertEquals(calls.length, 1);
+});
+
+Deno.test("D74: with a short daily limit, a scanned newsletter is read before the photos", async () => {
+  const { t, calls } = fakeTranscriber("Field day Friday, May 8 at 9 AM");
+  const files = { "f/m/photo": jpeg(100), "f/m/scan": await pdf([[""]]) };
+  const results = await triageMessage([att("photo", { mime: "image/jpeg", filename: "photo.jpg" }), att("scan")], null, deps(files, { transcriber: t, visionQuota: 1 }).d);
+  const by = Object.fromEntries(results.map((r) => [r.id, [r.status, r.triage.reason]]));
+  assertEquals([by.scan, by.photo, calls[0]?.kind], [["transcribed", "transcribed"], ["pending", "daily_vision_limit"], "pdf_page"]);
+});
+
+Deno.test("D74: on a retry, a picture that was already read is left as it is and not paid for again", async () => {
+  const { t, calls } = fakeTranscriber("Field day Friday, May 8 at 9 AM");
+  const files = { "f/m/done": jpeg(100), "f/m/new": jpeg(100) };
+  const results = await triageMessage([
+    att("done", { mime: "image/jpeg", filename: "done.jpg", status: "transcribed" }),
+    att("new", { mime: "image/jpeg", filename: "new.jpg", status: "skipped" }),
+  ], null, deps(files, { transcriber: t }).d);
+  assertEquals(results.map((r) => r.id), ["new"], "no result for the one already read, so its stored pages stay");
+  assertEquals(calls.length, 1);
 });
 
 Deno.test("a flyer photo is transcribed (vision last), and its events are in the transcription", async () => {
@@ -119,12 +163,12 @@ Deno.test("without a vision key, images wait (pending) instead of failing", asyn
   assertEquals([r?.status, r?.triage.reason], ["pending", "needs_vision_not_configured"]);
 });
 
-Deno.test("a scanned PDF sends only its first 2 pages to vision, or the page the owner chose", async () => {
+Deno.test("a scanned PDF sends every page to vision (D74), or only the page the owner chose", async () => {
   const blank = Array.from({ length: 6 }, () => [""]);
   const files = { "f/m/scan": await pdf(blank) };
   const first = fakeTranscriber("Practice Tuesdays 5 PM");
   const [r] = await triageMessage([att("scan")], null, deps(files, { transcriber: first.t }).d);
-  assertEquals([r?.status, r?.pages_total, first.calls.length, first.calls[0]?.kind], ["transcribed", 6, 2, "pdf_page"]);
+  assertEquals([r?.status, r?.pages_total, first.calls.length, first.calls[0]?.kind], ["transcribed", 6, 6, "pdf_page"]);
   const second = fakeTranscriber("Game day schedule");
   const [p] = await triageMessage([att("scan")], { version: 1, prefer: [{ pattern: "^scan\\.pdf$", mime: "application/pdf", pages: [4] }] }, deps(files, { transcriber: second.t }).d);
   assertEquals([second.calls.length, p?.triage.keptPages], [1, [4]]);
