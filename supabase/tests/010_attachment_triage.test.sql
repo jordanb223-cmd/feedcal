@@ -84,8 +84,8 @@ select is((select attachment_rule ->> 'allowLarge' from public.sources where id 
 select is((select jsonb_array_length(attachment_rule -> 'prefer') from public.sources where id = 'cccccccc-0000-4000-8000-000000000001'), 1, 'the preferred pattern is kept');
 
 -- ---------------------------------------------------------------- daily caps
-select is(public.take_quota('aaaaaaaa-0000-4000-8000-000000000001', 'vision_pages', 15), 15, 'vision pages granted');
-select is(public.take_quota('aaaaaaaa-0000-4000-8000-000000000001', 'vision_pages', 15), 5, 'only what is left of 20 a day');
+select is(public.take_quota('aaaaaaaa-0000-4000-8000-000000000001', 'vision_pages', 90), 90, 'vision pages granted');
+select is(public.take_quota('aaaaaaaa-0000-4000-8000-000000000001', 'vision_pages', 15), 10, 'only what is left of 100 a day (D78; it was 20)');
 select is(public.take_quota('aaaaaaaa-0000-4000-8000-000000000002', 'vision_pages', 1), 0, 'the cap is per owner, across their feeds');
 select is(public.take_quota('bbbbbbbb-0000-4000-8000-000000000001', 'vision_pages', 1), 1, 'another owner has their own');
 

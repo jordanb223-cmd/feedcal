@@ -238,7 +238,13 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
     if (att.bytes > MAX_VISION_BYTES && IMAGE_TYPES.has(att.mime)) { results.set(att.id, skip(att, 4, "too_large_for_vision", { pages_total: v.total })); continue; }
     const wanted = pageIndexes;
     const allowed = await deps.quota("vision_pages", wanted.length);
-    if (allowed === 0) { results.set(att.id, { id: att.id, status: "pending", pages: [], pages_total: v.total, triage: { stage: 4, reason: "daily_vision_limit" } }); continue; }
+    // D78: a file is read whole or not at all. Reading part of it would mark it read and leave the
+    // rest for ever. It waits for tomorrow instead, when a fresh day's pages cover any file of up to
+    // 30 pages. Only a file longer than that cap (a sender marked for large files) is read in part.
+    if (allowed === 0 || (allowed < wanted.length && wanted.length <= MAX_PAGES_PER_FILE)) {
+      results.set(att.id, { id: att.id, status: "pending", pages: [], pages_total: v.total, triage: { stage: 4, reason: "daily_vision_limit" } });
+      continue;
+    }
     try {
       const bytes = await deps.readFile(att.storage_path!);
       if (IMAGE_TYPES.has(att.mime) && !bytesMatchType(att.mime, bytes)) {

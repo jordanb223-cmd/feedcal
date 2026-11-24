@@ -59,5 +59,8 @@ select public.requeue_waiting_extractions(1000);
 select is((select count(*)::int from pgmq.q_extract_message where message ->> 'message_id' = 'd3300000-0000-4000-8000-000000000011'), 1, 'a waiting email from 2 days ago is retried');
 select is((select count(*)::int from pgmq.q_extract_message where message ->> 'message_id' = 'd3300000-0000-4000-8000-000000000012'), 0, 'one from 9 days ago is not');
 
+-- ---------------------------------------------------------------- D78: daily picture pages
+select is((private.triage_limits() ->> 'vision_pages_per_day')::int, 100, 'an owner can have 100 picture pages read a day (was 20)');
+
 select * from finish();
 rollback;

@@ -276,7 +276,7 @@ Deno.test("a file that isn't what it claims is refused before reading (D61)", as
 });
 
 // ---------------------------------------------------------------- D75: two-pass reading
-import { CHECK_MODEL, dateFacts, FIRST_MODEL, mentionsWhen, type PageRead, RefusedError as Refused, twoPassTranscriber } from "./transcriber.ts";
+import { CHECK_MODEL, dateFacts, FIRST_MODEL, mentionsWhen, type PageRead, RefusedError as Refused, TIEBREAK_MODEL, twoPassTranscriber } from "./transcriber.ts";
 
 function reader(replies: Record<string, string | "refuse" | "throw">) {
   const calls: string[] = [];
@@ -305,23 +305,49 @@ Deno.test("D75: a picture that shows a date is read again, and agreeing reads ar
   assertEquals(r.costUsd, 0.0126); // 0.0006 + 5000 × $2/M + 200 × $10/M
 });
 
-Deno.test("D75: when the two reads disagree on a date or a time, the page is marked unsure", async () => {
-  const day = reader({ [FIRST_MODEL]: "Musical Dec 18 at 6 PM", [CHECK_MODEL]: "Musical Dec 16 at 6 PM" });
-  assertEquals((await day.t.transcribe(PICTURE)).unsure, true);
-  const time = reader({ [FIRST_MODEL]: "Musical Dec 18 at 6 PM", [CHECK_MODEL]: "Musical Dec 18 at 8 PM" });
-  assertEquals((await time.t.transcribe(PICTURE)).unsure, true);
+Deno.test("D78: when the two reads disagree, a third model settles it; two that agree are enough", async () => {
+  const sidesWithCheck = reader({ [FIRST_MODEL]: "Musical Dec 18 at 6 PM", [CHECK_MODEL]: "Musical Dec 16 at 6 PM", [TIEBREAK_MODEL]: "MUSICAL - Dec 16, 6:00 pm" });
+  const a = await sidesWithCheck.t.transcribe(PICTURE);
+  assertEquals([a.text, a.unsure, sidesWithCheck.calls], ["MUSICAL - Dec 16, 6:00 pm", undefined, [FIRST_MODEL, CHECK_MODEL, TIEBREAK_MODEL]]);
+  assertEquals(a.costUsd, 0.0366); // 0.0006 + 0.012 + (5000 × $4/M + 200 × $20/M)
+  const sidesWithFirst = reader({ [FIRST_MODEL]: "Musical Dec 18 at 6 PM", [CHECK_MODEL]: "Musical Dec 16 at 6 PM", [TIEBREAK_MODEL]: "Musical Dec 18 at 6 PM" });
+  assertEquals((await sidesWithFirst.t.transcribe(PICTURE)).unsure, undefined);
 });
 
-Deno.test("D75: if the small model can't read pictures or declines, the larger one reads alone and the page is unsure", async () => {
-  for (const first of ["throw", "refuse"] as const) {
-    const solo = reader({ [FIRST_MODEL]: first, [CHECK_MODEL]: "Picture day Fri Nov 21 at 8:30 AM" });
-    const r = await solo.t.transcribe(PICTURE);
-    assertEquals([r.text, r.unsure, solo.calls], ["Picture day Fri Nov 21 at 8:30 AM", true, [FIRST_MODEL, CHECK_MODEL]], first);
+Deno.test("D78: when all three read it differently, the page is marked unsure for the owner", async () => {
+  const split = reader({ [FIRST_MODEL]: "Musical Dec 18 at 6 PM", [CHECK_MODEL]: "Musical Dec 16 at 6 PM", [TIEBREAK_MODEL]: "Musical Dec 10 at 6 PM" });
+  const r = await split.t.transcribe(PICTURE);
+  assertEquals([r.text, r.unsure], ["Musical Dec 10 at 6 PM", true]);
+});
+
+Deno.test("D78: a model that errors or declines is stood in for by another", async () => {
+  for (const down of ["throw", "refuse"] as const) {
+    // The small model is down: the other two read it and agree.
+    const noFirst = reader({ [FIRST_MODEL]: down, [CHECK_MODEL]: "Picture day Fri Nov 21 at 8:30 AM", [TIEBREAK_MODEL]: "Picture day, Nov 21, 8:30 am" });
+    const a = await noFirst.t.transcribe(PICTURE);
+    assertEquals([a.unsure, noFirst.calls], [undefined, [FIRST_MODEL, CHECK_MODEL, TIEBREAK_MODEL]], down);
+    // The check model is down: the third agrees with the first.
+    const noCheck = reader({ [FIRST_MODEL]: "Picture day Fri Nov 21 at 8:30 AM", [CHECK_MODEL]: down, [TIEBREAK_MODEL]: "Picture day, Nov 21, 8:30 am" });
+    assertEquals((await noCheck.t.transcribe(PICTURE)).unsure, undefined, down);
+    // Only one model can read it: its text is kept, and the owner is asked to compare.
+    const alone = reader({ [FIRST_MODEL]: down, [CHECK_MODEL]: "Picture day Fri Nov 21 at 8:30 AM", [TIEBREAK_MODEL]: down });
+    const c = await alone.t.transcribe(PICTURE);
+    assertEquals([c.text, c.unsure], ["Picture day Fri Nov 21 at 8:30 AM", true], down);
   }
-  const declined = reader({ [FIRST_MODEL]: "Fri Nov 21", [CHECK_MODEL]: "refuse" });
+  const none = reader({ [FIRST_MODEL]: "refuse", [CHECK_MODEL]: "throw", [TIEBREAK_MODEL]: "refuse" });
   let threw = false;
-  try { await declined.t.transcribe(PICTURE); } catch (e) { threw = e instanceof Refused; }
-  assert(threw, "a refusal by the check model is reported, as before");
+  try { await none.t.transcribe(PICTURE); } catch (e) { threw = e instanceof Refused; }
+  assert(threw, "no model could read it: reported as before");
+});
+
+Deno.test("D78: a file is read whole or waits for tomorrow, never half", async () => {
+  const { t, calls } = fakeTranscriber("Practice Tuesdays 5 PM");
+  const files = { "f/m/scan": await pdf(Array.from({ length: 6 }, () => [""])) };
+  const [r] = await triageMessage([att("scan")], null, deps(files, { transcriber: t, visionQuota: 4 }).d);
+  assertEquals([r?.status, r?.triage.reason, calls.length], ["pending", "daily_vision_limit", 0]);
+  const again = fakeTranscriber("Practice Tuesdays 5 PM");
+  const [ok] = await triageMessage([att("scan")], null, deps(files, { transcriber: again.t, visionQuota: 100 }).d);
+  assertEquals([ok?.status, again.calls.length], ["transcribed", 6]);
 });
 
 Deno.test("D75: dates and times are compared, not wording", () => {
@@ -331,7 +357,7 @@ Deno.test("D75: dates and times are compared, not wording", () => {
 });
 
 Deno.test("D75: an unsure page reaches triage's output marked as such", async () => {
-  const day = reader({ [FIRST_MODEL]: "Musical Dec 18 at 6 PM", [CHECK_MODEL]: "Musical Dec 16 at 6 PM" });
+  const day = reader({ [FIRST_MODEL]: "Musical Dec 18 at 6 PM", [CHECK_MODEL]: "Musical Dec 16 at 6 PM", [TIEBREAK_MODEL]: "Musical Dec 10 at 6 PM" });
   const [r] = await triageMessage([att("flyer", { mime: "image/jpeg", filename: "flyer.jpg" })], null, deps({ "f/m/flyer": jpeg(100) }, { transcriber: day.t }).d);
   assertEquals([r?.status, r?.pages[0]?.source], ["transcribed", "transcription_unsure"]);
 });

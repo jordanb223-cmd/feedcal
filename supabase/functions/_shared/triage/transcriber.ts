@@ -32,13 +32,17 @@ export class RefusedError extends Error {
 // that does show a date or time is read again by the larger model, and the two readings must agree
 // on every date and time. That check is what a single read never had, and it costs far less than
 // reading everything with the largest model.
+// D78: a third model settles a disagreement, and stands in when one of the other two can't answer
+// (an outage, a rate limit, a refusal). Two readings that agree are enough, whichever two they are.
 export const FIRST_MODEL = "claude-haiku-5-5";
 export const CHECK_MODEL = "claude-sonnet-5-5";
+export const TIEBREAK_MODEL = "claude-opus-5-5";
 // Anthropic list prices per token (claude-api reference, cached 2026-11-03): Haiku 5.5 $0.10 / $0.50
-// per MTok for prompts up to 100K tokens, Sonnet 5.5 $2 / $10. Estimates for logs and caps only.
+// per MTok for prompts up to 100K tokens, Sonnet 5.5 $2 / $10, Opus 5.5 $4 / $20. Estimates for logs and caps only.
 export const VISION_PRICES: Record<string, { input: number; output: number }> = {
   [FIRST_MODEL]: { input: 0.1 / 1e6, output: 0.5 / 1e6 },
   [CHECK_MODEL]: { input: 2 / 1e6, output: 10 / 1e6 },
+  [TIEBREAK_MODEL]: { input: 4 / 1e6, output: 20 / 1e6 },
 };
 
 const SYSTEM = [
@@ -73,29 +77,44 @@ export function mentionsWhen(text: string): boolean {
 }
 
 export function twoPassTranscriber(read: PageReader): Transcriber {
-  const cost = (r: PageRead) => { const p = VISION_PRICES[r.model] ?? VISION_PRICES[CHECK_MODEL]!; return r.inputTokens * p.input + r.outputTokens * p.output; };
+  const price = (r: PageRead) => { const p = VISION_PRICES[r.model] ?? VISION_PRICES[CHECK_MODEL]!; return r.inputTokens * p.input + r.outputTokens * p.output; };
   const round = (n: number) => Math.round(n * 10000) / 10000;
   return {
     async transcribe(input) {
-      // First pass. If the small model can't take the page at all, the larger one reads it alone.
-      let first: PageRead | null = null;
-      try {
-        first = await read(FIRST_MODEL, input);
-      } catch { /* fall through to the check model */ }
-      if (first && !first.refused && !first.text) {
-        return { text: "", inputTokens: first.inputTokens, outputTokens: first.outputTokens, model: first.model, costUsd: round(cost(first)) };
-      }
-      if (first && !first.refused && !mentionsWhen(first.text)) {
-        return { text: first.text, inputTokens: first.inputTokens, outputTokens: first.outputTokens, model: first.model, costUsd: round(cost(first)) };
-      }
-      const second = await read(CHECK_MODEL, input);
-      if (second.refused) throw new RefusedError("refused");
-      const spent = (first ? cost(first) : 0) + cost(second);
-      const tokens = { inputTokens: (first?.inputTokens ?? 0) + second.inputTokens, outputTokens: (first?.outputTokens ?? 0) + second.outputTokens };
-      // The larger model's text is the one kept. It counts as checked only when the small model
-      // read the page too and found the same dates and times.
-      const agreed = Boolean(first && !first.refused && dateFacts(first.text) === dateFacts(second.text));
-      return { text: second.text, ...tokens, model: second.model, costUsd: round(spent), ...(agreed || !mentionsWhen(second.text) ? {} : { unsure: true }) };
+      const made: PageRead[] = [];
+      // A model that errors or declines simply gives no reading; another one is asked instead.
+      const ask = async (model: string): Promise<PageRead | null> => {
+        try {
+          const r = await read(model, input);
+          made.push(r);
+          return r.refused ? null : r;
+        } catch {
+          return null;
+        }
+      };
+      const done = (text: string, model: string, unsure: boolean): Transcription => ({
+        text, model, costUsd: round(made.reduce((n, r) => n + price(r), 0)),
+        inputTokens: made.reduce((n, r) => n + r.inputTokens, 0), outputTokens: made.reduce((n, r) => n + r.outputTokens, 0),
+        ...(unsure ? { unsure: true } : {}),
+      });
+
+      const first = await ask(FIRST_MODEL);
+      // The common case: no text, or text with no day or time in it. One small-model read.
+      if (first && !mentionsWhen(first.text)) return done(first.text, first.model, false);
+
+      const second = await ask(CHECK_MODEL);
+      const agree = (a: PageRead | null, b: PageRead | null) => Boolean(a && b && dateFacts(a.text) === dateFacts(b.text));
+      if (agree(first, second)) return done(second!.text, second!.model, false);
+
+      // They disagree, or one of them gave no reading: the third model decides or stands in.
+      const third = await ask(TIEBREAK_MODEL);
+      if (agree(third, second)) return done(third!.text, third!.model, false);
+      if (agree(third, first)) return done(third!.text, third!.model, false);
+
+      // No two readings agree. Keep the strongest one we have, and say it needs a person's eye.
+      const best = [third, second, first].find((r) => r && r.text) ?? third ?? second ?? first;
+      if (!best) throw new RefusedError("refused");
+      return done(best.text, best.model, mentionsWhen(best.text) || Boolean(first && mentionsWhen(first.text)));
     },
   };
 }
@@ -111,8 +130,8 @@ export function claudeTranscriber(apiKey: string, client = new Anthropic({ apiKe
       max_tokens: 16000,
       // Transcription needs no deliberation; low effort keeps it cheap (thinking stays on at every level here).
       output_config: { effort: "low" },
-      // Haiku 5.5 has no server-side refusal fallback and rejects the parameter's list form; Sonnet 5.5 takes "default".
-      ...(model === CHECK_MODEL ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
+      // Haiku 5.5 has no server-side refusal fallback and rejects the parameter's list form; Sonnet 5.5 and Opus 5.5 take "default".
+      ...(model !== FIRST_MODEL ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
       system: SYSTEM,
       messages: [{ role: "user", content: [source, { type: "text", text: "Transcribe this page." }] }],
     });

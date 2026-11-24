@@ -71,6 +71,19 @@ values ('d3200000-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-0000000
 select pg_temp.read(pg_temp.cand('Pajama Day', '2026-12-10 20:00+00', 0.95));
 select is(pg_temp.events(), 5, 'something the owner rejected from this email does not come back');
 
+-- D78: a re-read that puts a PUBLISHED event on another day asks the owner, once.
+select pg_temp.read(pg_temp.cand('Christmas musical', '2026-12-17 20:00+00', 0.95));
+select is((select count(*)::int from public.event_candidates where message_id = 'd3200000-0000-4000-8000-000000000001' and state = 'needs_review' and outcome = 'conflict'), 1,
+  'a different day for a published event becomes one card for the owner');
+select is(((pg_temp.ev('Christmas musical')).starts_at at time zone 'UTC')::date, '2026-12-18'::date, 'and the published event keeps its day until the owner decides');
+select pg_temp.read(pg_temp.cand('Christmas musical', '2026-12-16 20:00+00', 0.95));
+select is((select count(*)::int from public.event_candidates where message_id = 'd3200000-0000-4000-8000-000000000001' and state = 'needs_review'), 1,
+  'reading it yet again replaces that card; they do not stack');
+select is(pg_temp.events(), 5, 'and still no new event');
+select pg_temp.read(pg_temp.cand('Christmas musical', '2026-12-18 20:00+00', 0.95));
+select is((select count(*)::int from public.event_candidates where message_id = 'd3200000-0000-4000-8000-000000000001' and state = 'needs_review'), 0,
+  'a read that agrees with the published event clears the question');
+
 -- Another email about the same event still goes through the normal matching.
 insert into public.messages (id, feed_id, source_id, status, original_subject, clean_text) values
   ('d3200000-0000-4000-8000-000000000002', 'aaaaaaaa-0000-4000-8000-000000000001', 'cccccccc-0000-4000-8000-000000000001', 'parsed', 'Reminder', 'x');
