@@ -821,6 +821,9 @@ isOneToOne: false
 "request_feed_deletion":
 { Args: { "p_feed_id": string }; Returns: string
                            },
+"requeue_parked_attachments":
+{ Args: { "p_limit"?: number }; Returns: number
+                           },
 "requeue_waiting_extractions":
 { Args: { "p_limit"?: number }; Returns: number
                            },

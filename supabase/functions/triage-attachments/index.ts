@@ -18,6 +18,13 @@ Deno.serve(async (req) => {
   const started = Date.now();
   const counts = { messages: 0, pages: 0, retry: 0, gave_up: 0 };
 
+  // D71: with image reading on, send back the emails whose photos and scans were parked earlier
+  // (it was off then, or the day's page limit was used up). A few per run, so cost is spread out.
+  if (transcriber) {
+    const { data: requeued } = await db.rpc("requeue_parked_attachments", { p_limit: 5 });
+    if (Number(requeued ?? 0) > 0) log("triage-attachments", requestId, "parked_requeued", { messages: Number(requeued) });
+  }
+
   while (Date.now() - started < TIME_BUDGET_MS) {
     const { data: jobs, error } = await db.rpc("claim_triage_jobs", { p_limit: 3, p_visibility_seconds: 300 });
     if (error) return json({ error: "Try again later." }, 503);
