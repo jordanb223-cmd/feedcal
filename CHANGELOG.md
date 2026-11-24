@@ -7,6 +7,14 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Changed
+- The Review page is now organised by email. Each email gets one card that says what Calantern added, what it left out, and the one or two things it needs you to decide. Before, every item was its own card.
+- Anything waiting for you now says why in one sentence, for example "This was read from a picture, and Calantern was 80% sure."
+- The buttons on a waiting item are "Yes, add it", "Fix it" and "Not an event".
+- An email that needs nothing from you is one line you can open.
+- An event that runs over several days shows both dates, like "Thu, Nov 26 to Fri, Nov 27".
+- "Approve all marked Sure" only appears when there are two or more, and now reads "Add the 2 Calantern is sure about".
+
 ## [0.13.2] - 2026-11-24
 
 ### Fixed

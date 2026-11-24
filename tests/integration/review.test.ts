@@ -63,7 +63,7 @@ describe.skipIf(!enabled)("review screen, end to end", { timeout: 60_000 }, () =
     const dash = await (await alice("/feeds")).text();
     expect(dash).toContain(`Room 12 ${run}`);
     const home = await (await alice(`/feeds/${feedId}`)).text();
-    expect(home).toContain("Nothing to review.");
+    expect(home).toContain("Nothing needs you.");
   });
 
   it("adds an event by hand, in the feed's time zone, with history", async () => {
@@ -85,7 +85,8 @@ describe.skipIf(!enabled)("review screen, end to end", { timeout: 60_000 }, () =
     }).select("id").single();
     const home = await (await alice(`/feeds/${feedId}`)).text();
     expect(home).toContain("<mark>the walkathon moves to Sunday at 10 AM</mark>");
-    expect(home).toContain("Check this");
+    expect(home).toContain("Needs you");
+    expect(home).toContain("Why it's waiting:");
 
     const reject = await alice(`/feeds/${feedId}/candidates/${cand?.id}/reject`, { reason: "wrong_date", note: "it's the 30th" });
     const undoId = /undo=([0-9a-f-]{36})/.exec(reject.headers.get("location") ?? "")?.[1] ?? "";

@@ -6,7 +6,7 @@ import { z } from "zod";
 import { currentUser, MESSAGES } from "./auth.js";
 import { ImportStatus, importNotice } from "./imports.js";
 import { CATEGORIES, dashboardPage, DONE, eventEditPage, feedHomePage, newFeedPage, REJECT_REASONS, settingsPage,
-  type DashboardFeed, type DraftCard, type ReviewCard } from "./review-views.js";
+  type DashboardFeed, type DraftCard, type EmailGroup, type ReviewCard } from "./review-views.js";
 import { csrfToken, csrfValid } from "./security.js";
 import type { AppEnv, SessionUser } from "./types.js";
 import { messagePage } from "./views.js";
@@ -55,6 +55,32 @@ const doneOf = (c: Context<AppEnv>) => {
 };
 
 // D44: only ZIPs in the loaded list (public.zip_codes) are accepted, so a typo can't place a calendar.
+const LEFT_OUT_WHY: Record<string, string> = {
+  already_past: "the date has passed",
+  date_out_of_range: "the date is too far off, or long past",
+};
+/**
+ * D81: what an email's last read dropped, for the "left out" line. Only the two date reasons are
+ * shown by name; anything else (a quote that couldn't be found, a bad time zone) is only counted,
+ * because those can be things the email never really said.
+ */
+export function leftOutOf(extraction: unknown, timezone: string): { named: { title: string; when: string; why: string }[]; others: number } {
+  const rejected = (extraction && typeof extraction === "object" && Array.isArray((extraction as { rejected?: unknown }).rejected))
+    ? (extraction as { rejected: { event?: { title?: unknown; start?: unknown; timezone?: unknown }; reason?: unknown }[] }).rejected : [];
+  const named: { title: string; when: string; why: string }[] = [];
+  let others = 0;
+  for (const r of rejected.slice(0, 60)) {
+    const why = LEFT_OUT_WHY[String(r.reason)];
+    const title = typeof r.event?.title === "string" ? r.event.title.slice(0, 120) : "";
+    const start = typeof r.event?.start === "string" && /^\d{4}-\d{2}-\d{2}/.test(r.event.start) ? r.event.start.slice(0, 10) : "";
+    if (!why || !title || !start) { others++; continue; }
+    const when = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "short", month: "short", day: "numeric" }).format(new Date(`${start}T12:00:00Z`));
+    named.push({ title, when, why });
+  }
+  void timezone;
+  return { named: named.slice(0, 10), others: others + Math.max(0, named.length - 10) };
+}
+
 /** The next coming date of a repeating event, as an ISO instant, or null when none is left. */
 export function nextOccurrence(occurrences: string[] | null | undefined, now: Date): string | null {
   const t = now.getTime();
@@ -146,7 +172,7 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     const [{ data: cands }, { data: drafts }, { data: listed }] = await Promise.all([
       sb.from("event_candidates").select("id, message_id, title, starts_at, all_day, timezone, location, confidence, outcome, change_kind, review_reasons, evidence_quote, source_kind, attachment_id, page_index, from_transcription, event_id")
         .eq("feed_id", id.data).eq("state", "needs_review").order("created_at").limit(50),
-      sb.from("events").select("id, title, starts_at, all_day, timezone, location, confidence, evidence_quote")
+      sb.from("events").select("id, title, starts_at, ends_at, all_day, timezone, location, confidence, evidence_quote, source_message_id")
         .eq("feed_id", id.data).eq("published", false).eq("status", "tentative").order("starts_at").limit(50),
       // Repeating events (imports) carry their coming dates; they stay listed after their first date.
       sb.from("events").select("id, title, starts_at, all_day, timezone, location, status, occurrences")
@@ -157,11 +183,24 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       return next ? [{ ...e, starts_at: next }] : [];
     }).sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at)).slice(0, 50);
     const list = cands ?? [];
-    const msgIds = [...new Set(list.map((x) => x.message_id))];
+    // D81: the page is grouped by the email things came from. Recent emails, plus any older one
+    // that still has something waiting.
+    const draftIds = (drafts ?? []).map((d) => d.id);
+    const [{ data: recent }, { data: draftWhy }] = await Promise.all([
+      sb.from("messages").select("id").eq("feed_id", id.data).gte("received_at", new Date(Date.now() - 14 * 86_400_000).toISOString())
+        .order("received_at", { ascending: false }).limit(12),
+      draftIds.length ? sb.from("event_candidates").select("event_id, review_reasons, from_transcription, confidence").in("event_id", draftIds).eq("outcome", "new")
+        : Promise.resolve({ data: [] as { event_id: string | null; review_reasons: string[] | null; from_transcription: boolean; confidence: number }[] }),
+    ]);
+    const msgIds = [...new Set([...list.map((x) => x.message_id), ...(drafts ?? []).flatMap((d) => (d.source_message_id ? [d.source_message_id] : [])), ...(recent ?? []).map((m) => m.id)])];
     const evIds = [...new Set(list.flatMap((x) => (x.event_id ? [x.event_id] : [])))];
     const attIds = [...new Set(list.flatMap((x) => (x.attachment_id ? [x.attachment_id] : [])))];
-    const [{ data: msgs }, { data: existing }, { data: atts }, { data: pages }] = await Promise.all([
-      msgIds.length ? sb.from("messages").select("id, clean_text, original_subject").in("id", msgIds) : Promise.resolve({ data: [] as { id: string; clean_text: string | null; original_subject: string | null }[] }),
+    type Msg = { id: string; clean_text: string | null; original_subject: string | null; subject: string | null; original_sender: string | null; sender: string | null; received_at: string; extraction: unknown };
+    type Added = { id: string; title: string; starts_at: string; ends_at: string | null; all_day: boolean; timezone: string; location: string | null; status: string; source_message_id: string | null };
+    const [{ data: msgs }, { data: added }, { data: existing }, { data: atts }, { data: pages }] = await Promise.all([
+      msgIds.length ? sb.from("messages").select("id, clean_text, original_subject, subject, original_sender, sender, received_at, extraction").in("id", msgIds) : Promise.resolve({ data: [] as Msg[] }),
+      msgIds.length ? sb.from("events").select("id, title, starts_at, ends_at, all_day, timezone, location, status, source_message_id")
+        .eq("feed_id", id.data).eq("published", true).neq("status", "cancelled").in("source_message_id", msgIds).order("starts_at").limit(200) : Promise.resolve({ data: [] as Added[] }),
       evIds.length ? sb.from("events").select("id, title, starts_at, all_day, timezone").in("id", evIds) : Promise.resolve({ data: [] as { id: string; title: string; starts_at: string; all_day: boolean; timezone: string }[] }),
       attIds.length ? sb.from("attachments").select("id, filename, mime, storage_path").in("id", attIds) : Promise.resolve({ data: [] as { id: string; filename: string | null; mime: string | null; storage_path: string | null }[] }),
       attIds.length ? sb.from("attachment_pages").select("attachment_id, page_index, text").in("attachment_id", attIds) : Promise.resolve({ data: [] as { attachment_id: string; page_index: number; text: string | null }[] }),
@@ -182,7 +221,8 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       const url = att?.storage_path ? signed.get(att.storage_path) ?? null : null;
       const l = local(x.starts_at, x.timezone);
       return {
-        id: x.id, title: x.title, when: { starts_at: x.starts_at, all_day: x.all_day, timezone: x.timezone }, location: x.location,
+        id: x.id, messageId: x.message_id, fromPicture: x.from_transcription,
+        title: x.title, when: { starts_at: x.starts_at, all_day: x.all_day, timezone: x.timezone }, location: x.location,
         confidence: Number(x.confidence), outcome: x.outcome, changeKind: x.change_kind, reviewReasons: x.review_reasons ?? [],
         existing: ev ? { title: ev.title, starts_at: ev.starts_at, all_day: ev.all_day, timezone: ev.timezone } : null,
         evidence: {
@@ -194,9 +234,26 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
         date: l.date, time: l.time,
       };
     });
-    const draftCards: DraftCard[] = (drafts ?? []).map((d) => ({ id: d.id, title: d.title, when: { starts_at: d.starts_at, all_day: d.all_day, timezone: d.timezone }, location: d.location, confidence: d.confidence === null ? null : Number(d.confidence), quote: d.evidence_quote }));
+    const draftCards: DraftCard[] = (drafts ?? []).map((d) => {
+      const why = (draftWhy ?? []).find((w) => w.event_id === d.id);
+      return {
+        id: d.id, messageId: d.source_message_id, title: d.title, when: { starts_at: d.starts_at, ends_at: d.ends_at, all_day: d.all_day, timezone: d.timezone },
+        location: d.location, confidence: d.confidence === null ? null : Number(d.confidence), quote: d.evidence_quote,
+        reviewReasons: why?.review_reasons ?? [], fromPicture: why?.from_transcription ?? false,
+      };
+    });
+    const emails: EmailGroup[] = ((msgs ?? []) as Msg[])
+      .sort((a, b) => Date.parse(b.received_at) - Date.parse(a.received_at))
+      .map((m) => ({
+        id: m.id, subject: m.original_subject ?? m.subject ?? "(no subject)", sender: m.original_sender ?? m.sender ?? null,
+        received: new Intl.DateTimeFormat("en-US", { timeZone: feed.timezone ?? "America/Los_Angeles", weekday: "short", month: "short", day: "numeric" }).format(new Date(m.received_at)),
+        added: ((added ?? []) as Added[]).filter((e) => e.source_message_id === m.id && Date.parse(e.ends_at ?? e.starts_at) >= Date.parse(since))
+          .map((e) => ({ id: e.id, title: e.title, when: { starts_at: e.starts_at, ends_at: e.ends_at, all_day: e.all_day, timezone: e.timezone }, location: e.location, status: e.status })),
+        leftOut: leftOutOf(m.extraction, feed.timezone ?? "America/Los_Angeles"),
+      }));
     return c.html(feedHomePage({
-      csrf: csrfToken(c), feedId: feed.id, name: feed.name, cards, drafts: draftCards,
+      csrf: csrfToken(c), feedId: feed.id, name: feed.name, cards, drafts: draftCards, emails,
+      bar: feed.auto_publish_threshold === null ? 0.7 : Number(feed.auto_publish_threshold),
       upcoming: upcoming.map((e) => ({ id: e.id, title: e.title, when: { starts_at: e.starts_at, all_day: e.all_day, timezone: e.timezone }, location: e.location, status: e.status })),
       done: doneOf(c), undo: undoOf(c, `/feeds/${feed.id}`),
     }));
