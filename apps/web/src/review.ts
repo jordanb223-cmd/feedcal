@@ -330,7 +330,7 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       csrf: csrfToken(c), feedId, ...(error ? { error } : {}), done: doneOf(c), undo: undoOf(c, `/feeds/${feedId}/settings`),
       s: {
         name: feed.name, description: feed.description ?? "", visibility: feed.visibility, timezone: feed.timezone,
-        threshold: feed.auto_publish_threshold === null ? 0.85 : Number(feed.auto_publish_threshold), isOwner: feed.owner_id === user.id,
+        threshold: feed.auto_publish_threshold === null ? 0.7 : Number(feed.auto_publish_threshold), isOwner: feed.owner_id === user.id,
         zip: feed.zip_code ?? null, zipSuggestion: suggestion.success ? suggestion.data : null,
         imported: imported.success ? imported.data : null, importNotice: importNotice(c.req.query("import")) ?? null,
         editors: (editors ?? []).map((e) => ({ userId: e.user_id, role: e.role, label: e.user_id === user.id ? "You" : (profiles ?? []).find((p) => p.id === e.user_id)?.display_name ?? "An editor" })),

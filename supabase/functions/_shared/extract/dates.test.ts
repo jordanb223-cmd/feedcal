@@ -46,7 +46,7 @@ Deno.test("relative days from the sent date", () => {
 });
 
 Deno.test("Room F: 'This Friday', sent on a Friday, is ambiguous", () => {
-  assertEquals(gate("2026-11-20", "This Friday is “Dinos”giving!", FRI), { confirmed: false, review: ["ambiguous_date"] });
+  assertEquals(gate("2026-11-20", "This Friday is “Dinos”giving!", FRI), { confirmed: false, review: ["ambiguous_date"], options: ["2026-11-13", "2026-11-20"] });
 });
 
 Deno.test("'next Friday' mid-week is ambiguous; on a Friday it means in 7 days", () => {

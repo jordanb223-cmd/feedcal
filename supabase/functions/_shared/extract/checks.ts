@@ -81,7 +81,7 @@ export type RejectReason = "quote_not_found" | "unknown_source" | "bad_timezone"
 export const LOW_CONFIDENCE = 0.5;
 
 /** Hard failures reject the event; soft ones keep it but send it to review. */
-export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: RejectReason; review?: string[]; fromTranscription: boolean; dateConfirmed?: boolean } {
+export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: RejectReason; review?: string[]; fromTranscription: boolean; dateConfirmed?: boolean; dateOptions?: string[] } {
   const source = sourceFor(e, input);
   if (!source) return { reject: "unknown_source", fromTranscription: false };
   if (!quoteFound(e.evidence_quote, source.text)) return { reject: "quote_not_found", fromTranscription: source.fromTranscription };
@@ -97,7 +97,7 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   const day = 86_400_000;
   if (start < ref - 31 * day || start > ref + 550 * day) return { reject: "date_out_of_range", fromTranscription: source.fromTranscription };
   const review: string[] = [];
-  // Below this, always ask the owner. Between it and the feed's own setting (85% unless the owner
+  // Below this, always ask the owner. Between it and the feed's own setting (70% unless the owner
   // lowers it), the reconciler decides. Lowered from 0.7 so an owner's 50-60% setting can work (D40).
   if (e.confidence < LOW_CONFIDENCE) review.push("low_confidence");
   if (source.fromTranscription) review.push("from_transcription");
@@ -108,5 +108,5 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   review.push(...gate.review);
   // Changes and cancellations aren't flagged here: from a trusted sender at high confidence they
   // apply automatically (D31), so subscribers see a moved practice without the owner stepping in.
-  return { review, fromTranscription: source.fromTranscription, dateConfirmed: gate.confirmed };
+  return { review, fromTranscription: source.fromTranscription, dateConfirmed: gate.confirmed, dateOptions: gate.options };
 }

@@ -4,7 +4,7 @@
 //              exactly one date) and, for timed events, any written time matches.
 //   review:    the quote contradicts the event, or the day is genuinely ambiguous, or the event
 //              is before the email was sent. These always wait for the owner.
-// Anything else is "unconfirmed" and falls back to the feed's normal bar (85% unless changed).
+// Anything else is "unconfirmed" and falls back to the feed's normal bar (70% unless changed, D70).
 
 export interface DateGateInput {
   start: string;          // local wall time "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM"
@@ -14,7 +14,12 @@ export interface DateGateInput {
   referenceDate: string;  // ISO; when the original email was sent
 }
 export type DateReview = "ambiguous_date" | "date_mismatch" | "weekday_mismatch" | "time_mismatch" | "before_email";
-export interface DateGate { confirmed: boolean; review: DateReview[] }
+export interface DateGate {
+  confirmed: boolean;
+  review: DateReview[];
+  /** When the day is ambiguous: every date the words could mean ("YYYY-MM-DD"), soonest first. */
+  options?: string[];
+}
 
 const MONTHS: Record<string, number> = {
   jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3, apr: 4, april: 4, may: 5, jun: 6, june: 6,
@@ -84,6 +89,7 @@ export function dateGate(i: DateGateInput): DateGate {
   if (startN < refN) review.add("before_email");
 
   let dateOk = false;
+  let ambiguous: number[] = [];
   const dates = writtenDates(q);
   if (dates.length > 0) {
     // A written date: the event's date must be one of them (the first of a range, say).
@@ -108,7 +114,10 @@ export function dateGate(i: DateGateInput): DateGate {
       const matching = options.filter((o) => o.includes(startN));
       if (matching.length === 0) review.add("date_mismatch");
       else if (matching.some((o) => o.length === 1)) dateOk = true;
-      else review.add("ambiguous_date");
+      else {
+        review.add("ambiguous_date");
+        ambiguous = [...new Set(matching.flat())].sort((a, b) => a - b);
+      }
     }
   }
 
@@ -123,5 +132,6 @@ export function dateGate(i: DateGateInput): DateGate {
     }
   }
 
-  return { confirmed: dateOk && timeOk && review.size === 0, review: [...review] };
+  const iso = (n: number) => { const v = fromDays(n); return `${v.y}-${String(v.m).padStart(2, "0")}-${String(v.d).padStart(2, "0")}`; };
+  return { confirmed: dateOk && timeOk && review.size === 0, review: [...review], ...(ambiguous.length > 1 ? { options: ambiguous.map(iso) } : {}) };
 }

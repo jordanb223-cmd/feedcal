@@ -100,7 +100,9 @@ Deno.test({ name: "evaluation: 50 labelled fixtures, no metric drops more than 3
   // Spot checks that each check fired for the right reason.
   const reasons = (id: string) => results.get(id)!.rejected.map((r) => r.reason);
   assertEquals(reasons("31-invented-event"), ["quote_not_found"]);
-  assertEquals(reasons("32-guessed-time"), ["time_not_in_quote"]);
+  // D70: a guessed time is dropped and the event kept as all-day, not thrown away.
+  assertEquals(reasons("32-guessed-time"), []);
+  assertEquals(results.get("32-guessed-time")!.candidates.map((c) => c.all_day), [true]);
   assertEquals(reasons("33-paraphrased-quote"), ["quote_not_found"]);
   assertEquals(reasons("34-wrong-page"), ["unknown_source"]);
   assertEquals(reasons("38-bad-timezone"), ["bad_timezone"]);
