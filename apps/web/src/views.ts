@@ -142,7 +142,7 @@ export function accountPage(opts: {
   /** From the database; null if it couldn't be read. */
   graceDays: number | null;
   feeds: { id: string; name: string; visibility: string }[];
-  notifications?: { weekly_digest: boolean; instant_reports: boolean; staleness: boolean; milestones: boolean };
+  notifications?: { weekly_digest: boolean; instant_reports: boolean; staleness: boolean; milestones: boolean; published_events?: boolean };
   notice?: string;
 }): Html {
   const n = opts.notifications ?? { weekly_digest: true, instant_reports: true, staleness: true, milestones: true };
@@ -163,6 +163,7 @@ export function accountPage(opts: {
   <h2>Emails from Calantern</h2>
   <form method="post" action="/account/notifications">
     ${csrfField(opts.csrf)}
+    <p><label class="check"><input type="checkbox" name="published_events" value="1" ${n.published_events === false ? "" : "checked"}> Right away when Calantern adds or changes an event by itself</label></p>
     <p><label class="check"><input type="checkbox" name="weekly_digest" value="1" ${n.weekly_digest ? "checked" : ""}> A weekly summary every Monday</label></p>
     <p><label class="check"><input type="checkbox" name="instant_reports" value="1" ${n.instant_reports ? "checked" : ""}> Right away when a subscriber reports a problem</label></p>
     <p><label class="check"><input type="checkbox" name="staleness" value="1" ${n.staleness ? "checked" : ""}> A reminder when a calendar goes quiet</label></p>

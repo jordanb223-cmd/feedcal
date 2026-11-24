@@ -7,6 +7,18 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Added
+- When Calantern adds, changes or cancels an event by itself, it emails you right away. The email lists each change with the exact words it was read from and a link to fix or remove it. You can switch these off on your account page or from the email.
+
+### Changed
+- An event whose date has already passed is no longer created, however late its email is read. No more drafts for last week.
+- Emails that had to wait are retried for 8 days, not 30. Older mail is about dates that have gone by.
+
+### Fixed
+- When Calantern reads the same email again, it no longer adds second copies. Before, each re-read could leave another draft or another "check this one" card for an event you already had, because the wording came out slightly different each time. Now a re-read updates the draft that email already made, leaves published events alone, and does not bring back anything you discarded or rejected.
+- Something that runs over several days, like "November 26 & 27 – no school", is now one event covering both days instead of a separate event for one of them.
+- A picture already found to have no text is not read again when its email is retried.
+
 ## [0.11.0] - 2026-11-23
 
 ### Changed

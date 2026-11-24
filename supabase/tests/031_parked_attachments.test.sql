@@ -24,7 +24,7 @@ select pg_temp.parked('d3100000-0000-4000-8000-000000000001', 'needs_vision_not_
 select pg_temp.parked('d3100000-0000-4000-8000-000000000002', 'daily_vision_limit', now() - interval '1 day');
 select pg_temp.parked('d3100000-0000-4000-8000-000000000003', 'daily_vision_limit');
 select pg_temp.parked('d3100000-0000-4000-8000-000000000004', 'owner_never');
-select pg_temp.parked('d3100000-0000-4000-8000-000000000005', 'needs_vision_not_configured', now(), now() - interval '40 days');
+select pg_temp.parked('d3100000-0000-4000-8000-000000000005', 'needs_vision_not_configured', now(), now() - interval '9 days');
 select pg_temp.parked('d3100000-0000-4000-8000-000000000006', 'page_budget_used', now(), now(), 'skipped');
 select pg_temp.parked('d3100000-0000-4000-8000-000000000007', 'no_schedule_found', now(), now(), 'skipped');
 select pgmq.purge_queue('triage_message');
@@ -40,7 +40,7 @@ select is(pg_temp.queued('d3100000-0000-4000-8000-000000000001'), 1, 'parked whi
 select is(pg_temp.queued('d3100000-0000-4000-8000-000000000002'), 1, 'parked by yesterday''s page limit: queued');
 select is(pg_temp.queued('d3100000-0000-4000-8000-000000000003'), 0, 'parked by today''s page limit: waits for tomorrow');
 select is(pg_temp.queued('d3100000-0000-4000-8000-000000000004'), 0, 'a file the owner said never to use is left alone');
-select is(pg_temp.queued('d3100000-0000-4000-8000-000000000005'), 0, 'an email older than 30 days is left alone');
+select is(pg_temp.queued('d3100000-0000-4000-8000-000000000005'), 0, 'an email older than 8 days is left alone (D77)');
 select is(pg_temp.queued('d3100000-0000-4000-8000-000000000006'), 1, 'D74: a file skipped by the old five-page limit: queued');
 select is(pg_temp.queued('d3100000-0000-4000-8000-000000000007'), 0, 'a file skipped for another reason is left alone');
 select lives_ok($$ update public.messages set pages_for_ai = 37 where id = 'd3100000-0000-4000-8000-000000000001' $$, 'D74: an email can have more than five pages to read');

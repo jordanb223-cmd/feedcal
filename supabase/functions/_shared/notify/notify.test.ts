@@ -101,3 +101,19 @@ Deno.test("backup alarm email (D65) names the problem and where to look", () => 
   assertEquals(r.subject, "Calantern alert: No database backup in over 30 hours");
   assert(r.text.includes("restore.md") && r.text.includes("\"hours\":31"));
 });
+
+Deno.test("D77: the auto-publish email lists each change with the words it was read from and a way to fix it", () => {
+  const r = render("events_published", { feed_id: "f1", feed_name: "Room F", subject: "TGIF", items: [
+    { event_id: "e1", title: "Share Day <b>", starts_at: "2026-11-25T20:00:00Z", all_day: true, timezone: "America/Los_Angeles", quote: "we will share on Wednesday", what: "added", picture: true },
+    { event_id: "e2", title: "Musical", starts_at: "2026-12-19T02:00:00Z", all_day: false, timezone: "America/Los_Angeles", quote: "Dec 18 at 6 PM", what: "changed", picture: false },
+  ] }, SITE, UNSUB);
+  assertEquals(r.subject, 'Room F: 2 calendar changes from "TGIF"');
+  assert(r.text.includes("without asking you"));
+  assert(r.text.includes('Added: Share Day <b>') && r.text.includes('Read from a picture: "we will share on Wednesday"'));
+  assert(r.text.includes("Changed: Musical") && r.text.includes(`Fix or remove: ${SITE}/feeds/f1/events/e2`));
+  assert(r.html.includes("Share Day &lt;b&gt;") && !r.html.includes("Share Day <b>"), "titles from emails are escaped");
+  assert(r.text.includes(UNSUB), "it can be switched off");
+  const one = render("events_published", { feed_id: "f1", feed_name: "Room F", subject: "TGIF\r\nBcc: x@y.z", items: [
+    { event_id: "e1", title: "Picture day", starts_at: "2026-11-25T20:00:00Z", all_day: true, timezone: "America/Los_Angeles", quote: "q", what: "cancelled" }] }, SITE, UNSUB);
+  assertEquals(one.subject, 'Room F: cancelled "Picture day" from "TGIF Bcc: x@y.z"', "one line, whatever the email's subject held");
+});

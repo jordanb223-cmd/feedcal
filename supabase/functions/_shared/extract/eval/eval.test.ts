@@ -44,7 +44,7 @@ async function evaluate(): Promise<{ metrics: Metrics; results: Map<string, Extr
   const results = new Map<string, ExtractionResult>();
   for (const f of FIXTURES) {
     const extractor = LIVE && apiKey ? claudeExtractor(apiKey) : recorded(f);
-    const r = await extractEvents(f.input, extractor);
+    const r = await extractEvents(f.input, extractor, { now: Date.parse(f.input.referenceDate) }); // fixtures are judged as of the day they were sent
     results.set(f.id, r);
     goldCount += f.gold.length;
     candidates += r.candidates.length;

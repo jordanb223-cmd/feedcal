@@ -76,7 +76,7 @@ export function personalDetails(e: { title: string; description: string | null }
   return [PHONE.test(text) ? "phone" : "", EMAIL.test(text) ? "email" : "", HOME_ADDRESS.test(text) ? "street_address" : ""].filter(Boolean);
 }
 
-export type RejectReason = "quote_not_found" | "unknown_source" | "bad_timezone" | "time_not_in_quote" | "end_before_start" | "date_out_of_range" | "bad_recurrence";
+export type RejectReason = "quote_not_found" | "unknown_source" | "bad_timezone" | "time_not_in_quote" | "end_before_start" | "date_out_of_range" | "bad_recurrence" | "already_past";
 
 export const LOW_CONFIDENCE = 0.5;
 

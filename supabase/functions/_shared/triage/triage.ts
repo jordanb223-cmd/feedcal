@@ -42,6 +42,8 @@ export interface AttachmentIn {
   seen_before: boolean;
   /** The owner said "never use files like this" about this very file. */
   owner_never: boolean;
+  /** An earlier pass read this picture and found no text on it (D76). */
+  blank_before?: boolean;
 }
 
 /** "transcription_unsure": two models read the page and disagreed on a date or time (D75). */
@@ -231,6 +233,8 @@ export async function triageMessage(attachments: AttachmentIn[], ruleValue: unkn
     // Already read on an earlier pass (a retry, D71): keep what was read, don't pay to read it again.
     // The owner's "This one has the schedule" resets the status first, so that still re-reads.
     if (att.status === "transcribed") continue;
+    // Likewise a picture already found to be blank: its "no text" result stands.
+    if (att.status === "skipped" && att.blank_before) continue;
     if (att.bytes > MAX_VISION_BYTES && IMAGE_TYPES.has(att.mime)) { results.set(att.id, skip(att, 4, "too_large_for_vision", { pages_total: v.total })); continue; }
     const wanted = pageIndexes;
     const allowed = await deps.quota("vision_pages", wanted.length);
