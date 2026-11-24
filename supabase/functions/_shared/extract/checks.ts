@@ -78,7 +78,7 @@ export function personalDetails(e: { title: string; description: string | null }
 
 export type RejectReason = "quote_not_found" | "unknown_source" | "bad_timezone" | "time_not_in_quote" | "end_before_start" | "date_out_of_range" | "bad_recurrence" | "already_past";
 
-export const LOW_CONFIDENCE = 0.5;
+export const LOW_CONFIDENCE = 0.45;
 
 /** Hard failures reject the event; soft ones keep it but send it to review. */
 export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: RejectReason; review?: string[]; fromTranscription: boolean; dateConfirmed?: boolean; dateOptions?: string[] } {
@@ -97,11 +97,11 @@ export function checkEvent(e: ExtractedEvent, input: ExtractInput): { reject?: R
   const day = 86_400_000;
   if (start < ref - 31 * day || start > ref + 550 * day) return { reject: "date_out_of_range", fromTranscription: source.fromTranscription };
   const review: string[] = [];
-  // Below this, always ask the owner. Between it and the feed's own setting (70% unless the owner
-  // lowers it), the reconciler decides. Lowered from 0.7 so an owner's 50-60% setting can work (D40).
+  // Below this, always ask the owner. Between it and the feed's own setting (45% unless the owner
+  // raises it), the reconciler decides. 0.5 until D85 moved it with the standard bar.
   if (e.confidence < LOW_CONFIDENCE) review.push("low_confidence");
   // D72: an event read from a photo or scan no longer waits just for that (owner's decision). It
-  // publishes under a higher bar, 85% or the feed's own if higher (D73, in reconcile_candidate).
+  // publishes under the same 45% bar as typed text since D85 (it was 85%, D73).
   // What it does not get is the "proven date"
   // shortcut below: the quote is checked against the transcription, not the picture, so a misread
   // digit would "prove" itself.

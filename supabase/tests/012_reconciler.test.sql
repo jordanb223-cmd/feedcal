@@ -75,7 +75,7 @@ select is((select diff ->> 'evidence_quote' from public.event_revisions r join p
 -- ---------------------------------------------------------------- rain date (unsure) goes to review
 select pg_temp.cand(pg_temp.msg('Walkathon'), 'Walkathon', '2026-11-22 10:00');
 select pg_temp.run();
-create temp table rd as select pg_temp.cand(pg_temp.msg('Walkathon rain plan'), 'Walkathon', '2026-11-23 10:00', 'changed', 0.65) as id;  -- below the 70% bar (D70)
+create temp table rd as select pg_temp.cand(pg_temp.msg('Walkathon rain plan'), 'Walkathon', '2026-11-23 10:00', 'changed', 0.40) as id;  -- below the 45% bar (D85)
 select pg_temp.run();
 select is(pg_temp.outcome((select id from rd)), 'update/needs_review', 'a rain date (low confidence) waits for the owner');
 select is((select starts_at::date from public.events where title = 'Walkathon'), '2026-11-22'::date, 'and changes nothing yet');

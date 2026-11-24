@@ -195,10 +195,10 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     const msgIds = [...new Set([...list.map((x) => x.message_id), ...(drafts ?? []).flatMap((d) => (d.source_message_id ? [d.source_message_id] : [])), ...(recent ?? []).map((m) => m.id)])];
     const evIds = [...new Set(list.flatMap((x) => (x.event_id ? [x.event_id] : [])))];
     const attIds = [...new Set(list.flatMap((x) => (x.attachment_id ? [x.attachment_id] : [])))];
-    type Msg = { id: string; clean_text: string | null; original_subject: string | null; subject: string | null; original_sender: string | null; sender: string | null; received_at: string; extraction: unknown };
+    type Msg = { id: string; clean_text: string | null; original_subject: string | null; subject: string | null; original_sender: string | null; sender: string | null; received_at: string; reference_date: string | null; extraction: unknown };
     type Added = { id: string; title: string; starts_at: string; ends_at: string | null; all_day: boolean; timezone: string; location: string | null; status: string; source_message_id: string | null };
     const [{ data: msgs }, { data: added }, { data: existing }, { data: atts }, { data: pages }] = await Promise.all([
-      msgIds.length ? sb.from("messages").select("id, clean_text, original_subject, subject, original_sender, sender, received_at, extraction").in("id", msgIds) : Promise.resolve({ data: [] as Msg[] }),
+      msgIds.length ? sb.from("messages").select("id, clean_text, original_subject, subject, original_sender, sender, received_at, reference_date, extraction").in("id", msgIds) : Promise.resolve({ data: [] as Msg[] }),
       msgIds.length ? sb.from("events").select("id, title, starts_at, ends_at, all_day, timezone, location, status, source_message_id")
         .eq("feed_id", id.data).eq("published", true).neq("status", "cancelled").in("source_message_id", msgIds).order("starts_at").limit(200) : Promise.resolve({ data: [] as Added[] }),
       evIds.length ? sb.from("events").select("id, title, starts_at, all_day, timezone").in("id", evIds) : Promise.resolve({ data: [] as { id: string; title: string; starts_at: string; all_day: boolean; timezone: string }[] }),
@@ -246,14 +246,15 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       .sort((a, b) => Date.parse(b.received_at) - Date.parse(a.received_at))
       .map((m) => ({
         id: m.id, subject: m.original_subject ?? m.subject ?? "(no subject)", sender: m.original_sender ?? m.sender ?? null,
-        received: new Intl.DateTimeFormat("en-US", { timeZone: feed.timezone ?? "America/Los_Angeles", weekday: "short", month: "short", day: "numeric" }).format(new Date(m.received_at)),
+        // D85: the day the email was sent, in the calendar's zone. It is the day "this Friday" is counted from.
+        received: `${m.reference_date ? "Sent " : ""}${new Intl.DateTimeFormat("en-US", { timeZone: feed.timezone ?? "America/Los_Angeles", weekday: "short", month: "short", day: "numeric" }).format(new Date(m.reference_date ?? m.received_at))}`,
         added: ((added ?? []) as Added[]).filter((e) => e.source_message_id === m.id && Date.parse(e.ends_at ?? e.starts_at) >= Date.parse(since))
           .map((e) => ({ id: e.id, title: e.title, when: { starts_at: e.starts_at, ends_at: e.ends_at, all_day: e.all_day, timezone: e.timezone }, location: e.location, status: e.status })),
         leftOut: leftOutOf(m.extraction, feed.timezone ?? "America/Los_Angeles"),
       }));
     return c.html(feedHomePage({
       csrf: csrfToken(c), feedId: feed.id, name: feed.name, cards, drafts: draftCards, emails,
-      bar: feed.auto_publish_threshold === null ? 0.7 : Number(feed.auto_publish_threshold),
+      bar: feed.auto_publish_threshold === null ? 0.45 : Number(feed.auto_publish_threshold),
       upcoming: upcoming.map((e) => ({ id: e.id, title: e.title, when: { starts_at: e.starts_at, all_day: e.all_day, timezone: e.timezone }, location: e.location, status: e.status })),
       done: doneOf(c), undo: undoOf(c, `/feeds/${feed.id}`),
     }));
@@ -286,6 +287,15 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     c.get("supabase").rpc("reject_candidate", { p_candidate_id: ids.item, p_reason: f.reason && f.reason in REJECT_REASONS ? f.reason : "other", ...(f.note ? { p_note: f.note.slice(0, 500) } : {}) }), "rejected", true);
   act("/feeds/:id/drafts/:item/publish", (c, _f, ids) => c.get("supabase").rpc("publish_draft", { p_event_id: ids.item }), "published");
   act("/feeds/:id/drafts/:item/discard", (c, _f, ids) => c.get("supabase").rpc("discard_draft", { p_event_id: ids.item }), "discarded", true);
+  // D85: "Add all" on one email's card. Each id goes through the same call as its own button, one
+  // at a time, so the owner checks and the audit trail are the same. One that fails is skipped.
+  act("/feeds/:id/add-all", async (c, f) => {
+    const ids = (s: string | undefined) => (s ?? "").split(",").map((x) => Id.safeParse(x.trim())).flatMap((r) => (r.success ? [r.data] : [])).slice(0, 30);
+    const sb = c.get("supabase");
+    for (const id of ids(f.candidates)) await sb.rpc("approve_candidate", { p_candidate_id: id });
+    for (const id of ids(f.drafts)) await sb.rpc("publish_draft", { p_event_id: id });
+    return { error: null };
+  }, "added_all");
   act("/feeds/:id/approve-sure", (c, _f, ids) => c.get("supabase").rpc("approve_all_sure", { p_feed_id: ids.feed }), "sure");
 
   // ---------------------------------------------------------------- events
@@ -387,7 +397,7 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       csrf: csrfToken(c), feedId, ...(error ? { error } : {}), done: doneOf(c), undo: undoOf(c, `/feeds/${feedId}/settings`),
       s: {
         name: feed.name, description: feed.description ?? "", visibility: feed.visibility, timezone: feed.timezone,
-        threshold: feed.auto_publish_threshold === null ? 0.7 : Number(feed.auto_publish_threshold), isOwner: feed.owner_id === user.id,
+        threshold: feed.auto_publish_threshold === null ? 0.45 : Number(feed.auto_publish_threshold), isOwner: feed.owner_id === user.id,
         zip: feed.zip_code ?? null, zipSuggestion: suggestion.success ? suggestion.data : null,
         imported: imported.success ? imported.data : null, importNotice: importNotice(c.req.query("import")) ?? null,
         editors: (editors ?? []).map((e) => ({ userId: e.user_id, role: e.role, label: e.user_id === user.id ? "You" : (profiles ?? []).find((p) => p.id === e.user_id)?.display_name ?? "An editor" })),

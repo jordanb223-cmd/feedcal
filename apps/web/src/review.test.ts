@@ -63,14 +63,14 @@ describe("review cards", () => {
 // D81: one card per email.
 describe("review page grouped by email", () => {
   const WHEN = { starts_at: "2026-11-26T20:00:00Z", ends_at: "2026-11-27T20:00:00Z", all_day: true, timezone: "America/Los_Angeles" };
-  const draft = (over: Partial<DraftCard> = {}): DraftCard => ({ id: "d1", messageId: "m1", title: "No school", when: WHEN, location: null, confidence: 0.8, quote: "NOVEMBER 26 & 27 – NO SCHOOL", reviewReasons: [], fromPicture: true, ...over });
+  const draft = (over: Partial<DraftCard> = {}): DraftCard => ({ id: "d1", messageId: "m1", title: "No school", when: WHEN, location: null, confidence: 0.4, quote: "NOVEMBER 26 & 27 – NO SCHOOL", reviewReasons: [], fromPicture: true, ...over });
   const email = (over: Partial<EmailGroup> = {}): EmailGroup => ({
     id: "m1", subject: "TGIF <b>", sender: "teacher@school.example", received: "Sat, Nov 21",
     added: [{ id: "e1", title: "Share Day", when: { starts_at: "2026-11-25T20:00:00Z", all_day: true, timezone: "America/Los_Angeles" }, location: null, status: "confirmed" }],
     leftOut: { named: [{ title: "Dinosgiving", when: "Fri, Nov 20", why: "the date has passed" }], others: 1 }, ...over,
   });
   const page = async (o: { cards?: ReviewCard[]; drafts?: DraftCard[]; emails?: EmailGroup[] }) =>
-    String(await feedHomePage({ csrf: "t", feedId: "f", name: "Room F", cards: o.cards ?? [], drafts: o.drafts ?? [], emails: o.emails ?? [], upcoming: [], bar: 0.7 }));
+    String(await feedHomePage({ csrf: "t", feedId: "f", name: "Room F", cards: o.cards ?? [], drafts: o.drafts ?? [], emails: o.emails ?? [], upcoming: [], bar: 0.45 }));
 
   it("puts what needs the owner, what was added and what was left out under their email", async () => {
     const html = await page({ drafts: [draft()], emails: [email()] });
@@ -79,7 +79,7 @@ describe("review page grouped by email", () => {
     expect(html).toContain("TGIF &lt;b&gt;");
     expect(html).toContain("Calantern <strong>added 1 event</strong> and is <strong>unsure about 1</strong>.");
     expect(html).toContain("<strong>Thu, Nov 26 to Fri, Nov 27</strong> · All day");
-    expect(html).toContain("Why it's waiting: This was read from a picture, and Calantern was 80% sure. Pictures need 85% to go on by themselves.");
+    expect(html).toContain("Why it's waiting: This was read from a picture, and Calantern was 40% sure. Pictures need 45% to go on by themselves.");
     expect(html).toContain('action="/feeds/f/drafts/d1/publish"');
     expect(html).toContain("Yes, add it");
     expect(html).toContain("Not an event");
@@ -105,9 +105,21 @@ describe("review page grouped by email", () => {
     expect(html).toContain("Yes, add it");
   });
 
+  it("D85: two or more new events waiting get one 'Add all' button; one does not", async () => {
+    const two = await page({ drafts: [draft(), draft({ id: "d2", title: "Book fair" })], emails: [email()] });
+    expect(two).toContain('action="/feeds/f/add-all"');
+    expect(two).toContain('name="drafts" value="d1,d2"');
+    expect(two).toContain("Add all 2");
+    // Each one keeps its own buttons.
+    expect(two).toContain('action="/feeds/f/drafts/d2/publish"');
+    const one = await page({ drafts: [draft()], emails: [email()] });
+    expect(one).not.toContain("/add-all");
+  });
+
   it("explains the wait in one sentence", () => {
     expect(whyWaiting({ confidence: 0.6 }, 0.7)).toBe("Calantern was 60% sure. It needs 70% to add something by itself.");
-    expect(whyWaiting({ confidence: 0.8, fromPicture: true }, 0.7)).toContain("Pictures need 85%");
+    expect(whyWaiting({ confidence: 0.4, fromPicture: true }, 0.45)).toContain("Pictures need 45%");
+    expect(whyWaiting({ confidence: 0.8, fromPicture: true }, 0.9)).toContain("Pictures need 90%");
     expect(whyWaiting({ confidence: 0.9, reviewReasons: ["ambiguous_date"] }, 0.7)).toContain("fits more than one date");
     expect(whyWaiting({ confidence: 0.9, outcome: "conflict" }, 0.7)).toContain("read this email again");
     expect(whyWaiting({ confidence: 0.95 }, 0.7)).toBe("Calantern is 95% sure, but held this back to be safe.");

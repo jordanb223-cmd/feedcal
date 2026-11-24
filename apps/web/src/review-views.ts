@@ -32,6 +32,7 @@ const REVIEW_LABELS: Record<string, string> = {
 
 export const DONE: Record<string, string> = {
   approved: "Approved. It's on the calendar.",
+  added_all: "Added. They're on the calendar.",
   rejected: "Rejected.",
   published: "Published.",
   discarded: "Draft discarded.",
@@ -139,6 +140,10 @@ export function whenRange(w: When): string {
   return a === b ? first : first.replace(a, `${a} to ${b}`);
 }
 
+/** D85: the bars an event must clear to go on a calendar by itself. A calendar's own setting replaces the first. */
+export const STANDARD_BAR = 0.45;
+export const PICTURE_BAR = 0.45;
+
 /** D81: one plain sentence on why something is waiting for the owner. */
 export function whyWaiting(i: { reviewReasons?: string[]; fromPicture?: boolean; confidence: number | null; outcome?: string | null }, bar: number): string {
   const reason = (i.reviewReasons ?? []).find((r) => r !== "low_confidence" || (i.reviewReasons ?? []).length === 1);
@@ -148,7 +153,7 @@ export function whyWaiting(i: { reviewReasons?: string[]; fromPicture?: boolean;
   if (i.outcome === "update" || i.outcome === "cancel" || i.outcome === "exdate") return "It changes something already on your calendar, and Calantern wasn't sure enough to do that by itself.";
   const pct = (n: number) => `${Math.round(n * 100)}%`;
   if (i.confidence === null) return "Calantern wasn't sure enough to add this by itself.";
-  const need = i.fromPicture ? Math.max(bar, 0.85) : bar;
+  const need = i.fromPicture ? Math.max(bar, PICTURE_BAR) : bar;
   if (i.confidence >= need) return `Calantern is ${pct(i.confidence)} sure, but held this back to be safe.`;
   return i.fromPicture
     ? `This was read from a picture, and Calantern was ${pct(i.confidence)} sure. Pictures need ${pct(need)} to go on by themselves.`
@@ -173,7 +178,7 @@ export function feedHomePage(opts: {
   done?: string | undefined; undo?: { id: string; back: string } | null | undefined;
 }): Html {
   const t = opts.csrf;
-  const bar = opts.bar ?? 0.7;
+  const bar = opts.bar ?? STANDARD_BAR;
   const sure = opts.cards.filter(isSure).length + opts.drafts.filter((d) => (d.confidence ?? 0) >= 0.85 && (d.reviewReasons ?? []).length === 0).length;
   const waiting = opts.cards.length + opts.drafts.length;
 
@@ -237,6 +242,17 @@ export function feedHomePage(opts: {
     return added > 0 && asks > 0 ? html`Calantern ${did} and ${unsure}.` : asks > 0 ? html`Calantern ${unsure}.` : html`Calantern ${did}.`;
   };
 
+  // D85: one button for an email with two or more new events waiting. Changes to events already on
+  // the calendar, cancellations and anything flagged as aimed at the AI keep their own buttons.
+  const addAll = (cards: ReviewCard[], drafts: DraftCard[]) => {
+    const plain = cards.filter((c) => c.changeKind !== "cancelled" && !["update", "conflict", "cancel", "exdate"].includes(c.outcome ?? "") && !c.reviewReasons.includes("possible_injection"));
+    const n = plain.length + drafts.length;
+    if (n < 2) return "";
+    return html`<form method="post" action="/feeds/${opts.feedId}/add-all" class="addall">${csrf(t)}
+        <input type="hidden" name="candidates" value="${plain.map((c) => c.id).join(",")}"><input type="hidden" name="drafts" value="${drafts.map((d) => d.id).join(",")}">
+        <button type="submit">Add all ${n}</button> <span class="muted">or go through them below</span></form>`;
+  };
+
   // Group what is waiting under the email it came from. Anything with no known email goes last.
   const groups = (opts.emails ?? []).map((m) => ({ m, cards: opts.cards.filter((c) => c.messageId === m.id), drafts: opts.drafts.filter((d) => d.messageId === m.id) }));
   const known = new Set((opts.emails ?? []).map((m) => m.id));
@@ -260,13 +276,14 @@ ${hasCards ? html`<div class="split"><div>` : ""}
 ${busy.map((g) => html`<article class="mailcard">
     <header>${head(g.m)}
       <p class="sum">${summary(g.m.added.length, g.cards.length + g.drafts.length)}</p>
+      ${addAll(g.cards, g.drafts)}
     </header>
     ${g.cards.map(ask)}${g.drafts.map(askDraft)}
     ${addedList(g.m.added)}
     ${leftOut(g.m.leftOut)}
   </article>`)}
 ${loose.cards.length + loose.drafts.length > 0 ? html`<article class="mailcard">
-    <header><h2>Found earlier</h2><p class="sum">${summary(0, loose.cards.length + loose.drafts.length)}</p></header>
+    <header><h2>Found earlier</h2><p class="sum">${summary(0, loose.cards.length + loose.drafts.length)}</p>${addAll(loose.cards, loose.drafts)}</header>
     ${loose.cards.map(ask)}${loose.drafts.map(askDraft)}
   </article>` : ""}
 ${quiet.map((g) => html`<details class="mailcard quiet">
@@ -351,7 +368,7 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
     <p><label for="description">Description</label><textarea id="description" name="description" rows="2" maxlength="2000" dir="auto">${s.description}</textarea></p>
     <p><label for="timezone">Time zone</label><input class="copy" id="timezone" name="timezone" autocomplete="off" spellcheck="false" value="${s.timezone}" pattern="[A-Za-z]+(/[A-Za-z0-9_+-]+){0,2}"></p>
     <p><label for="threshold">Publish automatically when Calantern is at least this sure (from trusted senders)</label>
-      <select class="copy" id="threshold" name="threshold">${[0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1].map((n) => html`<option value="${n}" ${Math.abs(s.threshold - n) < 0.001 ? "selected" : ""}>${n === 1 ? "Never: I review everything" : `${Math.round(n * 100)}%`}</option>`)}</select></p>
+      <select class="copy" id="threshold" name="threshold">${[0.45, 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1].map((n) => html`<option value="${n}" ${Math.abs(s.threshold - n) < 0.001 ? "selected" : ""}>${n === 1 ? "Never: I review everything" : `${Math.round(n * 100)}%`}</option>`)}</select></p>
     </details>
     <button type="submit">Save settings</button>
   </form>`

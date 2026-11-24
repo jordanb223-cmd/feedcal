@@ -3,7 +3,7 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { type Extractor, LARGE_MODEL, type ModelReply } from "./extractor.ts";
 import { alreadyPast, extractEvents, moveToDate, withoutUnstatedEnd, withoutUnstatedTime } from "./pipeline.ts";
-import type { ExtractInput } from "./prompt.ts";
+import { buildUserPrompt, type ExtractInput, sentOn } from "./prompt.ts";
 import { DATE_DECISION_SCHEMA, RESOLVE_SYSTEM } from "./resolve.ts";
 import type { ExtractedEvent } from "./schema.ts";
 
@@ -143,4 +143,11 @@ Deno.test("D83: an end time the words don't state is dropped", () => {
   assertEquals(timed("2026-11-20T21:00", "Movie night Friday, November 20, 7-9 PM"), "2026-11-20T21:00");
   assertEquals(timed("2026-11-20T21:00", "Movie night Friday, November 20, 7 PM - 9:00"), "2026-11-20T21:00", "no AM/PM on the end: the start fixes the half");
   assertEquals(timed("2026-11-20T21:30", "Movie night Friday, November 20, 7-9 PM"), null);
+});
+
+Deno.test("D85: the model is given the day the email was sent, in the feed's zone", () => {
+  // Friday 20 Nov, 7 PM Pacific is already Saturday in UTC.
+  assertEquals(sentOn("2026-11-21T03:00:00Z", "America/Los_Angeles"), "Friday, November 20, 2026");
+  assertEquals(sentOn("2026-11-21T03:00:00Z", "Not/AZone"), "Saturday, November 21, 2026", "an unknown zone falls back to UTC");
+  assert(buildUserPrompt({ ...input, referenceDate: "2026-11-21T03:00:00Z" }).includes('<reference_date sent_on="Friday, November 20, 2026">2026-11-21T03:00:00Z</reference_date>'));
 });

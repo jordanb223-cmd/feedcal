@@ -7,7 +7,7 @@ delete from public.events where feed_id = 'aaaaaaaa-0000-4000-8000-000000000001'
 insert into public.messages (id, feed_id, source_id, status, original_subject, clean_text) values
   ('d3200000-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'cccccccc-0000-4000-8000-000000000001', 'parsed', 'Newsletter', 'x');
 
-create function pg_temp.cand(p_title text, p_start timestamptz, p_conf numeric default 0.6, p_kind text default 'new', p_review jsonb default '[]')
+create function pg_temp.cand(p_title text, p_start timestamptz, p_conf numeric default 0.4, p_kind text default 'new', p_review jsonb default '[]')
 returns jsonb language sql as $$
   select jsonb_build_object('title', p_title, 'starts_at', p_start, 'ends_at', null, 'all_day', true, 'timezone', 'America/Los_Angeles',
     'location', null, 'description', null, 'recurrence', null, 'status', p_kind, 'confidence', p_conf, 'evidence_quote', 'quoted ' || p_title,
@@ -26,7 +26,7 @@ create function pg_temp.events() returns integer language sql as $$
 create function pg_temp.ev(p_like text) returns public.events language sql as $$
   select * from public.events where feed_id = 'aaaaaaaa-0000-4000-8000-000000000001' and title ilike p_like order by created_at limit 1 $$;
 
--- First read: a draft (60%, date not proven), a published event (95%), and two practices with the same name.
+-- First read: a draft (40%, date not proven), a published event (95%), and two practices with the same name.
 select pg_temp.read(
   pg_temp.cand('No school (Thanksgiving)', '2026-11-26 20:00+00'),
   pg_temp.cand('Christmas musical', '2026-12-18 20:00+00', 0.95),
@@ -63,7 +63,7 @@ select is(pg_temp.events(), 5, 'a discarded draft is not recreated');
 select is((pg_temp.ev('Bake sale%')).status, 'cancelled', 'and stays discarded');
 
 -- A review card nobody decided is replaced, not stacked; a rejected one stays rejected.
-select pg_temp.read(pg_temp.cand('Christmas musical', '2026-12-19 20:00+00', 0.6, 'changed'));
+select pg_temp.read(pg_temp.cand('Christmas musical', '2026-12-19 20:00+00', 0.4, 'changed'));
 select is((select count(*)::int from public.event_candidates where message_id = 'd3200000-0000-4000-8000-000000000001' and state = 'needs_review'), 0,
   'a "changed" reading of an event this email itself produced is that event again, not a change card');
 insert into public.event_candidates (message_id, feed_id, title, starts_at, all_day, timezone, change_kind, confidence, evidence_quote, source_kind, state, reject_reason, decided_at)

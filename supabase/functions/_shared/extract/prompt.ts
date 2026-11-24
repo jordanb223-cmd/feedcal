@@ -16,7 +16,7 @@ export const SYSTEM_PROMPT = `You extract calendar events for Feedcal, which tur
 
 Rules:
 - Only include events the source actually states. Never invent, infer from context, or guess.
-- Resolve relative dates ("this Friday", "next week", "tomorrow") against the reference date given. If a date has no year, use its next occurrence on or after the reference date.
+- The reference date is when the email was sent. Its sent_on attribute is that moment as a calendar day in the feed's timezone; that day is "today" for the email. Resolve relative dates ("this Friday", "next week", "tomorrow") from sent_on, never from the current date and never from the UTC date. If a date has no year, use its next occurrence on or after sent_on.
 - Never guess a time. If no time is stated for an event, make it all-day.
 - A time written with no AM or PM ("at 3:15"): use the rest of the source if it settles it ("evening concert"). Otherwise read 7 to 11 as morning and 12 to 6 as afternoon.
 - Something that runs over several days ("November 26 & 27 - no school", "Nov 26-28 break") is ONE all-day event: start on the first day, end on the last. Never split it into one event per day, and never report only one of its days.\n- end is the LAST day or time the source states for the event, itself included. An event on one day has end null; never set end to the day after. Give an end only when the source states one.
@@ -64,13 +64,19 @@ export function neutralise(text: string): string {
   });
 }
 
+/** D85: "Friday, November 20, 2026": the day the email was sent, in the feed's zone. A sent time late in the evening is already the next day in UTC. */
+export function sentOn(iso: string, timeZone: string): string {
+  const fmt = (tz: string) => new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long", month: "long", day: "numeric", year: "numeric" }).format(new Date(iso));
+  try { return fmt(timeZone); } catch { return fmt("UTC"); }
+}
+
 export function buildUserPrompt(input: ExtractInput): string {
   const pages = input.pages
     .map((p) => `<page attachment_id="${p.attachment_id}" page_index="${p.page_index}" source="${p.source}" filename="${neutralise(p.filename ?? "").replace(/"/g, "'")}">\n${neutralise(p.text)}\n</page>`)
     .join("\n");
   return [
     `<feed name="${neutralise(input.feedName).replace(/"/g, "'")}" category="${input.feedCategory ?? "none"}" timezone="${input.timezone}"/>`,
-    `<reference_date>${input.referenceDate}</reference_date>`,
+    `<reference_date sent_on="${sentOn(input.referenceDate, input.timezone)}">${input.referenceDate}</reference_date>`,
     "<email>",
     `<subject>${neutralise(input.subject ?? "")}</subject>`,
     `<sender>${neutralise(input.sender ?? "")}</sender>`,
