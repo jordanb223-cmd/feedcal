@@ -122,6 +122,13 @@ describe("behaviour", () => {
     expect(ics).not.toContain("BEGIN:VTIMEZONE");
   });
 
+  it("D84: a timed event with no end is a one-hour block; a stated end is kept", () => {
+    const { ics } = build("timezone");
+    // 04:30 UTC is 10:00 in Kolkata.
+    expect(ics).toContain("DTSTART;TZID=Asia/Kolkata:20261103T100000\r\nDTEND;TZID=Asia/Kolkata:20261103T110000");
+    expect(ics).toContain("DTSTART;TZID=America/Los_Angeles:20261102T090000\r\nDTEND;TZID=America/Los_Angeles:20261102T120000");
+  });
+
   it("cancelled events stay in the feed with STATUS:CANCELLED", () => {
     expect(build("cancelled").ics).toContain("STATUS:CANCELLED");
   });

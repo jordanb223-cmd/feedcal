@@ -72,6 +72,8 @@ export function validRrule(rule: string): boolean {
 
 const STATUS: Record<EventStatus, string> = { tentative: "TENTATIVE", confirmed: "CONFIRMED", cancelled: "CANCELLED" };
 
+const DEFAULT_LENGTH_MS = 3_600_000;
+
 function ms(iso: string): number {
   const t = Date.parse(iso);
   if (Number.isNaN(t)) throw new Error("Invalid date in calendar event");
@@ -100,7 +102,10 @@ function eventLines(e: CalendarEvent, tz: string, opts: BuildOptions, warnings: 
     lines.push(`DTSTART;VALUE=DATE:${formatDate(first)}`, `DTEND;VALUE=DATE:${formatDate(nextDay(last))}`);
   } else {
     lines.push(`DTSTART;TZID=${tz}:${formatLocal(wallTime(start, tz))}`);
-    if (end !== null) lines.push(`DTEND;TZID=${tz}:${formatLocal(wallTime(end, tz))}`);
+    // D84: a timed event with no stated end is shown as a one-hour block. The stored event keeps
+    // no end; only the calendar file gives it a length, so calendar apps don't draw a zero-minute
+    // sliver or pick a length of their own.
+    lines.push(`DTEND;TZID=${tz}:${formatLocal(wallTime(end ?? start + DEFAULT_LENGTH_MS, tz))}`);
   }
 
   if (e.rrule) {

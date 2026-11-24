@@ -2,7 +2,7 @@
 //   small model → Zod → (retry once with the error) → escalate to the large model when unsure or
 //   image-only → quote, time, date and timezone checks → candidates for the reconciler (Phase 10).
 import { checkEvent, hasTime, looksLikeInjection, type RejectReason, zonedToUtc } from "./checks.ts";
-import { type DateReview, localDate, writtenTimes } from "./dates.ts";
+import { type DateReview, endDayStated, localDate, timeStated } from "./dates.ts";
 import { resolveDate } from "./resolve.ts";
 import { type Extractor, LARGE_MODEL, PRICES, SMALL_MODEL } from "./extractor.ts";
 import { buildUserPrompt, type ExtractInput, SYSTEM_PROMPT } from "./prompt.ts";
@@ -28,7 +28,7 @@ export interface ExtractionResult {
 const ESCALATE_BELOW = 0.7;
 // D70: at most this many "which day did they mean?" questions per email (each is a large-model call).
 const MAX_DATE_QUESTIONS = 3;
-const DATE_REASONS: readonly string[] = ["ambiguous_date", "date_mismatch", "weekday_mismatch", "time_mismatch", "before_email"] satisfies DateReview[];
+const DATE_REASONS: readonly string[] = ["ambiguous_date", "date_mismatch", "weekday_mismatch", "time_mismatch", "time_unlikely", "before_email"] satisfies DateReview[];
 
 const ymd = (v: { y: number; m: number; d: number }) => `${v.y}-${String(v.m).padStart(2, "0")}-${String(v.d).padStart(2, "0")}`;
 const dayNumber = (date: string) => Math.floor(Date.parse(`${date}T00:00:00Z`) / 86_400_000);
@@ -53,6 +53,26 @@ function ends(e: ExtractedEvent): string | null {
     return zonedToUtc(e.end, e.timezone);
   }
   return zonedToUtc(e.end.includes("T") ? e.end : `${e.end}T23:59`, e.timezone);
+}
+
+/**
+ * D82: an end on a later day is kept only when the quoted words state that day. Models often give
+ * "the next day" as the end of a one-day event (the calendar-file habit of an exclusive end), and
+ * Calantern reads an end as the event's last day, so the event showed on two days. With no stated
+ * later day, the event has no end: it is the one day (or the one start time) the words give.
+ */
+export function withoutUnstatedEnd(e: ExtractedEvent): ExtractedEvent {
+  if (!e.end) return e;
+  const sameDay = e.end.slice(0, 10) === e.start.slice(0, 10);
+  if (sameDay && e.all_day) return { ...e, end: null };
+  if (!sameDay && !endDayStated(e.evidence_quote, e.end)) return { ...e, end: null };
+  // D83: an end time is kept only when the words state it (with no AM/PM given, either half of
+  // the day counts: the start already fixes which one it can be).
+  if (!e.all_day && e.end.includes("T")) {
+    const said = timeStated(e.evidence_quote, Number(e.end.slice(11, 13)) * 60 + Number(e.end.slice(14, 16)));
+    if (said === "no" || said === "silent") return { ...e, end: null };
+  }
+  return e;
 }
 
 /** D77: an event whose last day is before today (in its own zone) is never created. Repeating events are kept. */
@@ -101,7 +121,7 @@ export async function extractEvents(input: ExtractInput, extractor: Extractor, o
   const injection = looksLikeInjection(input);
   let dateQuestions = 0;
   for (const found of result.output.events) {
-    let e = withoutUnstatedTime(found);
+    let e = withoutUnstatedEnd(withoutUnstatedTime(found));
     const check = checkEvent(e, input);
     if (check.reject) {
       rejected.push({ event: e, reason: check.reject });
@@ -120,7 +140,7 @@ export async function extractEvents(input: ExtractInput, extractor: Extractor, o
       if (answer.date) {
         e = moveToDate(e, answer.date);
         review = review.filter((r) => r !== "ambiguous_date");
-        const timeProven = e.all_day || writtenTimes(e.evidence_quote).includes(Number(e.start.slice(11, 13)) * 60 + Number(e.start.slice(14, 16)));
+        const timeProven = e.all_day || timeStated(e.evidence_quote, Number(e.start.slice(11, 13)) * 60 + Number(e.start.slice(14, 16))) === "yes";
         dateConfirmed = timeProven && !check.fromTranscription && !review.some((r) => DATE_REASONS.includes(r));
       }
     }

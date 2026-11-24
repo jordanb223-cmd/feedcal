@@ -767,3 +767,44 @@ What was checked, against what, and what changed:
 - **Emails shown.** The twelve most recent from the last 14 days, plus any older one that still has something waiting.
 - **Tests.** `apps/web/src/review.test.ts` (grouping, one dark button for one question, quiet emails, reasons, date ranges, left-out rules), `tests/integration/review.test.ts` (wording).
 - **Not verified yet.** On production data. Viewed in headless Chrome at 375px and 1280px with stand-in data shaped like Room F: no horizontal overflow, no console errors. Not tried with many emails in one week, with long subjects, or on a real phone. The other organizer pages (Email, Share, Settings) are unchanged.
+
+## D82 — An end day must be stated in the email's words (2026-11-24)
+
+- **Why.** The new Review page (D81) shows date ranges. On production it showed two published Room F events with an extra day: "Share Day (moved to Wednesday)" as Nov 25 to Nov 26, and "Dino Christmas Musical & Stuffy Exchange" as Dec 18 to Dec 19. Their quotes state one day each ("we will share on Wednesday"; "DECEMBER 18"). Both events' edit pages on production confirmed the stored end dates.
+- **Effect on followers.** `packages/ics/src/calendar.ts` writes an all-day event's `DTEND` as the day after the stored last day. So these two events were being served to followers' calendar apps as two-day events. Read from the code; no follower's device was looked at.
+- **Cause.** The model gave "the next day" as the end of a one-day event, the exclusive-end habit of calendar files. Calantern reads an end as the event's last day, inclusive (D22). D41's date rules check an event's start against its quote and never checked its end.
+- **What.**
+  - `statedDays` and `endDayStated` (`extract/dates.ts`): the days a text states, including the later days of a range ("November 26 & 27", "Nov 26-28", "Dec 1 through 5", "6/15-19"), and a weekday range ending on the end's weekday.
+  - `withoutUnstatedEnd` (`extract/pipeline.ts`), applied to every extracted event: an end on a later day than the start is kept only if the quote states that day; otherwise the end is dropped. An all-day end on the start day is dropped as meaningless. An end time on the start day is untouched.
+  - The prompt now says the end is the last day or time stated, inclusive, and that a one-day event has no end.
+- **The two live events** were corrected by hand on 24 Nov through their edit pages, at the owner's request: both now have no end date. "No school - Thanksgiving", Nov 26 to 27, was left as it is; its quote states both days.
+- **Tests.** `extract/dates.test.ts` (ranges, lists, time ranges that are not day ranges, weekday ranges), `extract/resolve.test.ts` (the production case, a stated second day, same-day ends).
+- **Not covered.** A comma list ("Nov 3, 4 and 5") states only its first day here, so such a range would lose its end and need the owner's edit. Imported calendars and events typed by hand are not affected by this rule. Other events already stored with a wrong end, on any calendar, are not found or fixed by this change; Room F's were the only ones looked at.
+
+## D83 — Time rules: a range shares its AM/PM, and an end time must be stated (2026-11-24)
+
+- **Why.** The owner asked whether a time in an email is sure to reach the calendar correctly. Fourteen phrasings were run through `dateGate` (a scratch script, not kept in the repo). Three gaps showed in that run:
+  1. "6:30-8 PM" was read as 6:30 with no AM/PM plus 8 PM, so a correct 6:30 PM start was held as a mismatch.
+  2. "at 3:15" matched both 3:15 AM and 3:15 PM, so either reading counted as proven.
+  3. Nothing checked an end time against the words. A model's guessed length was stored.
+- **What.**
+  - `timesIn` (`extract/dates.ts`) reads ranges first. An AM/PM on the end of a range applies to the start; if that would put the start after the end, the start is the other half ("11-1 PM" is 11 AM to 1 PM).
+  - `timeStated` answers `yes`, `maybe`, `unlikely`, `no` or `silent` for a clock time against a text. Only `yes` proves a time (`dateGate`, and `timeProven` in `extract/pipeline.ts`).
+  - `withoutUnstatedEnd` now also drops an end time the quote does not state (`no` or `silent`). The event is kept with no end.
+- **Changed behaviour in the 50-fixture evaluation.** Fixture `40-end-before-start` (start 7 PM, end 5 PM, quote "7 PM") used to be rejected whole. Its end is now dropped and the event kept. The `end_before_start` check stays in `checks.ts` for ends the words do state.
+- **Tests.** `extract/dates.test.ts`, `extract/resolve.test.ts`, `extract/eval/eval.test.ts`.
+- **Not covered.** An hour with no colon and no AM/PM ("at 9", "9 o'clock", "1830") is not read as a time. Such an event has no time in its words and becomes all-day (D70).
+
+## D84 — With no AM/PM, 7 to 11 is morning and 12 to 6 is afternoon; no end time means a one-hour block (2026-11-24)
+
+- **Owner's rules, given while D83 was being built.** "The times are likly AM 7-11, and pm 12-6, so that should be factored in, almost like a rule if not specificied", and "if no end time, only give it an hour block."
+- **What, for AM/PM.**
+  - `timesIn` gives a time with no AM/PM its likely reading by those hours, and keeps the other reading as `other`. In a range with no AM/PM ("6:30-8", "11:30-1"), the start follows the rule and the end is the first such time after it. A range needs at least one side written H:MM, so "Nov 20-21" is not a time.
+  - "morning", or "afternoon", "evening", "tonight", "night", in the same quote settles the half, and the time then counts as stated. If both kinds of word appear, neither settles it.
+  - The likely reading is `maybe`: not proof. The event needs the feed's bar (70%, or 85% for a picture). This is the interpretation chosen here, not the owner's words: the rule is "likely", and an evening event at "7:00" exists, so it was not made proof.
+  - The unlikely reading is held with a new review reason, `time_unlikely` ("The email gives the time with no AM or PM, and this reading is the less usual one. Check the time."). The time is not changed: the model read the whole email and may be right.
+  - The prompt tells the model the same rule.
+- **What, for the hour block.** `packages/ics/src/calendar.ts` writes `DTEND` one hour after `DTSTART` for a timed event with no stored end. The stored event still has no end, and Calantern's own pages still show the start time only. All-day events are unchanged.
+- **Effect on existing events.** Every timed event with no end, on every calendar, is served with the one-hour end from the next time its feed is built. Read from the code; no calendar app was checked for how it redraws an event whose end appears without a new `SEQUENCE`.
+- **Tests.** `extract/dates.test.ts` (the hours, ranges, the settling words, the review reason), `packages/ics/src/calendar.test.ts` and the golden files.
+- **Not covered.** Events at unusual hours for the rule (a 7:00 evening concert with no "evening" in the quoted words) will wait for the owner. That is the intended cost.
