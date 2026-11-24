@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-24
+
 ### Changed
 - The Review page is now organised by email. Each email gets one card that says what Calantern added, what it left out, and the one or two things it needs you to decide. Before, every item was its own card.
 - Anything waiting for you now says why in one sentence, for example "This was read from a picture, and Calantern was 80% sure."
