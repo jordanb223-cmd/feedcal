@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-23
+
 ### Fixed
 - Emails that had to wait (your daily limit was reached, or AI reading was paused) are now picked up again on their own, every hour. Before, they waited until someone restarted them by hand.
 - With Gmail connected, an email that arrived after the day's limit was reached is no longer skipped for good. Calantern tries it again an hour later.
