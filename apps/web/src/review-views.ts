@@ -99,6 +99,9 @@ export function newFeedPage(opts: { csrf: string; error?: string; values?: Recor
 // ---------------------------------------------------------------- feed home: review queue
 export interface ReviewCard {
   id: string;
+  /** The email it came from, when known: the page groups by it (D81). */
+  messageId?: string | null;
+  fromPicture?: boolean;
   title: string;
   when: { starts_at: string; all_day: boolean; timezone: string };
   location: string | null;
@@ -113,8 +116,43 @@ export interface ReviewCard {
   date: string;
   time: string;
 }
-export interface DraftCard { id: string; title: string; when: { starts_at: string; all_day: boolean; timezone: string }; location: string | null; confidence: number | null; quote: string | null }
-export interface EventRow { id: string; title: string; when: { starts_at: string; all_day: boolean; timezone: string }; location: string | null; status: string }
+type When = { starts_at: string; ends_at?: string | null; all_day: boolean; timezone: string };
+export interface DraftCard {
+  id: string; messageId?: string | null; title: string; when: When; location: string | null; confidence: number | null; quote: string | null;
+  reviewReasons?: string[]; fromPicture?: boolean;
+}
+export interface EventRow { id: string; title: string; when: When; location: string | null; status: string }
+/** One email and what its latest read did (D81). */
+export interface EmailGroup {
+  id: string; subject: string; sender: string | null; received: string;
+  added: EventRow[];
+  leftOut: { named: { title: string; when: string; why: string }[]; others: number };
+}
+
+/** "Thu, Nov 26 to Fri, Nov 27 · All day" when an event runs past its first day; else the usual form. */
+export function whenRange(w: When): string {
+  const first = formatWhen(w);
+  if (!w.ends_at) return first;
+  const day = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: w.timezone, weekday: "short", month: "short", day: "numeric" }).format(new Date(iso));
+  const [a, b] = [day(w.starts_at), day(w.ends_at)];
+  return a === b ? first : first.replace(a, `${a} to ${b}`);
+}
+
+/** D81: one plain sentence on why something is waiting for the owner. */
+export function whyWaiting(i: { reviewReasons?: string[]; fromPicture?: boolean; confidence: number | null; outcome?: string | null }, bar: number): string {
+  const reason = (i.reviewReasons ?? []).find((r) => r !== "low_confidence" || (i.reviewReasons ?? []).length === 1);
+  const label = reason && reason !== "low_confidence" ? REVIEW_LABELS[reason] : undefined;
+  if (label) return label;
+  if (i.outcome === "conflict") return "Calantern read this email again and got a different time from the one on your calendar.";
+  if (i.outcome === "update" || i.outcome === "cancel" || i.outcome === "exdate") return "It changes something already on your calendar, and Calantern wasn't sure enough to do that by itself.";
+  const pct = (n: number) => `${Math.round(n * 100)}%`;
+  if (i.confidence === null) return "Calantern wasn't sure enough to add this by itself.";
+  const need = i.fromPicture ? Math.max(bar, 0.85) : bar;
+  if (i.confidence >= need) return `Calantern is ${pct(i.confidence)} sure, but held this back to be safe.`;
+  return i.fromPicture
+    ? `This was read from a picture, and Calantern was ${pct(i.confidence)} sure. Pictures need ${pct(need)} to go on by themselves.`
+    : `Calantern was ${pct(i.confidence)} sure. It needs ${pct(need)} to add something by itself.`;
+}
 
 export const isSure = (c: { confidence: number; reviewReasons: string[]; outcome: string | null }) =>
   c.confidence >= 0.85 && c.reviewReasons.length === 0 && c.outcome !== "conflict";
@@ -129,72 +167,123 @@ function what(c: ReviewCard) {
 
 export function feedHomePage(opts: {
   csrf: string; feedId: string; name: string; cards: ReviewCard[]; drafts: DraftCard[]; upcoming: EventRow[];
+  /** D81: the emails things came from. Without it, everything waiting is shown in one group. */
+  emails?: EmailGroup[]; bar?: number;
   done?: string | undefined; undo?: { id: string; back: string } | null | undefined;
 }): Html {
-  const sure = opts.cards.filter(isSure).length + opts.drafts.filter((d) => (d.confidence ?? 0) >= 0.85).length;
-  // On a wide screen, things to review sit beside "Coming up". With nothing to review there is one column.
-  const hasWork = opts.cards.length + opts.drafts.length > 0;
   const t = opts.csrf;
+  const bar = opts.bar ?? 0.7;
+  const sure = opts.cards.filter(isSure).length + opts.drafts.filter((d) => (d.confidence ?? 0) >= 0.85 && (d.reviewReasons ?? []).length === 0).length;
+  const waiting = opts.cards.length + opts.drafts.length;
+
+  // One question: a change or new event Calantern wasn't sure enough to make itself.
+  const ask = (c: ReviewCard) => html`<section class="part ask">
+    <h3>Needs you</h3>
+    <p class="q" dir="auto">${c.title}</p>
+    ${what(c)}
+    ${c.imageUrl ? html`<p><img src="${c.imageUrl}" alt="The page this came from" style="max-width:100%;border-radius:8px"></p>` : ""}
+    <blockquote class="muted" dir="auto">…${c.evidence.before}<mark>${c.evidence.quote}</mark>${c.evidence.after}…<br><small>${c.evidence.where}</small></blockquote>
+    ${c.originalUrl ? html`<p><a href="${c.originalUrl}" target="_blank" rel="noopener">Open the original file</a></p>` : ""}
+    ${c.reviewReasons.includes("possible_injection") ? html`<p class="error">${REVIEW_LABELS.possible_injection}</p>` : html`<p class="why">Why it's waiting: ${whyWaiting(c, bar)}</p>`}
+    <div class="row">
+      <form method="post" action="/feeds/${opts.feedId}/candidates/${c.id}/approve">${csrf(t)}<button type="submit">${c.changeKind === "cancelled" ? "Yes, cancel it" : c.outcome === "update" || c.outcome === "conflict" ? "Yes, change it" : "Yes, add it"}</button></form>
+    </div>
+    <details><summary>Fix it</summary>
+      <form method="post" action="/feeds/${opts.feedId}/candidates/${c.id}/approve">${csrf(t)}
+        <p><label for="t-${c.id}">Title</label><input class="copy" id="t-${c.id}" name="title" value="${c.title}" dir="auto"></p>
+        <p><label for="d-${c.id}">Date</label><input class="copy" type="date" id="d-${c.id}" name="date" value="${c.date}"></p>
+        ${c.when.all_day ? "" : html`<p><label for="h-${c.id}">Time</label><input class="copy" type="time" id="h-${c.id}" name="time" value="${c.time}"></p>`}
+        <p><label for="l-${c.id}">Place</label><input class="copy" id="l-${c.id}" name="location" value="${c.location ?? ""}" dir="auto"></p>
+        <button type="submit" class="secondary">Save and add</button>
+      </form>
+    </details>
+    <details><summary>Not right</summary>
+      <form method="post" action="/feeds/${opts.feedId}/candidates/${c.id}/reject">${csrf(t)}
+        <p><label for="r-${c.id}">Why?</label><select class="copy" id="r-${c.id}" name="reason">${Object.entries(REJECT_REASONS).map(([k, v]) => html`<option value="${k}">${v}</option>`)}</select></p>
+        <p><label for="n-${c.id}">Note (optional, helps Calantern learn)</label><input class="copy" id="n-${c.id}" name="note" maxlength="500"></p>
+        <button type="submit" class="danger">Leave it out</button>
+      </form>
+    </details>
+  </section>`;
+  // One question: an event Calantern found but did not put on the calendar.
+  const askDraft = (d: DraftCard) => html`<section class="part ask">
+    <h3>Needs you</h3>
+    <p class="q" dir="auto">${d.title}</p>
+    <p class="qwhen"><strong>${whenRange(d.when).split(" · ")[0]}</strong> · ${whenRange(d.when).split(" · ").slice(1).join(" · ")}${d.location ? html` · <span dir="auto">${d.location}</span>` : ""}</p>
+    ${d.quote ? html`<blockquote class="muted" dir="auto"><mark>${d.quote}</mark></blockquote>` : ""}
+    <p class="why">Why it's waiting: ${whyWaiting(d, bar)}</p>
+    <div class="row">
+      <form method="post" action="/feeds/${opts.feedId}/drafts/${d.id}/publish">${csrf(t)}<button type="submit">Yes, add it</button></form>
+      <a class="button secondary" href="/feeds/${opts.feedId}/events/${d.id}">Fix it</a>
+      <form method="post" action="/feeds/${opts.feedId}/drafts/${d.id}/discard">${csrf(t)}<button type="submit" class="link">Not an event</button></form>
+    </div>
+  </section>`;
+  const addedList = (rows: EventRow[]) => rows.length === 0 ? "" : html`<section class="part">
+    <h3>Added to your calendar</h3>
+    <ul class="rows">${rows.map((e) => html`<li><span class="tick" aria-hidden="true">✓</span><span class="t"><strong dir="auto">${e.title}</strong><span class="d">${whenRange(e.when)}</span></span><a href="/feeds/${opts.feedId}/events/${e.id}">Edit</a></li>`)}</ul>
+  </section>`;
+  const leftOut = (l: EmailGroup["leftOut"]) => {
+    const n = l.named.length + l.others;
+    if (n === 0) return "";
+    return html`<details class="left"><summary>${n} left out</summary><ul>
+      ${l.named.map((x) => html`<li><span dir="auto">${x.title}</span>, ${x.when}: ${x.why}</li>`)}
+      ${l.others > 0 ? html`<li>${l.others} ${l.others === 1 ? "other" : "others"} that didn't pass Calantern's checks</li>` : ""}
+    </ul></details>`;
+  };
+  const summary = (added: number, asks: number) => {
+    const did = added > 0 ? html`<strong>added ${added} ${added === 1 ? "event" : "events"}</strong>` : "";
+    const unsure = asks > 0 ? html`is <strong>unsure about ${asks}</strong>` : "";
+    return added > 0 && asks > 0 ? html`Calantern ${did} and ${unsure}.` : asks > 0 ? html`Calantern ${unsure}.` : html`Calantern ${did}.`;
+  };
+
+  // Group what is waiting under the email it came from. Anything with no known email goes last.
+  const groups = (opts.emails ?? []).map((m) => ({ m, cards: opts.cards.filter((c) => c.messageId === m.id), drafts: opts.drafts.filter((d) => d.messageId === m.id) }));
+  const known = new Set((opts.emails ?? []).map((m) => m.id));
+  const loose = { cards: opts.cards.filter((c) => !c.messageId || !known.has(c.messageId)), drafts: opts.drafts.filter((d) => !d.messageId || !known.has(d.messageId)) };
+  const busy = groups.filter((g) => g.cards.length + g.drafts.length > 0);
+  const quiet = groups.filter((g) => g.cards.length + g.drafts.length === 0 && (g.m.added.length > 0 || g.m.leftOut.named.length + g.m.leftOut.others > 0)).slice(0, 5);
+  const head = (m: EmailGroup) => html`<h2 dir="auto">${m.subject}</h2>
+      <p class="from">${m.sender ? html`From <span dir="auto">${m.sender}</span> · ` : ""}${m.received}</p>`;
+  const hasCards = busy.length + quiet.length > 0 || loose.cards.length + loose.drafts.length > 0;
+
   return layout(opts.name, html`${banner(opts.done, opts.undo ?? null, t)}
 <div class="card">
   <h1 dir="auto">${opts.name}</h1>
   ${feedNav(opts.feedId, "home")}
-  ${opts.cards.length + opts.drafts.length === 0
-    ? html`<p class="muted">Nothing to review. New emails are read within a few minutes of arriving.</p>`
-    : html`<p>${opts.cards.length + opts.drafts.length} to review.</p>
-  ${sure > 0 ? html`<form method="post" action="/feeds/${opts.feedId}/approve-sure">${csrf(t)}<button type="submit">Approve all ${sure} marked Sure</button></form>` : ""}`}
+  ${waiting === 0
+    ? html`<p class="status muted">Nothing needs you. New emails are read within a few minutes of arriving.</p>`
+    : html`<p class="status"><strong>${waiting} ${waiting === 1 ? "thing needs" : "things need"} you.</strong> Everything else Calantern found is on the calendar.</p>
+  ${sure > 1 ? html`<form method="post" action="/feeds/${opts.feedId}/approve-sure">${csrf(t)}<button type="submit" class="secondary">Add the ${sure} Calantern is sure about</button></form>` : ""}`}
 </div>
-${hasWork ? html`<div class="split"><div>` : ""}
-${opts.cards.map((c) => html`<div class="card panel">
-  <span class="kicker">${isSure(c) ? "Calantern is sure" : "Check this one"}</span>
-  <h2 dir="auto">${c.title}</h2>
-  ${what(c)}
-  ${c.reviewReasons.map((r) => html`<p class="${r === "possible_injection" ? "error" : "muted"}">${REVIEW_LABELS[r] ?? r}</p>`)}
-  ${c.imageUrl ? html`<p><img src="${c.imageUrl}" alt="The page this came from" style="max-width:100%;border-radius:8px"></p>` : ""}
-  <blockquote class="muted" dir="auto">…${c.evidence.before}<mark>${c.evidence.quote}</mark>${c.evidence.after}…<br><small>${c.evidence.where}</small></blockquote>
-  ${c.originalUrl ? html`<p><a href="${c.originalUrl}" target="_blank" rel="noopener">Open the original file</a></p>` : ""}
-  <div class="row">
-    <form method="post" action="/feeds/${opts.feedId}/candidates/${c.id}/approve">${csrf(t)}<button type="submit">Approve</button></form>
-  </div>
-  <details><summary>Edit, then approve</summary>
-    <form method="post" action="/feeds/${opts.feedId}/candidates/${c.id}/approve">${csrf(t)}
-      <p><label for="t-${c.id}">Title</label><input class="copy" id="t-${c.id}" name="title" value="${c.title}" dir="auto"></p>
-      <p><label for="d-${c.id}">Date</label><input class="copy" type="date" id="d-${c.id}" name="date" value="${c.date}"></p>
-      ${c.when.all_day ? "" : html`<p><label for="h-${c.id}">Time</label><input class="copy" type="time" id="h-${c.id}" name="time" value="${c.time}"></p>`}
-      <p><label for="l-${c.id}">Place</label><input class="copy" id="l-${c.id}" name="location" value="${c.location ?? ""}" dir="auto"></p>
-      <button type="submit">Save and approve</button>
-    </form>
-  </details>
-  <details><summary>Reject</summary>
-    <form method="post" action="/feeds/${opts.feedId}/candidates/${c.id}/reject">${csrf(t)}
-      <p><label for="r-${c.id}">Why?</label><select class="copy" id="r-${c.id}" name="reason">${Object.entries(REJECT_REASONS).map(([k, v]) => html`<option value="${k}">${v}</option>`)}</select></p>
-      <p><label for="n-${c.id}">Note (optional, helps Calantern learn)</label><input class="copy" id="n-${c.id}" name="note" maxlength="500"></p>
-      <button type="submit" class="danger">Reject</button>
-    </form>
-  </details>
-</div>`)}
-${opts.drafts.map((d) => html`<div class="card panel">
-  <span class="kicker">Draft${(d.confidence ?? 0) >= 0.85 ? " · Calantern is sure" : ""}</span>
-  <h2 dir="auto">${d.title}</h2>
-  <p>${formatWhen(d.when)}${d.location ? html` · <span dir="auto">${d.location}</span>` : ""}</p>
-  ${d.quote ? html`<blockquote class="muted" dir="auto"><mark>${d.quote}</mark></blockquote>` : ""}
-  <div class="row">
-    <form method="post" action="/feeds/${opts.feedId}/drafts/${d.id}/publish">${csrf(t)}<button type="submit">Publish</button></form>
-    <a class="button secondary" href="/feeds/${opts.feedId}/events/${d.id}">Edit</a>
-    <form method="post" action="/feeds/${opts.feedId}/drafts/${d.id}/discard">${csrf(t)}<button type="submit" class="secondary">Discard</button></form>
-  </div>
-</div>`)}
-${hasWork ? html`</div><aside>` : ""}
+${hasCards ? html`<div class="split"><div>` : ""}
+${busy.map((g) => html`<article class="mailcard">
+    <header>${head(g.m)}
+      <p class="sum">${summary(g.m.added.length, g.cards.length + g.drafts.length)}</p>
+    </header>
+    ${g.cards.map(ask)}${g.drafts.map(askDraft)}
+    ${addedList(g.m.added)}
+    ${leftOut(g.m.leftOut)}
+  </article>`)}
+${loose.cards.length + loose.drafts.length > 0 ? html`<article class="mailcard">
+    <header><h2>Found earlier</h2><p class="sum">${summary(0, loose.cards.length + loose.drafts.length)}</p></header>
+    ${loose.cards.map(ask)}${loose.drafts.map(askDraft)}
+  </article>` : ""}
+${quiet.map((g) => html`<details class="mailcard quiet">
+    <summary><span class="s" dir="auto">${g.m.subject}</span><span class="from">${g.m.received} · ${g.m.added.length > 0 ? `added ${g.m.added.length}` : "nothing added"}</span></summary>
+    ${addedList(g.m.added)}
+    ${leftOut(g.m.leftOut)}
+  </details>`)}
+${hasCards ? html`</div><aside>` : ""}
 <div class="card">
   <h2>Coming up</h2>
   ${opts.upcoming.length === 0
     ? html`<p class="muted">No upcoming events yet. <a href="/feeds/${opts.feedId}/events/new">Add one</a>, or forward an email.</p>`
     : html`<ul class="cal">${opts.upcoming.map((e, i) => {
         const d = dayParts(e.when);
-        return html`<li class="${i === 0 ? "next" : ""}"><span class="day" aria-hidden="true"><span class="dow">${d.dow}</span><span class="num">${d.num}</span></span><span class="what"><a href="/feeds/${opts.feedId}/events/${e.id}"><strong dir="auto">${e.title}</strong></a>${e.status === "cancelled" ? html` <span class="muted">(cancelled)</span>` : ""}<span class="when">${formatWhen(e.when)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}</span></span></li>`;
+        return html`<li class="${i === 0 ? "next" : ""}"><span class="day" aria-hidden="true"><span class="dow">${d.dow}</span><span class="num">${d.num}</span></span><span class="what"><a href="/feeds/${opts.feedId}/events/${e.id}"><strong dir="auto">${e.title}</strong></a><span class="when">${whenRange(e.when)}${e.location ? html` · <span dir="auto">${e.location}</span>` : ""}${e.status === "cancelled" ? " · Cancelled" : ""}</span></span></li>`;
       })}</ul>`}
 </div>
-${hasWork ? html`</aside></div>` : ""}`);
+${hasCards ? html`</aside></div>` : ""}`);
 }
 
 // ---------------------------------------------------------------- event editor

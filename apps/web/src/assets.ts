@@ -41,6 +41,36 @@ footer nav a{padding:.375rem 0}
 /* Calendar pages already carry the longer notes right above the footer; don't say it twice. */
 main:has(.notes) footer>p:first-child{display:none}
 
+/* Review page (D81): one card per email. What needs the owner is tinted; the rest is quiet. */
+.status{font-size:1.0625rem;margin:0 0 1.25rem}
+.mailcard{display:block;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin:0 0 1rem;overflow:hidden}
+.mailcard>header{padding:1rem 1.25rem .875rem}
+.mailcard h2{font-size:1.25rem;margin:0 0 .25rem}
+.mailcard .from{font-size:.875rem;color:var(--soft);margin:0}
+.mailcard .sum{margin:.625rem 0 0}
+.part{border-top:1px solid var(--line);padding:.875rem 1.25rem}
+.part>h3{font:700 .8125rem/1.2 system-ui,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);margin:0 0 .625rem}
+.part.ask{background:#fff6e6}
+.part.ask>h3{color:var(--accent-text)}
+.part.ask .row{margin:0 0 .5rem}
+.part.ask details{margin:.25rem 0 0}
+.part.ask details[open]>summary{margin-bottom:.625rem}
+.rows{list-style:none;margin:0;padding:0}
+.rows li{display:flex;gap:.625rem;align-items:baseline;padding:.3125rem 0}
+.rows .tick{color:#2f6b3a;font-weight:700;flex-shrink:0}
+.rows .t{flex:1;min-width:0}
+.rows .d{display:block;font-size:.875rem;color:var(--soft)}
+.rows a{font-size:.875rem;color:var(--soft)}
+.q{font:400 1.1875rem/1.3 var(--display);margin:0 0 .25rem}
+.qwhen{margin:0 0 .625rem}
+.why{font-size:.875rem;color:var(--soft);margin:0 0 .875rem}
+details.left{border-top:1px solid var(--line);padding:.75rem 1.25rem;font-size:.9375rem;color:var(--soft)}
+details.left ul{margin:.5rem 0 0;padding-left:1.125rem}
+details.mailcard.quiet>summary{display:flex;gap:.75rem;align-items:baseline;justify-content:space-between;padding:.75rem 1.25rem;cursor:pointer;list-style:none}
+details.mailcard.quiet>summary::-webkit-details-marker{display:none}
+details.mailcard.quiet .s{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.mailcard.quiet .from{white-space:nowrap}
+
 /* Surfaces */
 /* A page is open sections divided by a rule. Only the one main thing on a page gets a panel. */
 .card{padding:1.5rem 0 .5rem;margin:0;border-top:1px solid var(--line)}

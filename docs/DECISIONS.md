@@ -752,3 +752,18 @@ What was checked, against what, and what changed:
 - **What.** `record_triage` now sets the status whenever it differs from the result's. The migration also repairs rows already in that state (`skipped` with reason `daily_vision_limit` or `needs_vision_not_configured` become `pending`).
 - **Tests.** `031_parked_attachments.test.sql`: a file found blank, then parked, is `pending` and is retried.
 - **Not verified yet.** On production. The production rows themselves were not read; the cause is inferred from the code and the local reproduction.
+
+## D81 — The Review page is one card per email (2026-11-24)
+
+- **Why.** The owner noted that the organizer page may need to be "even more simple and clear cut". Room F's Review page on 23 Nov had five cards of three kinds, sixteen buttons on a phone screen, no stated reason for any wait, and the calendar at the bottom. Five directions were offered; the owner chose "one card per email", saw a mockup (`.design/organizer/option3.html`, local only), and said to build it.
+- **What** (`apps/web/src/review-views.ts`, `review.ts`).
+  - Each recent email is one card: its subject, sender and date; one line on what Calantern did ("added 2 events and is unsure about 1"); a tinted "Needs you" block per waiting item; a quiet ticked list of what it added; and a folded "left out" list.
+  - A waiting item shows the event, when (with a date range if it runs past its first day), the quoted words, and one sentence on why it waits (`whyWaiting`). For a draft the reason comes from the candidate that created it; drafts stored no reason before.
+  - Buttons: "Yes, add it" (or "Yes, change it" / "Yes, cancel it"), "Fix it", and "Not an event" / "Not right". The routes behind them are unchanged.
+  - An email with nothing waiting is one folded line. An email that added nothing and left nothing out is not shown. At most five quiet emails are listed.
+  - "Left out" names only items dropped for their date (`already_past`, `date_out_of_range`). Other rejections are counted, not named, because they can be things the email never said.
+  - Something waiting whose email is not among those loaded appears under "Found earlier".
+  - The bulk button appears only for two or more sure items.
+- **Emails shown.** The twelve most recent from the last 14 days, plus any older one that still has something waiting.
+- **Tests.** `apps/web/src/review.test.ts` (grouping, one dark button for one question, quiet emails, reasons, date ranges, left-out rules), `tests/integration/review.test.ts` (wording).
+- **Not verified yet.** On production data. Viewed in headless Chrome at 375px and 1280px with stand-in data shaped like Room F: no horizontal overflow, no console errors. Not tried with many emails in one week, with long subjects, or on a real phone. The other organizer pages (Email, Share, Settings) are unchanged.
