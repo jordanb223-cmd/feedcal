@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-23
+
 ### Added
 - When Calantern adds, changes or cancels an event by itself, it emails you right away. The email lists each change with the exact words it was read from and a link to fix or remove it. You can switch these off on your account page or from the email.
 
