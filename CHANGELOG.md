@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-23
+
 ### Changed
 - Pictures are now read in two passes, to cost less and catch misread dates. A fast, low-cost AI model reads every picture. If the picture shows a date or time, a stronger model reads it again, and the two must agree. If they disagree, the event waits for you with the note "Read from an image; compare with the picture."
 - The second opinion on unclear events, and the reasoning about unclear days, now use a mid-priced AI model instead of the most expensive one.
