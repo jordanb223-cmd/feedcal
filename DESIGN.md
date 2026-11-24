@@ -224,6 +224,11 @@ longer clips.
 
 - The home page's second line is SavvyCal's idea (ink line, then accent line). The reviewer
   called it derivative. Worth a second idea of our own.
+- The organizer's pages (a calendar's Review page first, then Email, Share and Settings) may need
+  another pass to organize and streamline them: "even more simple and clear cut" (owner, 2026-11-24).
+  Not scoped yet. Seen on Room F that day: five review cards of three different kinds (a change
+  card, drafts, a draft marked sure) above the list of coming events, with nothing saying which
+  to deal with first or why each one is waiting.
 
 Done since (D69): on wide screens Share, Account and Review use two columns, and other organizer
 pages are a little wider (36rem). Share and Account each fold their rare, risky action away, and
