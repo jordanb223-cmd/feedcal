@@ -387,14 +387,14 @@ isOneToOne: false
                   ]
                 },"notification_settings": {
                   Row: {
-                    "instant_reports": boolean,"milestones": boolean,"staleness": boolean,"updated_at": string,"user_id": string,"weekly_digest": boolean
+                    "instant_reports": boolean,"milestones": boolean,"published_events": boolean,"staleness": boolean,"updated_at": string,"user_id": string,"weekly_digest": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "instant_reports"?: boolean,"milestones"?: boolean,"staleness"?: boolean,"updated_at"?: string,"user_id": string,"weekly_digest"?: boolean
+                    "instant_reports"?: boolean,"milestones"?: boolean,"published_events"?: boolean,"staleness"?: boolean,"updated_at"?: string,"user_id": string,"weekly_digest"?: boolean
                   }
                   Update: {
-                    "instant_reports"?: boolean,"milestones"?: boolean,"staleness"?: boolean,"updated_at"?: string,"user_id"?: string,"weekly_digest"?: boolean
+                    "instant_reports"?: boolean,"milestones"?: boolean,"published_events"?: boolean,"staleness"?: boolean,"updated_at"?: string,"user_id"?: string,"weekly_digest"?: boolean
                   }
                   Relationships: [
                     {

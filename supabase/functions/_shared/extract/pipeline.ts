@@ -55,7 +55,17 @@ function ends(e: ExtractedEvent): string | null {
   return zonedToUtc(e.end.includes("T") ? e.end : `${e.end}T23:59`, e.timezone);
 }
 
-export async function extractEvents(input: ExtractInput, extractor: Extractor): Promise<ExtractionResult> {
+/** D77: an event whose last day is before today (in its own zone) is never created. Repeating events are kept. */
+export function alreadyPast(e: ExtractedEvent, now: number): boolean {
+  if (e.recurrence) return false;
+  const lastDay = (e.end ?? e.start).slice(0, 10);
+  let today: string;
+  try { today = ymd(localDate(new Date(now).toISOString(), e.timezone)); } catch { return false; }
+  return lastDay < today;
+}
+
+export async function extractEvents(input: ExtractInput, extractor: Extractor, opts: { now?: number } = {}): Promise<ExtractionResult> {
+  const now = opts.now ?? Date.now();
   const calls: ExtractionResult["calls"] = [];
   const user = buildUserPrompt(input);
 
@@ -97,6 +107,7 @@ export async function extractEvents(input: ExtractInput, extractor: Extractor): 
       rejected.push({ event: e, reason: check.reject });
       continue;
     }
+
     let review = [...(check.review ?? []), ...(injection ? ["possible_injection"] : [])];
     let dateConfirmed = check.dateConfirmed ?? false;
     // D70: the words fit more than one day. Ask the large model to reason it out from the whole
@@ -112,6 +123,12 @@ export async function extractEvents(input: ExtractInput, extractor: Extractor): 
         const timeProven = e.all_day || writtenTimes(e.evidence_quote).includes(Number(e.start.slice(11, 13)) * 60 + Number(e.start.slice(14, 16)));
         dateConfirmed = timeProven && !check.fromTranscription && !review.some((r) => DATE_REASONS.includes(r));
       }
+    }
+    // D77: nothing dated before today reaches a calendar or a review card, whenever the email is read.
+    // Checked last, so an unclear day that was settled above is judged on the day it settled on.
+    if (alreadyPast(e, now)) {
+      rejected.push({ event: e, reason: "already_past" });
+      continue;
     }
     candidates.push({ ...e, starts_at: zonedToUtc(e.start, e.timezone), ends_at: ends(e), review, from_transcription: check.fromTranscription, date_confirmed: dateConfirmed });
   }

@@ -213,7 +213,7 @@ async function renderAccount(c: Context<AppEnv>, user: SessionUser, notice?: str
       : null;
   const graceDays = account.success ? account.data.grace_days : null;
   const { data: feeds } = await c.get("supabase").from("feeds").select("id, name, visibility").order("name");
-  const { data: prefs } = await sb.from("notification_settings").select("weekly_digest, instant_reports, staleness, milestones").eq("user_id", user.id).maybeSingle();
+  const { data: prefs } = await sb.from("notification_settings").select("weekly_digest, instant_reports, staleness, milestones, published_events").eq("user_id", user.id).maybeSingle();
   const done = c.req.query("done") === "notifications" ? "Email choices saved." : undefined;
   return c.html(
     accountPage({

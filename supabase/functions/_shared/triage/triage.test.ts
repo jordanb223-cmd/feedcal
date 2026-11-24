@@ -134,6 +134,12 @@ Deno.test("D74: with a short daily limit, a scanned newsletter is read before th
   assertEquals([by.scan, by.photo, calls[0]?.kind], [["transcribed", "transcribed"], ["pending", "daily_vision_limit"], "pdf_page"]);
 });
 
+Deno.test("D76: on a retry, a picture already found to be blank is not read again", async () => {
+  const { t, calls } = fakeTranscriber("x");
+  const results = await triageMessage([att("blank", { mime: "image/jpeg", filename: "blank.jpg", status: "skipped", blank_before: true })], null, deps({ "f/m/blank": jpeg(100) }, { transcriber: t }).d);
+  assertEquals([results.length, calls.length], [0, 0]);
+});
+
 Deno.test("D74: on a retry, a picture that was already read is left as it is and not paid for again", async () => {
   const { t, calls } = fakeTranscriber("Field day Friday, May 8 at 9 AM");
   const files = { "f/m/done": jpeg(100), "f/m/new": jpeg(100) };

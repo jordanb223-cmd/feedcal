@@ -1,6 +1,6 @@
 // Notification emails, as plain text and simple HTML. Plain English; every email says why it
 // was sent and has a one-click unsubscribe for that kind.
-export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks" | "ops_alert" | "gmail_reconnect" | "contact";
+export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks" | "ops_alert" | "gmail_reconnect" | "contact" | "events_published";
 
 /** Operations alerts (D38) go to admins and have no unsubscribe: an ignored alert is the failure. */
 export const NO_UNSUBSCRIBE: ReadonlySet<Kind> = new Set<Kind>(["ops_alert", "gmail_reconnect", "contact"]);
@@ -79,6 +79,27 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
     const body = `Hi,\n\n${lead}\n\nReconnecting takes one click, and your sender and schedule are kept: ${link}\n\nThanks,\nCalantern`;
     const html = shell(`<p>Hi,</p><p>${esc(lead)}</p><p>Reconnecting takes one click, and your sender and schedule are kept.</p><p><a href="${esc(link)}">Reconnect Gmail</a></p><p>Thanks,<br>Calantern</p>`, esc(why));
     return { subject, text: `${body}\n\n—\n${why}`, html };
+  }
+  if (kind === "events_published") {
+    // D77: every automatic change reaches a person at once, with the words it was read from.
+    const feedId = String(p.feed_id ?? "");
+    const name = String(p.feed_name ?? "your calendar");
+    const from = typeof p.subject === "string" && p.subject ? `"${p.subject}"` : "an email";
+    const items = (Array.isArray(p.items) ? p.items : []).slice(0, 20) as Record<string, unknown>[];
+    const VERB: Record<string, string> = { added: "Added", changed: "Changed", cancelled: "Cancelled" };
+    const line = (i: Record<string, unknown>) => {
+      const date = when(String(i.starts_at ?? ""), i.all_day === true, String(i.timezone ?? "UTC"));
+      return { verb: VERB[String(i.what)] ?? "Added", title: String(i.title ?? "Event"), date, quote: String(i.quote ?? ""),
+        picture: i.picture === true, link: `${site}/feeds/${feedId}/events/${String(i.event_id ?? "")}` };
+    };
+    const lines = items.map(line);
+    const n = lines.length;
+    const subject = `${name}: ${n === 1 ? `${lines[0]!.verb.toLowerCase()} "${lines[0]!.title}"` : `${n} calendar changes`} from ${from}`;
+    const lead = `Calantern read ${from} and updated ${name} without asking you. Please check ${n === 1 ? "it" : "them"} against the email. If anything is wrong, open it to fix or remove it; followers' calendars update on their own.`;
+    const text = lines.map((l) => `${l.verb}: ${l.title}\n  ${l.date}\n  Read from${l.picture ? " a picture" : ""}: "${l.quote}"\n  Fix or remove: ${l.link}`).join("\n\n");
+    const html = lines.map((l) => `<p><strong>${esc(l.verb)}: ${esc(l.title)}</strong><br>${esc(l.date)}<br><span style="color:#5c5c5c">Read from${l.picture ? " a picture" : ""}: “${esc(l.quote)}”</span><br><a href="${esc(l.link)}">Fix or remove</a></p>`).join("");
+    const w = wrap(site, unsubscribe, "You get this because Calantern changed a calendar you own without asking first.", `${lead}\n\n${text}`, `<p>${esc(lead)}</p>${html}`);
+    return { subject, ...w };
   }
   if (kind === "contact") {
     const label = CONTACT_KINDS[String(p.kind)] ?? "Message";

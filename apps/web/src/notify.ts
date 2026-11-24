@@ -17,9 +17,9 @@ const KINDS: Record<z.infer<typeof Kind>, string> = {
   abuse: "Something here is inappropriate",
   other: "Something else",
 };
-const UnsubKind = z.enum(["weekly_digest", "report", "stale_nudge", "milestone", "supporter_thanks", "all"]);
+const UnsubKind = z.enum(["weekly_digest", "report", "stale_nudge", "milestone", "supporter_thanks", "events_published", "all"]);
 const UNSUB_LABELS: Record<z.infer<typeof UnsubKind>, string> = {
-  weekly_digest: "the weekly summary", report: "instant report notices", stale_nudge: "reminders about quiet calendars", milestone: "milestone thank-yous", supporter_thanks: "supporter thank-yous (sent only once)", all: "all Calantern emails",
+  weekly_digest: "the weekly summary", report: "instant report notices", stale_nudge: "reminders about quiet calendars", milestone: "milestone thank-yous", events_published: "notices when Calantern changes a calendar by itself", supporter_thanks: "supporter thank-yous (sent only once)", all: "all Calantern emails",
 };
 
 async function form(c: Context<AppEnv>): Promise<Record<string, string>> {
@@ -97,7 +97,7 @@ export function registerNotifyRoutes(app: Hono<AppEnv>): void {
     if (!csrfValid(c, body.csrf)) return c.html(messagePage("Please try again", MESSAGES.badForm, { href: "/account", text: "Back" }), 403);
     const values = {
       user_id: user.id, weekly_digest: body.weekly_digest === "1", instant_reports: body.instant_reports === "1",
-      staleness: body.staleness === "1", milestones: body.milestones === "1", updated_at: new Date().toISOString(),
+      staleness: body.staleness === "1", milestones: body.milestones === "1", published_events: body.published_events === "1", updated_at: new Date().toISOString(),
     };
     const { error } = await c.get("supabase").from("notification_settings").upsert(values as never, { onConflict: "user_id" });
     if (error) throw new Error("notification_settings failed");
