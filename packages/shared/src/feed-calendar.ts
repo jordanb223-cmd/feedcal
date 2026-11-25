@@ -28,6 +28,8 @@ export const FeedCalendarData = z.object({
     description: z.string().nullable(),
     visibility: z.enum(["public", "unlisted", "private"]),
     last_updated_at: z.string(),
+    /** D86: when the calendar's Gmail connection lapsed, once that is 20 days or more ago. */
+    source_lapsed_since: z.string().nullable().optional(),
   }),
   events: z.array(FeedCalendarEvent).max(2000),
 });

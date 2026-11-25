@@ -682,6 +682,9 @@ isOneToOne: false
 "feed_import_stop":
 { Args: { "p_feed_id": string }; Returns: boolean
                            },
+"feed_status":
+{ Args: { "p_feed_id": string }; Returns: Json
+                           },
 "feed_subscribe_stats":
 { Args: { "p_feed_id": string }; Returns: Json
                            },

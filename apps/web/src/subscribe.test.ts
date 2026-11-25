@@ -122,6 +122,45 @@ describe("GET /c/<slug>", () => {
     expect(body).not.toContain('name="robots"');
   });
 
+  it("D86: after a 20-day Gmail lapse, the page tells followers; otherwise it doesn't", async () => {
+    const lapsed = page();
+    (lapsed.feed as Record<string, unknown>).source_lapsed_since = "2026-11-04T20:00:00Z";
+    const a = setup((fn) => (fn === "public_feed_page" ? { data: lapsed, error: null } : { data: true, error: null }));
+    expect(await (await a.request("/c/sutterville-kindergarten")).text()).toContain("This calendar stopped getting new emails on Nov 4, 2026, and its organizer hasn&#39;t reconnected it. Newer events may be missing.");
+    const b = setup((fn) => (fn === "public_feed_page" ? { data: page(), error: null } : { data: true, error: null }));
+    expect(await (await b.request("/c/sutterville-kindergarten")).text()).not.toContain("stopped getting new emails");
+  });
+
+  it("D87: the Calendar Health page shows a working connection, or how long it has been disconnected", async () => {
+    const base = { name: "Room F", organizer_name: "Alice", slug: "room-f", last_updated_at: "2026-11-23T20:00:00Z", last_email_at: "2026-11-21T20:00:00Z", upcoming: 4 };
+    const working = { ...base, gmail: { state: "working", last_checked_at: "2026-11-23T20:00:00Z", next_check_at: "2026-11-26T20:00:00Z", disconnected_since: null, renewed_at: "2026-11-21T20:00:00Z" } };
+    const a = setup((fn) => (fn === "feed_status" ? { data: working, error: null } : { data: null, error: null }));
+    const res = await a.request(`/h/${FEED_ID}`);
+    const ok = await res.text();
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-robots-tag")).toBe("noindex");
+    expect(a.rpc).toHaveBeenCalledWith("feed_status", { p_feed_id: FEED_ID });
+    expect(ok).toContain("<strong>Working.</strong>");
+    expect(ok).toContain("<dt>Connection last renewed by the organizer</dt><dd>Sat, Nov 21, 2026</dd>");
+    expect(ok).toContain("<dt>Next check</dt><dd>Thu, Nov 26, 2026</dd>");
+    expect(ok).toContain("<dt>Upcoming events</dt><dd>4</dd>");
+    expect(ok).toContain('href="/c/room-f"');
+
+    const since = new Date(Date.now() - 25 * 86_400_000 - 3_600_000).toISOString();
+    const off = { ...base, name: null, organizer_name: null, slug: null, gmail: { state: "disconnected", last_checked_at: since, next_check_at: null, disconnected_since: since, renewed_at: since } };
+    const b = setup((fn) => (fn === "feed_status" ? { data: off, error: null } : { data: null, error: null }));
+    const bad = await (await b.request(`/h/${FEED_ID}`)).text();
+    expect(bad).toMatch(/Not getting new emails since [A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2}, \d{4} \(25 days\)\./);
+    expect(bad).toContain("<dt>Email connection</dt><dd>Disconnected</dd>");
+    expect(bad).not.toContain("Next check");
+    expect(bad).not.toContain('href="/c/');
+    expect(bad).toContain("<h1 dir=\"auto\">Private calendar</h1>");
+
+    const none = setup(() => ({ data: null, error: null }));
+    expect((await none.request(`/h/${FEED_ID}`)).status).toBe(404);
+    expect((await none.request("/h/not-an-id")).status).toBe(404);
+  });
+
   it("an unlisted page is kept out of search engines", async () => {
     const { request } = setup(() => ({ data: page("unlisted"), error: null }));
     const res = await request("/c/sutterville-kindergarten");

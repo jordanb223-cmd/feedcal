@@ -822,3 +822,31 @@ What was checked, against what, and what changed:
   - The model was given the reference date only as a UTC timestamp. An email sent Friday at 7 PM Pacific read as Saturday 03:00Z. The prompt now carries `sent_on="Friday, November 20, 2026"` in the feed's zone and tells the model to count from that day.
   - The Review page showed the day Calantern received the email. It now shows "Sent" and the sent day.
 - **Not checked.** Whether Room F's stored `reference_date` values are the emails' true sent dates: production rows were not read.
+
+## D86 — A lapsed Gmail connection: reminders every 20 days, and a notice to followers after 20 days (2026-11-24)
+
+- **Owner's words.** "there should be signals to the subscribers if the coordinator hasn't logged in to update the Gmail connection after 20 days. At 20 day increments, also reminders to the organizer to continue to log in to maintain the connection". In the same message the owner declined recipient matching: "It shouldn't really matter if it matches recipient list, just if the originator of the email is approved as the source, so everything from that email address gets a scan". So an organizer who connects their own Gmail and approves their own address has all mail they send scanned; that is the owner's decision.
+- **"Lapsed"** starts when Google refuses the connection and its status becomes `needs_reconnect` (`gmail_check_done`). `private.gmail_connections.lapsed_at` holds that moment; a later refusal does not move it; reconnecting (`gmail_oauth_complete`) clears it. Rows already lapsed were dated from their last working check, or from connecting.
+- **Organizer.** `private.gmail_reminders()` (hourly) sends one `gmail_reconnect` email at each 20-day mark while the connection stays lapsed: "Gmail for X has been disconnected for 40 days". A connection found long lapsed gets one email, not one per mark missed. These are on top of the two existing emails (the day before Google's 7-day limit, and at the lapse). Like them, they cannot be unsubscribed from; disconnecting Gmail stops them.
+  - Reading of "20 day increments" chosen here: every 20 days while lapsed. No reminder is sent on a 20-day cycle to a connection that is working.
+- **Followers.** Followers are not known to Calantern (D53), so nothing can be sent to them. After 20 days lapsed, `public_feed_page` and `feed_calendar` return `source_lapsed_since`, and:
+  - the calendar's public page shows "This calendar stopped getting new emails on Nov 4, 2026, and its organizer hasn't reconnected it. Newer events may be missing.";
+  - the same sentence leads the calendar's description in the calendar file.
+  - Not built: an entry placed in followers' calendars. Most followers never open the public page or a calendar's description, so the two signals above are weak. An entry is the one thing every follower would see, and it is intrusive, so it is left for the owner to decide.
+- **Tests.** `supabase/tests/034_gmail_lapse.test.sql`, `notify/notify.test.ts`, `apps/web/src/subscribe.test.ts`.
+- **Not checked.** Which calendar apps show a subscribed calendar's description, and where.
+
+## D87 — A status page for every calendar, linked from every event (2026-11-24)
+
+- **Owner's words**, on reading D86's notice to followers: "Notices shouldn't be emails maybe a tracker in the actual scheduled events ? A tracker link to a status of the organizer page!! Do you see the clairvoyance accountability clarity simplicity loop I'm trying to build ?"
+- **The loop, as understood here.** Followers only ever look at events. So each event carries a link to one page that says how current the calendar is. Anyone can see whether the organizer has kept it going; the organizer knows they can; that keeps the calendar current, which is what followers need to trust it.
+- **What.**
+  - `public.feed_status(feed id)` (anon may call it): name, organizer's display name, the public page's slug if there is one, last change, last email received, count of upcoming events, and for a Gmail connection its state, last check, next check, the day it lapsed and the day it was last renewed. No sender address, subject or follower data. Hidden calendars and ones being deleted return nothing.
+  - `GET /h/<feed id>` renders it (`statusPage`), `noindex`, cached 60 seconds. A lapse shows there from its first day, not after 20.
+  - `packages/ics`: `statusLine` option, written as the last line of each event's description. `apps/web/src/feed.ts` sets it to "Calendar Health: <link>", or "Calendar Health (may be missing newer events): <link>" once the lapse is 20 days old (D86).
+  - The public page links to the status page beside "Updated".
+- **Private calendars have a status page too**, without the calendar's name or organizer: the page is headed "Private calendar". The first build gave the name to anyone holding the calendar's id; the security sweep (`tests/integration/security-sweep.test.ts`, D60) failed on exactly that, and the function was changed. A follower reaches the page from their own event and knows which calendar it is.
+- **Kept from D86:** the 20-day reminder emails to the organizer, which the owner asked for there, and the notice on the public page and in the calendar's description. Whether "notices shouldn't be emails" was also meant for the organizer's reminders was not settled; it is asked.
+- **Name and placement, set by the owner after seeing it:** "It should be a very small hyperlink at bottom of each event ... Dub it 'Calendar Health'". The page is headed Calendar Health, its address is `/h/<feed id>` (short, to keep the link small), and the link is the last line of each event's description: "Calendar Health: <link>", or "Calendar Health (may be missing newer events): <link>" after a 20-day lapse. Where this entry says "status page" and `/status/`, read Calendar Health and `/h/`. An event's description is plain text, so the link's size is whatever the calendar app draws; it could be made last and short, not small.
+- **Tests.** `supabase/tests/034_gmail_lapse.test.sql`, `apps/web/src/subscribe.test.ts`, `apps/web/src/feed.test.ts`.
+- **Not checked.** Whether calendar apps make a link in an event's description tappable; that differs by app. Existing events pick the line up the next time each app re-reads the calendar.

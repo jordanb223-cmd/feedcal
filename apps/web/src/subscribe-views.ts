@@ -75,6 +75,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
   ${kicker(feed.category, feed.zip_code)}
   <h1 dir="auto">${feed.name}${feed.verified ? html` <span title="Verified organizer" style="font-size:1rem">✓ Verified</span>` : ""}</h1>
   ${feed.may_be_out_of_date ? html`<p class="error" role="alert">This calendar hasn't been updated in over 90 days, so it may be out of date.</p>` : ""}
+  ${sourceLapsedNote(feed.source_lapsed_since) ? html`<p class="error" role="alert">${sourceLapsedNote(feed.source_lapsed_since)}</p>` : ""}
   ${feed.organizer_name ? html`<p class="muted">Kept up to date by <span dir="auto">${feed.organizer_name}</span>${feed.area ? html` · <span dir="auto">${feed.area}</span>` : ""}</p>` : ""}
   ${feed.description ? html`<p dir="auto">${feed.description}</p>` : ""}
   <p><a class="button wide" href="${go(primary.target)}">${primary.label}</a></p>
@@ -89,7 +90,7 @@ ${feed.visibility === "public" ? raw(`<script type="application/ld+json">${jsonL
       <input class="copy" id="feed-link" readonly spellcheck="false" value="${opts.links.https}"></p>
     <p><button type="button" class="secondary" data-copy="feed-link" data-count="/c/${encodeURIComponent(feed.slug)}/copied">Copy link</button></p>
   </details>
-  <p class="muted">${n > 0 ? html`≈ ${n} ${n === 1 ? "calendar follows" : "calendars follow"} this. ` : ""}Updated ${formatUpdated(feed.last_updated_at)}.</p>
+  <p class="muted">${n > 0 ? html`≈ ${n} ${n === 1 ? "calendar follows" : "calendars follow"} this. ` : ""}Updated ${formatUpdated(feed.last_updated_at)}. <a href="/h/${feed.id}">Calendar Health</a></p>
   ${n > 0 ? html`<p class="muted" style="font-size:.875rem">How we count: ≈ because each calendar app counts once on its busiest recent day: a phone that switches networks can count twice, and Google and Outlook count once for all their users.</p>` : ""}
 </div>
 <div class="card">
@@ -211,6 +212,61 @@ export function flyerPage(opts: { name: string; url: string; qrSvg: string; feed
 /** D64: the last line of every event in a Calantern calendar, so people can tell where it came from. */
 export const eventSignOff = (calendarName: string, origin: string) =>
   `Added by Calantern for ${calendarName}. It fills calendars in automatically and can make mistakes, so check details with the organizer. Don't want this calendar any more? Unsubscribe in your calendar app: ${origin}/help/unsubscribe`;
+/**
+ * D86: what followers are told once the organizer's Gmail connection has been lapsed for 20 days.
+ * Shown on the calendar's page and written into the calendar file's description.
+ */
+export function sourceLapsedNote(since: string | null | undefined, timeZone = "America/Los_Angeles"): string {
+  const t = since ? Date.parse(since) : NaN;
+  if (!Number.isFinite(t)) return "";
+  const day = new Intl.DateTimeFormat("en-US", { timeZone, month: "short", day: "numeric", year: "numeric" }).format(new Date(t));
+  return `This calendar stopped getting new emails on ${day}, and its organizer hasn't reconnected it. Newer events may be missing.`;
+}
+
+/** What public.feed_status() returns (D87). */
+export interface FeedStatus {
+  /** Null for a private calendar: its name is not shown to someone who only has the link. */
+  name: string | null; organizer_name: string | null; slug: string | null; last_updated_at: string; last_email_at: string | null; upcoming: number;
+  gmail: { state: "working" | "disconnected"; last_checked_at: string | null; next_check_at: string | null; disconnected_since: string | null; renewed_at: string | null } | null;
+}
+
+/**
+ * D87: the calendar's health page ("Calendar Health"). Every event links here, so a follower can see how current the
+ * calendar is and whether its organizer has kept the email connection going.
+ */
+export function statusPage(s: FeedStatus, now = Date.now(), timeZone = "America/Los_Angeles"): Html {
+  const day = (iso: string | null) => (iso && Number.isFinite(Date.parse(iso))
+    ? new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short", month: "short", day: "numeric", year: "numeric" }).format(new Date(iso)) : null);
+  const daysSince = (iso: string | null) => (iso && Number.isFinite(Date.parse(iso)) ? Math.max(0, Math.floor((now - Date.parse(iso)) / 86_400_000)) : null);
+  const row = (label: string, value: string | null) => (value ? html`<dt>${label}</dt><dd>${value}</dd>` : "");
+  const g = s.gmail;
+  const off = g?.state === "disconnected";
+  const n = daysSince(g?.disconnected_since ?? null);
+  const headline = off
+    ? html`<p class="error" role="alert"><strong>Not getting new emails${day(g.disconnected_since) ? html` since ${day(g.disconnected_since)}` : ""}${n !== null && n > 0 ? ` (${n} ${n === 1 ? "day" : "days"})` : ""}.</strong> The organizer needs to reconnect it. Newer events may be missing.</p>`
+    : g
+      ? html`<p class="status"><strong>Working.</strong> Calantern is checking the organizer's email for new events.</p>`
+      : html`<p class="status">This calendar is filled in by its organizer, by hand or from emails they pass on.</p>`;
+  const name = s.name ?? "Private calendar";
+  return publicLayout(`${name}: Calendar Health`, html`<div class="card">
+  <h1 dir="auto">${name}</h1>
+  <p class="muted">Calendar Health</p>
+  ${headline}
+  <dl class="facts">
+    ${s.organizer_name ? html`<dt>Kept up to date by</dt><dd dir="auto">${s.organizer_name}</dd>` : ""}
+    ${g ? row("Email connection", off ? "Disconnected" : "Connected") : ""}
+    ${g ? row("Last checked for new email", day(g.last_checked_at)) : ""}
+    ${g && !off ? row("Next check", day(g.next_check_at)) : ""}
+    ${g ? row("Connection last renewed by the organizer", day(g.renewed_at)) : ""}
+    ${row("Last email read", day(s.last_email_at))}
+    ${row("Calendar last changed", day(s.last_updated_at))}
+    <dt>Upcoming events</dt><dd>${s.upcoming}</dd>
+  </dl>
+  ${s.slug ? html`<p><a class="button secondary" href="/c/${encodeURIComponent(s.slug)}">See the calendar</a></p>` : ""}
+  <p class="muted">${NOTE_ACCURACY}</p>
+</div>`);
+}
+
 export const NOTE_ACCURACY = "Calantern fills this calendar in automatically, from emails and other calendars, and it can make mistakes. Check important details (dates, times, places) with the organizer.";
 export const NOTE_UNOFFICIAL = "Not run or endorsed by any school, team or group named in it, unless they say so.";
 export const NOTE_REFRESH = "Your calendar app checks for changes on its own schedule, so updates can take a few hours to show.";

@@ -7,6 +7,12 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Added
+- If a calendar's Gmail connection stops and isn't reconnected, Calantern now emails the organizer a reminder every 20 days until it is.
+- Every calendar has a Calendar Health page. It shows whether the email connection is working, when Calantern last checked for new email, when the organizer last renewed the connection, and when the calendar last changed. It shows no email addresses or subjects.
+- Every event in a follower's calendar now ends with one short "Calendar Health" link to that page. The calendar's public page links to it too.
+- After 20 days without a reconnect, the calendar's page tells followers the day it stopped getting new emails and that newer events may be missing. The same line is added to the calendar's description in calendar apps. It goes away as soon as the organizer reconnects.
+
 ## [0.16.0] - 2026-11-24
 
 ### Changed

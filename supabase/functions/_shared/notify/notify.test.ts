@@ -70,6 +70,12 @@ Deno.test("gmail reconnect email (D39): names the feed, links to reconnect, no u
   assertEquals(links.filter((l) => l.includes("/gmail")), ["https://feedcal.test/feeds/f1/gmail"]);
   const gone = render("gmail_reconnect", { feed_id: "f1", feed_name: "Room F", expired: true }, "https://feedcal.test", "x");
   assert(gone.subject === "Reconnect Gmail for Room F" && gone.text.includes("won't reach the calendar"));
+  // D86: the reminder sent every 20 days while it stays disconnected.
+  const still = render("gmail_reconnect", { feed_id: "f1", feed_name: "Room F", expired: true, days_lapsed: 40 }, "https://feedcal.test", "x");
+  assertEquals(still.subject, "Gmail for Room F has been disconnected for 40 days");
+  assert(still.text.includes("tells its followers"));
+  // The exact link, as its own word (D59).
+  assertEquals((still.text.match(/https?:\/\/\S+/g) ?? []).filter((l) => l.includes("/gmail")), ["https://feedcal.test/feeds/f1/gmail"]);
   assert(NO_UNSUBSCRIBE.has("gmail_reconnect"));
 });
 

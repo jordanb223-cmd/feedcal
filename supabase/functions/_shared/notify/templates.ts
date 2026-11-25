@@ -71,8 +71,12 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
     const name = String(p.feed_name ?? "your calendar");
     const link = `${site}/feeds/${String(p.feed_id ?? "")}/gmail`;
     const expired = p.expired === true;
-    const subject = expired ? `Reconnect Gmail for ${name}` : `Reconnect Gmail for ${name} by tomorrow`;
-    const lead = expired
+    // D86: sent every 20 days while the connection stays lapsed.
+    const days = typeof p.days_lapsed === "number" && p.days_lapsed >= 20 ? Math.floor(p.days_lapsed) : 0;
+    const subject = days ? `Gmail for ${name} has been disconnected for ${days} days` : expired ? `Reconnect Gmail for ${name}` : `Reconnect Gmail for ${name} by tomorrow`;
+    const lead = days
+      ? `Calantern hasn't been able to check Gmail for ${name} for ${days} days. New emails are not reaching the calendar, and the calendar now tells its followers that it may be missing newer events.`
+      : expired
       ? `Calantern can't check Gmail for ${name} any more: Google ended the connection. Until you reconnect, new emails won't reach the calendar.`
       : `Google ends Calantern's Gmail connection for ${name} tomorrow (it lasts 7 days while Calantern is in Google's test mode).`;
     const why = "You get this because you connected Gmail to a Calantern calendar. Disconnecting stops these emails.";
