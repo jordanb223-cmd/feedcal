@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-24
+
 ### Added
 - Ask the organizer. Every event now has an "Ask the organizer" link. A follower can send a question about that event without giving a name or email. Only the people who run the calendar see it: it shows at the top of the Review page and arrives by email (under the same setting as reports). When you answer, the question and your answer show on that event's question page for all followers. You can hide a question instead. Followers can't message each other.
 
