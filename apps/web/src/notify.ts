@@ -6,6 +6,7 @@ import { z } from "zod";
 import { currentUser, MESSAGES } from "./auth.js";
 import { csrfToken, csrfValid } from "./security.js";
 import type { AppEnv } from "./types.js";
+import { formatWhen } from "./subscribe-views.js";
 import { layout, messagePage, publicLayout } from "./views.js";
 
 const Uid = z.string().regex(/^[0-9a-f-]{36}@feedcal\.app$/);
@@ -43,7 +44,75 @@ function reportPage(csrf: string, uid: string, error?: string) {
 </div>`);
 }
 
+// D88: "Ask the organizer". What public.event_questions_page() returns.
+const QuestionsPage = z.object({
+  event: z.object({ title: z.string().nullable(), calendar: z.string().nullable(), starts_at: z.string(), ends_at: z.string().nullable(), all_day: z.boolean(), timezone: z.string() }),
+  answered: z.array(z.object({ question: z.string(), answer: z.string(), answered_at: z.string() })).max(50),
+});
+type QuestionsPage = z.infer<typeof QuestionsPage>;
+
+export function askPage(csrf: string, uid: string, p: QuestionsPage, error?: string) {
+  const title = p.event.title ?? "An event on a private calendar";
+  return publicLayout(`Ask about ${title}`, html`<div class="card">
+  <p class="muted">Ask the organizer</p>
+  <h1 dir="auto">${title}</h1>
+  <p><strong>${formatWhen(p.event)}</strong>${p.event.calendar ? html` · <span dir="auto">${p.event.calendar}</span>` : ""}</p>
+  ${error ? html`<p class="error" role="alert">${error}</p>` : ""}
+  <form method="post" action="/ask/${uid}">
+    <input type="hidden" name="csrf" value="${csrf}">
+    <p><label for="question">Your question</label><textarea id="question" name="question" rows="3" maxlength="500" required dir="auto" placeholder="For example: should we bring a packed lunch?"></textarea></p>
+    <button type="submit">Send to the organizer</button>
+  </form>
+  <p class="muted">Only the person who runs this calendar sees your question. We don't ask for your name or email. If they answer, the question and the answer appear here for everyone, so don't include anything private.</p>
+</div>
+<div class="card">
+  <h2>Answered</h2>
+  ${p.answered.length === 0
+    ? html`<p class="muted">No answers yet.</p>`
+    : html`<dl class="qa">${p.answered.map((a) => html`<dt dir="auto">${a.question}</dt><dd dir="auto">${a.answer}</dd>`)}</dl>`}
+</div>`);
+}
+
 export function registerNotifyRoutes(app: Hono<AppEnv>): void {
+  // D88: every event links here ("Ask the organizer" in its description).
+  const loadQuestions = async (c: Context<AppEnv>, uid: string): Promise<QuestionsPage | null> => {
+    const { data, error } = await c.get("supabase").rpc("event_questions_page", { p_event_uid: uid });
+    if (error) throw new Error("event_questions_page failed");
+    const parsed = QuestionsPage.safeParse(data);
+    return parsed.success ? parsed.data : null;
+  };
+  const noEvent = (c: Context<AppEnv>) => c.html(messagePage("Event not found", "This event isn't in the calendar any more, or the link isn't complete. Please open it again from the event in your calendar."), 404);
+  app.get("/ask/:uid", async (c) => {
+    c.header("x-robots-tag", "noindex");
+    // Not "no-referrer": with it the browser sends "Origin: null" on this page's own form, and
+    // the same-site check then refuses the question. "same-origin" tells other sites nothing.
+    c.header("referrer-policy", "same-origin");
+    const uid = Uid.safeParse(c.req.param("uid"));
+    if (!uid.success) return noEvent(c);
+    const page = await loadQuestions(c, uid.data);
+    return page ? c.html(askPage(csrfToken(c), uid.data, page)) : noEvent(c);
+  });
+  app.post("/ask/:uid", async (c) => {
+    c.header("x-robots-tag", "noindex");
+    const uid = Uid.safeParse(c.req.param("uid"));
+    if (!uid.success) return noEvent(c);
+    const page = await loadQuestions(c, uid.data);
+    if (!page) return noEvent(c);
+    const body = await form(c);
+    if (!csrfValid(c, body.csrf)) return c.html(askPage(csrfToken(c), uid.data, page, MESSAGES.badForm), 403);
+    const question = (body.question ?? "").trim().slice(0, 500);
+    if (!question) return c.html(askPage(csrfToken(c), uid.data, page, "Please type your question."), 400);
+    const ip = c.req.header("cf-connecting-ip");
+    const { data, error } = await c.get("supabase").rpc("ask_question", { p_event_uid: uid.data, p_body: question, ...(ip ? { p_client_ip: ip } : {}) });
+    if (error) throw new Error("ask_question failed");
+    if (data === "rate_limited") return c.html(messagePage("Please wait", "Too many questions were sent from here recently. Please try again in an hour."), 429);
+    if (data === "full") return c.html(messagePage("Please wait", "This event already has a lot of questions waiting for the organizer. Please check back later."), 429);
+    if (data !== "ok") return noEvent(c);
+    c.get("log").info("question_asked");
+    return c.html(messagePage("Sent", "Your question went to the person who runs this calendar. If they answer, it will appear on this event's question page.", { href: `/ask/${uid.data}`, text: "Back to the event's questions" }));
+  });
+
+
   // Every event in every calendar links here (the "Report a problem" line in its description).
   app.get("/report/:uid", (c) => {
     const uid = Uid.safeParse(c.req.param("uid"));

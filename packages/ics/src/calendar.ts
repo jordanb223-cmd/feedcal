@@ -40,6 +40,8 @@ export interface BuildOptions {
   reportUrl?: (uid: string) => string;
   /** Product name and version for PRODID. */
   product?: string;
+  /** D88: link for "Ask the organizer" in each event's description. */
+  askUrl?: (uid: string) => string;
   /** D87: the last line of every event's description: a short link to the calendar's health page. */
   statusLine?: string;
   /** D64: a closing line for every event's description, e.g. who added it and a caution. */
@@ -127,6 +129,7 @@ function eventLines(e: CalendarEvent, tz: string, opts: BuildOptions, warnings: 
   const description = [
     e.description ?? "",
     e.source ? `Source: forwarded email from ${e.source}` : "",
+    opts.askUrl ? `Ask the organizer: ${opts.askUrl(wellFormed(e.uid))}` : "",
     opts.reportUrl ? `Report a problem: ${opts.reportUrl(wellFormed(e.uid))}` : "",
     opts.signOff ? `— ${opts.signOff}` : "",
     opts.statusLine ?? "",
