@@ -33,6 +33,8 @@ const REVIEW_LABELS: Record<string, string> = {
 export const DONE: Record<string, string> = {
   approved: "Approved. It's on the calendar.",
   answered: "Answered. Followers can see it on the event's question page.",
+  chat_on: "The chat is on. This event now links to it in followers' calendars.",
+  chat_off: "The chat is off.",
   question_hidden: "Hidden. Nobody will see that question.",
   added_all: "Added. They're on the calendar.",
   rejected: "Rejected.",
@@ -332,6 +334,8 @@ export function eventEditPage(opts: {
   csrf: string; feedId: string; eventId: string | null; error?: string; timezone: string;
   values: { title: string; date: string; time: string; end_date: string; end_time: string; all_day: boolean; location: string; description: string };
   status?: string; quote?: string | null; history: Revision[]; done?: string | undefined; undo?: { id: string; back: string } | null | undefined;
+  /** D89: this event's chat. `url` is its page; `over` means the event has ended, so it can't be open. */
+  chat?: { on: boolean; url: string; over: boolean } | undefined;
 }): Html {
   const v = opts.values;
   const action = opts.eventId ? `/feeds/${opts.feedId}/events/${opts.eventId}` : `/feeds/${opts.feedId}/events`;
@@ -357,6 +361,16 @@ export function eventEditPage(opts: {
     ? html`<form method="post" action="/feeds/${opts.feedId}/events/${opts.eventId}/cancel">${csrf(opts.csrf)}<button type="submit" class="danger">Cancel this event</button></form>`
     : ""}
 </div>
+${opts.eventId && opts.chat && opts.status !== "cancelled" ? html`<div class="card">
+  <h2>Chat</h2>
+  ${opts.chat.on
+    ? html`<p><strong>${opts.chat.over ? "On, but closed: the event is over." : "On."}</strong> Followers can chat about this event without giving a name. You see everything and can remove any message.</p>
+  <p><a class="button secondary" href="${opts.chat.url}">Open the chat</a></p>
+  <form method="post" action="/feeds/${opts.feedId}/events/${opts.eventId}/chat">${csrf(opts.csrf)}<input type="hidden" name="on" value="0"><button type="submit" class="link">Switch the chat off</button></form>`
+    : html`<p>Off. Switch it on to let followers talk about this event with you and each other, without giving a name. Text only, no links. It closes by itself when the event is over.</p>
+  <p class="muted">You're responsible for what stays up: you can remove any message, and a message several followers report is hidden.</p>
+  <form method="post" action="/feeds/${opts.feedId}/events/${opts.eventId}/chat">${csrf(opts.csrf)}<input type="hidden" name="on" value="1"><button type="submit" class="secondary">Switch the chat on</button></form>`}
+</div>` : ""}
 ${opts.quote ? html`<div class="card"><h2>Where it came from</h2><blockquote class="muted" dir="auto"><mark>${opts.quote}</mark></blockquote></div>` : ""}
 ${opts.history.length
   ? html`<div class="card"><h2>History</h2><ul class="events">${opts.history.map((h) => html`<li>${CAUSES[h.cause] ?? h.cause}<span class="when">${new Date(h.at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: opts.timezone })} · ${h.actor === "ai" ? "Calantern" : h.actor.startsWith("user:") ? "a person" : h.actor}</span></li>`)}</ul></div>`

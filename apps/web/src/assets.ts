@@ -49,6 +49,14 @@ main:has(.notes) footer>p:first-child{display:none}
 .mailcard .from{font-size:.875rem;color:var(--soft);margin:0}
 .mailcard .sum{margin:.625rem 0 0}
 .mailcard .addall{margin:.75rem 0 0}
+ol.chat{list-style:none;margin:1rem 0;padding:0;max-height:60vh;overflow-y:auto;border-top:1px solid var(--line)}
+ol.chat li{padding:.625rem 0;border-bottom:1px solid var(--line)}
+ol.chat li.org{background:#fff6e6;padding-left:.625rem;padding-right:.625rem}
+ol.chat p{margin:0}
+ol.chat .who{font-size:.875rem}
+ol.chat .said{margin:.125rem 0;overflow-wrap:anywhere}
+ol.chat form{margin:0}
+ol.chat button.link{font-size:.8125rem;color:var(--soft)}
 dl.qa{margin:0}
 dl.qa dt{font-weight:600;margin:1rem 0 .25rem}
 dl.qa dt::before{content:"Q. ";color:var(--soft)}
@@ -320,6 +328,29 @@ export const APP_JS = `"use strict";
       button.disabled = false;
     }
   });
+})();
+// D89: an open chat's message list refreshes itself every 5 seconds while the page is in view.
+(() => {
+  const list = document.getElementById("chat");
+  const url = list && list.dataset.live;
+  if (!url) return;
+  let last = "";
+  const tick = async () => {
+    if (document.visibilityState !== "visible") return;
+    try {
+      const res = await fetch(url, { headers: { accept: "text/html" }, credentials: "same-origin" });
+      if (!res.ok) return;
+      const text = await res.text();
+      // Compare without the form tokens, which differ on every answer.
+      const plain = text.replace(/name="csrf" value="[^"]*"/g, "");
+      if (plain === last) return;
+      const first = last === "";
+      last = plain;
+      if (!first) list.innerHTML = text;
+    } catch { /* offline: try again next time */ }
+  };
+  tick();
+  setInterval(tick, 5000);
 })();
 document.addEventListener("click", async (ev) => {
   const target = ev.target instanceof Element ? ev.target : null;

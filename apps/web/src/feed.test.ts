@@ -71,6 +71,17 @@ describe("GET /f/<token>.ics", () => {
     expect(plain).toMatch(new RegExp(`Calendar Health: ${BASE}/h/${FEED_ID}\\r?\\nEND:VEVENT`));
   });
 
+  it("D89: an event with an open chat links to it; the others don't", async () => {
+    const withChat = calendarData();
+    (withChat.events[0] as Record<string, unknown>).chat = true;
+    const a = setup(() => ({ data: withChat, error: null }));
+    const ics = (await (await a.request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
+    expect((ics.match(/Chat about this event: /g) ?? []).length).toBe(1);
+    expect(ics).toMatch(new RegExp(`Chat about this event: ${BASE}/chat/[0-9a-f-]{36}%40feedcal\\.app`));
+    const b = setup(() => ({ data: calendarData(), error: null }));
+    expect(await (await b.request(`/f/${TOKEN}.ics`)).text()).not.toContain("Chat about this event");
+  });
+
   it("the calendar's description tells subscribers it can make mistakes (D44)", async () => {
     const { request } = setup(() => ({ data: calendarData(), error: null }));
     const ics = (await (await request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");

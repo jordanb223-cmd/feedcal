@@ -307,6 +307,19 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     for (const id of ids(f.drafts)) await sb.rpc("publish_draft", { p_event_id: id });
     return { error: null };
   }, "added_all");
+  // D89: switch one event's chat on or off. The function checks that the user runs the calendar.
+  app.post("/feeds/:id/events/:item/chat", async (c) => {
+    const feed = Id.safeParse(c.req.param("id"));
+    const item = Id.safeParse(c.req.param("item"));
+    if (!feed.success || !item.success) return notFound(c);
+    const form = await body(c);
+    const user = await guard(c, form);
+    if (user instanceof Response) return user;
+    const on = form.on === "1";
+    const { data } = await c.get("supabase").rpc("set_event_chat", { p_event_id: item.data, p_on: on });
+    c.get("log").info("review_action", { feed_id: feed.data, action: on ? "chat_on" : "chat_off" });
+    return c.redirect(`/feeds/${feed.data}/events/${item.data}${data === true ? `?done=${on ? "chat_on" : "chat_off"}` : ""}`, 303);
+  });
   // D88: answer or hide a follower's question. The functions check that the user runs the calendar.
   act("/feeds/:id/questions/:item/answer", (c, f, ids) => c.get("supabase").rpc("answer_question", { p_question_id: ids.item, p_answer: (f.answer ?? "").slice(0, 1000) }), "answered");
   act("/feeds/:id/questions/:item/hide", (c, _f, ids) => c.get("supabase").rpc("hide_question", { p_question_id: ids.item }), "question_hidden");
@@ -327,19 +340,24 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     let status: string | undefined;
     let quote: string | null = null;
     let history: { at: string; cause: string; actor: string }[] = [];
+    let chat: { on: boolean; url: string; over: boolean } | undefined;
     if (eventId) {
       const sb = c.get("supabase");
-      const { data: e } = await sb.from("events").select("id, title, starts_at, ends_at, all_day, timezone, location, description, status, evidence_quote").eq("id", eventId).eq("feed_id", feedId).maybeSingle();
+      const { data: e } = await sb.from("events").select("id, uid, title, starts_at, ends_at, all_day, timezone, location, description, status, evidence_quote").eq("id", eventId).eq("feed_id", feedId).maybeSingle();
       if (!e) return notFound(c);
       const s = local(e.starts_at, e.timezone);
       const en = e.ends_at ? local(e.ends_at, e.timezone) : { date: "", time: "" };
       if (!extra.values) values = { title: e.title, date: s.date, time: e.all_day ? "" : s.time, end_date: en.date === s.date ? "" : en.date, end_time: e.all_day ? "" : en.time, all_day: e.all_day, location: e.location ?? "", description: e.description ?? "" };
       status = e.status;
       quote = e.evidence_quote;
+      // D89: the chat's switch. "Over" mirrors the database's rule only roughly; the chat page has the exact answer.
+      const { data: ch } = await sb.from("event_chats").select("enabled").eq("event_id", eventId).maybeSingle();
+      const last = Date.parse(e.ends_at ?? e.starts_at) + (e.all_day ? 86_400_000 : e.ends_at ? 0 : 3_600_000);
+      chat = { on: ch?.enabled === true, url: `/chat/${encodeURIComponent(e.uid)}`, over: last < Date.now() };
       const { data: revs } = await sb.from("event_revisions").select("created_at, cause, actor").eq("event_id", eventId).order("id", { ascending: false }).limit(30);
       history = (revs ?? []).map((r) => ({ at: r.created_at, cause: r.cause, actor: r.actor }));
     }
-    return c.html(eventEditPage({ csrf: csrfToken(c), feedId, eventId, timezone: feed.timezone, values, ...(status ? { status } : {}), quote, history,
+    return c.html(eventEditPage({ csrf: csrfToken(c), feedId, eventId, timezone: feed.timezone, values, ...(status ? { status } : {}), quote, history, chat,
       ...(extra.error ? { error: extra.error } : {}), done: doneOf(c), undo: undoOf(c, eventId ? `/feeds/${feedId}/events/${eventId}` : `/feeds/${feedId}`) }), extra.status ?? 200);
   }
 
