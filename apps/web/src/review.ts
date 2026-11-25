@@ -353,7 +353,7 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
       // D89: the chat's switch. "Over" mirrors the database's rule only roughly; the chat page has the exact answer.
       const { data: ch } = await sb.from("event_chats").select("enabled").eq("event_id", eventId).maybeSingle();
       const last = Date.parse(e.ends_at ?? e.starts_at) + (e.all_day ? 86_400_000 : e.ends_at ? 0 : 3_600_000);
-      chat = { on: ch?.enabled === true, url: `/chat/${encodeURIComponent(e.uid)}`, over: last < Date.now() };
+      if (e.uid) chat = { on: ch?.enabled === true, url: `/chat/${encodeURIComponent(e.uid)}`, over: last < Date.now() };
       const { data: revs } = await sb.from("event_revisions").select("created_at, cause, actor").eq("event_id", eventId).order("id", { ascending: false }).limit(30);
       history = (revs ?? []).map((r) => ({ at: r.created_at, cause: r.cause, actor: r.actor }));
     }
