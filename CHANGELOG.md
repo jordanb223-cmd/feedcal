@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-24
+
 ### Changed
 - Calantern is now called Bumpdraft. The name changes on every page, in every email, and in the calendar files. Nothing else changes: your calendars, their links, your followers' subscriptions and your sign-in all stay as they are. Entries below this one keep the old name, because that is what it was called then.
 
