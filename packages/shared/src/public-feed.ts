@@ -15,6 +15,8 @@ export const PublicFeedPage = z.object({
     organizer_name: z.string().nullable(),
     subscribers_at_least: z.number().int().nonnegative(),
     may_be_out_of_date: z.boolean().optional().default(false),
+    /** D86: when the calendar's Gmail connection lapsed, once that is 20 days or more ago. */
+    source_lapsed_since: z.string().nullable().optional(),
     verified: z.boolean().optional().default(false),
     feed_token: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
   }),

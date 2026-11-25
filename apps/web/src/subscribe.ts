@@ -6,7 +6,7 @@ import { currentUser } from "./auth.js";
 import { feedUrl } from "./feed.js";
 import { csrfToken, originOf } from "./security.js";
 import { detectDevice, GO_TARGETS, platformOf, subscribeLinks, type GoTarget } from "./subscribe-links.js";
-import { flyerPage, shareKitPage, subscribePage } from "./subscribe-views.js";
+import { flyerPage, shareKitPage, statusPage, subscribePage } from "./subscribe-views.js";
 import type { AppEnv } from "./types.js";
 import { messagePage } from "./views.js";
 
@@ -14,6 +14,11 @@ const Slug = z.string().regex(/^[a-z0-9]([a-z0-9-]{0,78}[a-z0-9])?$/);
 const FeedId = z.uuid();
 const Target = z.enum(Object.keys(GO_TARGETS) as [GoTarget, ...GoTarget[]]);
 const FeedRow = z.object({ id: z.uuid(), name: z.string(), slug: z.string(), visibility: z.enum(["public", "unlisted", "private"]) });
+const When = z.string().nullable();
+const Status = z.object({
+  name: z.string().nullable(), organizer_name: z.string().nullable(), slug: z.string().nullable(), last_updated_at: z.string(), last_email_at: When, upcoming: z.number().int(),
+  gmail: z.object({ state: z.enum(["working", "disconnected"]), last_checked_at: When, next_check_at: When, disconnected_since: When, renewed_at: When }).nullable(),
+});
 const Stats = z.object({ subscribers_at_least: z.number().int(), clicks_30d: z.record(z.string(), z.number().int()) });
 
 function qr(text: string): string {
@@ -54,6 +59,21 @@ export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
     // Public pages may be cached briefly; they carry no session data.
     c.header("cache-control", "public, max-age=60");
     return c.html(subscribePage({ page, device: detectDevice(c.req.header("user-agent")), links, pageUrl }));
+  });
+
+  // D87: the calendar's health page, linked from every event (a short address keeps that link small). Any calendar has one, private ones
+  // included: the link is only in the calendar's own events, and the page shows no event details.
+  app.get("/h/:id", async (c) => {
+    const id = FeedId.safeParse(c.req.param("id"));
+    c.header("x-robots-tag", "noindex");
+    if (!id.success) return notFoundPage(c);
+    const { data, error } = await c.get("supabase").rpc("feed_status", { p_feed_id: id.data });
+    if (error) throw new Error("feed_status failed");
+    const parsed = Status.safeParse(data);
+    if (!parsed.success) return notFoundPage(c);
+    c.header("cache-control", "public, max-age=60");
+    c.header("referrer-policy", "no-referrer");
+    return c.html(statusPage(parsed.data));
   });
 
   // A subscribe button: count the tap [Rev 4], then hand off to the calendar app.

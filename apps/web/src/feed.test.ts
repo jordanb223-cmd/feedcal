@@ -54,18 +54,33 @@ describe("GET /f/<token>.ics", () => {
     });
   });
 
+  it("D86: after a 20-day Gmail lapse, the calendar's description says so first; otherwise it doesn't", async () => {
+    const lapsed = calendarData();
+    (lapsed.feed as Record<string, unknown>).source_lapsed_since = "2026-11-04T20:00:00Z";
+    const { request } = setup(() => ({ data: lapsed, error: null }));
+    const ics = (await (await request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
+    expect(ics).toMatch(/X-WR-CALDESC:This calendar stopped getting new emails on Nov 4\\, 2026/);
+    // D87: every event links to the status page, and says why when the calendar has lapsed.
+    expect(ics).toMatch(new RegExp(`Calendar Health \\(may be missing newer events\\): ${BASE}/h/${FEED_ID}\\r?\\nEND:VEVENT`));
+    const fine = setup(() => ({ data: calendarData(), error: null }));
+    const plain = (await (await fine.request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
+    expect(plain).not.toContain("stopped getting new emails");
+    // The last line of the event, after everything else.
+    expect(plain).toMatch(new RegExp(`Calendar Health: ${BASE}/h/${FEED_ID}\\r?\\nEND:VEVENT`));
+  });
+
   it("the calendar's description tells subscribers it can make mistakes (D44)", async () => {
     const { request } = setup(() => ({ data: calendarData(), error: null }));
     const ics = (await (await request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
     expect(ics).toMatch(/X-WR-CALDESC:.*can make mistakes/);
   });
 
-  it("every event ends with who added it, for which calendar (D64)", async () => {
+  it("every event ends with who added it, for which calendar (D64), then the Calendar Health link (D87)", async () => {
     const { request } = setup(() => ({ data: calendarData(), error: null }));
     const ics = (await (await request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
     const descriptions = ics.split("\r\n").filter((l) => l.startsWith("DESCRIPTION:"));
     expect(descriptions.length).toBeGreaterThan(0);
-    for (const d of descriptions) expect(d).toMatch(/\\n\\n— Added by Calantern for Room 12\. It fills calendars in automatically and can make mistakes\\, so check details with the organizer\. Don't want this calendar any more\? Unsubscribe in your calendar app: https?:\/\/[^\\\s]+\/help\/unsubscribe$/);
+    for (const d of descriptions) expect(d).toMatch(/\\n\\n— Added by Calantern for Room 12\. It fills calendars in automatically and can make mistakes\\, so check details with the organizer\. Don't want this calendar any more\? Unsubscribe in your calendar app: https?:\/\/[^\\\s]+\/help\/unsubscribe\\n\\nCalendar Health: https?:\/\/[^\\]+\/h\/[0-9a-f-]{36}$/);
   });
 
   it("answers 304 when the calendar hasn't changed", async () => {

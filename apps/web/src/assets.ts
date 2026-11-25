@@ -49,6 +49,10 @@ main:has(.notes) footer>p:first-child{display:none}
 .mailcard .from{font-size:.875rem;color:var(--soft);margin:0}
 .mailcard .sum{margin:.625rem 0 0}
 .mailcard .addall{margin:.75rem 0 0}
+dl.facts{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:.375rem 1.25rem;margin:1rem 0}
+dl.facts dt{color:var(--soft)}
+dl.facts dd{margin:0;font-weight:600}
+@media (max-width:30rem){dl.facts{grid-template-columns:1fr;gap:0}dl.facts dd{margin:0 0 .625rem}}
 .part{border-top:1px solid var(--line);padding:.875rem 1.25rem}
 .part>h3{font:700 .8125rem/1.2 system-ui,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);margin:0 0 .625rem}
 .part.ask{background:#fff6e6}
