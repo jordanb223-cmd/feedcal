@@ -6,6 +6,7 @@ import { probeDatabase, type DbProbe } from "./db.js";
 import { registerAuthRoutes } from "./auth.js";
 import { registerEmailRoutes } from "./email.js";
 import { registerReviewRoutes } from "./review.js";
+import { registerChatRoutes } from "./chat.js";
 import { registerNotifyRoutes } from "./notify.js";
 import { registerSupportRoutes } from "./support.js";
 import { registerAssetRoutes } from "./assets.js";
@@ -118,6 +119,7 @@ export function createApp(deps: AppDeps) {
   registerEmailRoutes(app);
   registerReviewRoutes(app);
   registerNotifyRoutes(app);
+  registerChatRoutes(app);
   registerDirectoryRoutes(app, deps.anonSupabase ?? anonSupabase);
   registerAdminRoutes(app);
   registerAssetRoutes(app);

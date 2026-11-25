@@ -48,7 +48,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
             <button type="submit">Continue</button></form></div>`));
       }
       // Not enrolled yet: show the QR code and the secret once.
-      const { data: enrolled, error } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: `Calantern admin ${new Date().toISOString().slice(0, 10)}` });
+      const { data: enrolled, error } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: `Bumpdraft admin ${new Date().toISOString().slice(0, 10)}` });
       if (error || !enrolled) return c.html(messagePage("Couldn't start set-up", "Please try again in a minute."), 503);
       const qr = String(enrolled.totp.qr_code);
       return c.html(layout("Set up your second factor", html`<div class="card"><h1>Set up your second factor</h1>
@@ -151,7 +151,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
   // ---------------------------------------------------------------- "Report this calendar" (public pages)
   const Slug = z.string().regex(/^[a-z0-9]([a-z0-9-]{0,78}[a-z0-9])?$/);
   const reportForm = (c: Context<AppEnv>, slug: string, error?: string) => publicLayout("Report this calendar", html`<div class="card"><h1>Report this calendar</h1>
-    <p>Reports go to Calantern's team, not the calendar's organizer. We don't ask for your name.</p>
+    <p>Reports go to Bumpdraft's team, not the calendar's organizer. We don't ask for your name.</p>
     ${error ? html`<p class="error" role="alert">${error}</p>` : ""}
     <form method="post" action="/c/${slug}/report">${raw(`<input type="hidden" name="csrf" value="${csrfToken(c)}">`)}
       <fieldset style="border:0;padding:0;margin:0 0 1rem"><legend style="font-weight:600">What's the problem?</legend>
@@ -176,7 +176,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
     const { data } = await c.get("supabase").rpc("submit_feed_report", { p_slug: slug.data, p_kind: kind.data, ...(body.details ? { p_details: body.details.slice(0, 2000) } : {}), ...(ip ? { p_client_ip: ip } : {}) });
     if (data === "rate_limited") return c.html(messagePage("Please wait", "Too many reports were sent from here recently. Please try again in an hour."), 429);
     if (data !== "ok") return hidden(c);
-    return c.html(messagePage("Thank you", "Your report was sent to Calantern's team. We aim to look at it within 2 business days (sooner for safety issues)."));
+    return c.html(messagePage("Thank you", "Your report was sent to Bumpdraft's team. We aim to look at it within 2 business days (sooner for safety issues)."));
   });
 
   // ---------------------------------------------------------------- verification
@@ -190,7 +190,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
     if (error) return c.html(messagePage("Not allowed", "Only the owner can ask for verification."), 403);
     return c.html(data === true
       ? messagePage("Verified", "Your calendar now shows a verified badge: your email address is at the same organisation that sends its emails.", { href: `/feeds/${id.data}/settings`, text: "Back to settings" })
-      : messagePage("Not verified automatically", "We verify automatically when you sign in with your organisation's email (not Gmail, Yahoo and so on) and that organisation's address is a trusted sender for this calendar. Otherwise, reply to any Calantern email and we'll check by hand.", { href: `/feeds/${id.data}/settings`, text: "Back to settings" }));
+      : messagePage("Not verified automatically", "We verify automatically when you sign in with your organisation's email (not Gmail, Yahoo and so on) and that organisation's address is a trusted sender for this calendar. Otherwise, reply to any Bumpdraft email and we'll check by hand.", { href: `/feeds/${id.data}/settings`, text: "Back to settings" }));
   });
 }
 
@@ -198,7 +198,7 @@ export function registerAdminRoutes(app: Hono<AppEnv>): void {
 const DRAFT = html`<p class="muted"><strong>Draft.</strong> To be reviewed by a lawyer before public launch (see BUILD-PLAN "Non-negotiables").</p>`;
 export function registerPolicyRoutes(app: Hono<AppEnv>): void {
   app.get("/rules", (c) => c.html(publicLayout("Community rules", html`<div class="card"><h1>Community rules</h1>${DRAFT}
-    <p>Calantern calendars are for real events from real groups. To keep it useful and safe:</p>
+    <p>Bumpdraft calendars are for real events from real groups. To keep it useful and safe:</p>
     <ul>
       <li>Only share events you have the right to share: your own group's, or ones you were sent to pass on.</li>
       <li>Don't pretend to be a school, team or person you aren't.</li>
@@ -206,16 +206,16 @@ export function registerPolicyRoutes(app: Hono<AppEnv>): void {
       <li>Keep children safe: no children's full names, home addresses, phone numbers or photos in public calendars. School and youth calendars start as "anyone with the link" for this reason.</li>
       <li>Keep events accurate. If plans change, update or cancel them.</li>
     </ul>
-    <p>Breaking these rules can get a calendar hidden or an account suspended. <a href="/takedown">How reports and takedowns work</a>.</p></div>`, seoHead(c, "Community rules", "How Calantern calendars stay useful and safe: what can be shared, and what isn't allowed."))));
+    <p>Breaking these rules can get a calendar hidden or an account suspended. <a href="/takedown">How reports and takedowns work</a>.</p></div>`, seoHead(c, "Community rules", "How Bumpdraft calendars stay useful and safe: what can be shared, and what isn't allowed."))));
   app.get("/terms", (c) => c.html(publicLayout("Terms of use", html`<div class="card"><h1>Terms of use</h1>${DRAFT}
-    <p>Calantern is a free service that turns forwarded emails into calendars people can subscribe to.</p>
+    <p>Bumpdraft is a free service that turns forwarded emails into calendars people can subscribe to.</p>
     <ul>
-      <li><strong>Your content.</strong> You keep the rights to what you send. You let Calantern store and process it to run your calendars, and publish what you choose to publish.</li>
-      <li><strong>Your responsibilities.</strong> Follow the <a href="/rules">community rules</a>. Check what Calantern publishes for you; it uses AI and can make mistakes.</li>
-      <li><strong>No guarantees.</strong> Calantern is provided as is. Don't rely on it for anything where a missed or wrong event would cause harm.</li>
+      <li><strong>Your content.</strong> You keep the rights to what you send. You let Bumpdraft store and process it to run your calendars, and publish what you choose to publish.</li>
+      <li><strong>Your responsibilities.</strong> Follow the <a href="/rules">community rules</a>. Check what Bumpdraft publishes for you; it uses AI and can make mistakes.</li>
+      <li><strong>No guarantees.</strong> Bumpdraft is provided as is. Don't rely on it for anything where a missed or wrong event would cause harm.</li>
       <li><strong>Ending.</strong> You can delete your account at any time from your account page. We may hide calendars or suspend accounts that break the rules.</li>
       <li><strong>Email.</strong> Forwarded emails and attachments are deleted after 30 days.</li>
-    </ul></div>`, seoHead(c, "Terms of use", "The terms for using Calantern, the free service that turns emails into calendars people can subscribe to."))));
+    </ul></div>`, seoHead(c, "Terms of use", "The terms for using Bumpdraft, the free service that turns emails into calendars people can subscribe to."))));
   app.get("/takedown", (c) => c.html(publicLayout("Reports and takedowns", html`<div class="card"><h1>Reports and takedowns</h1>${DRAFT}
     <p>Anyone can report a calendar with the "Report this calendar" link on its page, or report one event from the link inside it in their calendar.</p>
     <ul>
@@ -223,5 +223,5 @@ export function registerPolicyRoutes(app: Hono<AppEnv>): void {
       <li><strong>Impersonation, spam, wrong information</strong>: we aim to respond within 2 business days.</li>
       <li><strong>Copyright or other legal requests</strong>: send the details through the <a href="/contact">contact form</a>; we aim to respond within 5 business days.</li>
     </ul>
-    <p>Hidden calendars stop updating subscribers at once. Organizers are told what happened and can ask for another look.</p></div>`, seoHead(c, "Reports and takedowns", "How to report a calendar or an event on Calantern, and how takedown requests are handled."))));
+    <p>Hidden calendars stop updating subscribers at once. Organizers are told what happened and can ask for another look.</p></div>`, seoHead(c, "Reports and takedowns", "How to report a calendar or an event on Bumpdraft, and how takedown requests are handled."))));
 }

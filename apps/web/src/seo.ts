@@ -8,7 +8,7 @@ export function seoHead(c: Context, title: string, description: string) {
   return html`<meta name="description" content="${description}">
 <link rel="canonical" href="${url}">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Calantern">
+<meta property="og:site_name" content="Bumpdraft">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:url" content="${url}">`;

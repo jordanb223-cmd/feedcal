@@ -1,6 +1,6 @@
 # Rollback: undo a bad release
 
-Calantern has three parts that change in a release, and each goes back a different way.
+Bumpdraft has three parts that change in a release, and each goes back a different way.
 
 | Part | How fast | How |
 |---|---|---|
@@ -32,7 +32,7 @@ Don't re-run an older release's deploy workflow: the database now has migrations
 
 Migrations aren't reversed. If a migration is wrong, write a new migration that corrects it and release it as in step 2.
 
-If data was lost or damaged, every production deploy takes a backup first (`backup-predeploy-<tag>-<run>`, kept 90 days, also copied weekly to `~/Documents/Calantern Backups`). Follow `restore.md`. Restoring production replaces everything written since that backup (new events, sign-ups, reports), so first export or note anything newer you need to keep.
+If data was lost or damaged, every production deploy takes a backup first (`backup-predeploy-<tag>-<run>`, kept 90 days, also copied weekly to `~/Documents/Bumpdraft Backups`). Follow `restore.md`. Restoring production replaces everything written since that backup (new events, sign-ups, reports), so first export or note anything newer you need to keep.
 
 ## Which one?
 

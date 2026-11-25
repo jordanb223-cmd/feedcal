@@ -71,6 +71,17 @@ describe("GET /f/<token>.ics", () => {
     expect(plain).toMatch(new RegExp(`Calendar Health: ${BASE}/h/${FEED_ID}\\r?\\nEND:VEVENT`));
   });
 
+  it("D89: an event with an open chat links to it; the others don't", async () => {
+    const withChat = calendarData();
+    (withChat.events[0] as Record<string, unknown>).chat = true;
+    const a = setup(() => ({ data: withChat, error: null }));
+    const ics = (await (await a.request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
+    expect((ics.match(/Chat about this event: /g) ?? []).length).toBe(1);
+    expect(ics).toMatch(new RegExp(`Chat about this event: ${BASE}/chat/[0-9a-f-]{36}%40feedcal\\.app`));
+    const b = setup(() => ({ data: calendarData(), error: null }));
+    expect(await (await b.request(`/f/${TOKEN}.ics`)).text()).not.toContain("Chat about this event");
+  });
+
   it("the calendar's description tells subscribers it can make mistakes (D44)", async () => {
     const { request } = setup(() => ({ data: calendarData(), error: null }));
     const ics = (await (await request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
@@ -82,7 +93,7 @@ describe("GET /f/<token>.ics", () => {
     const ics = (await (await request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
     const descriptions = ics.split("\r\n").filter((l) => l.startsWith("DESCRIPTION:"));
     expect(descriptions.length).toBeGreaterThan(0);
-    for (const d of descriptions) expect(d).toMatch(/\\n\\n— Added by Calantern for Room 12\. It fills calendars in automatically and can make mistakes\\, so check details with the organizer\. Don't want this calendar any more\? Unsubscribe in your calendar app: https?:\/\/[^\\\s]+\/help\/unsubscribe\\n\\nCalendar Health: https?:\/\/[^\\]+\/h\/[0-9a-f-]{36}$/);
+    for (const d of descriptions) expect(d).toMatch(/\\n\\n— Added by Bumpdraft for Room 12\. It fills calendars in automatically and can make mistakes\\, so check details with the organizer\. Don't want this calendar any more\? Unsubscribe in your calendar app: https?:\/\/[^\\\s]+\/help\/unsubscribe\\n\\nCalendar Health: https?:\/\/[^\\]+\/h\/[0-9a-f-]{36}$/);
   });
 
   it("answers 304 when the calendar hasn't changed", async () => {

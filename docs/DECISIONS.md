@@ -864,3 +864,41 @@ What was checked, against what, and what changed:
 - **What followers can and can't do.** They can ask, and read what the organizer chose to answer. They cannot see other followers' unanswered questions or reply to each other. An unanswered or hidden question is seen only by the calendar's people.
 - **Tests.** `supabase/tests/035_ask_the_organizer.test.sql`, `apps/web/src/notify.test.ts`, `apps/web/src/review.test.ts`, `apps/web/src/feed.test.ts`, `notify/notify.test.ts`.
 - **Not covered.** No filter reads a question for abuse before the organizer sees it; the limits bound the volume, not the content. An editor's answer is published without the owner's review. Questions on past events stay open until answered or hidden.
+
+## D89 — Event chat, switched on by the organizer (2026-11-24)
+
+- **Decision.** The second of the two sizes the owner accepted in D88 ("1 and 2 make sense"), built on "Yes, build it". An open anonymous chat on every event (the third size) is not built.
+- **What.**
+  - `public.event_chats` (one row per event: on or off) and `public.event_chat_messages`. Neither is readable or writable directly; everything goes through functions.
+  - `set_event_chat(event, on)`: members of the calendar only.
+  - `chat_post(event uid, text, ip)`: only while the chat is open. One line of text, 300 characters. Refused if it contains `http://`, `https://`, `www.` or a name ending in a common site ending (.com, .net, .org and a dozen more). A follower may post once every 10 seconds and 30 times an hour; an event holds 500 messages. A member posts as "Organizer" with no waiting.
+  - A follower's name is made up from the event and a keyed hash of their network address: 16 colours times 16 animals. It is the same for one person on one event and different on another event. The address itself is not stored.
+  - `chat_page(event uid)`: the last 100 showing messages, for anyone with the event's link; nothing until the organizer has switched the chat on at least once; no title or calendar name for a private calendar.
+  - `chat_report(message, ip)`: three reports from different addresses hide a message. The organizer's own messages can't be reported away. `chat_remove(message)`: members only.
+  - **Open** means switched on, the event published and not cancelled, the calendar not hidden, and the event not over. An event with no end time counts as an hour long (D84); an all-day event lasts through its last day; a repeating event stays open while it has a coming date.
+  - Pages: `GET/POST /chat/<event uid>`, `/chat/<uid>/messages` (the list alone), `/report/<id>`, `/remove/<id>`. The page script fetches the list every 5 seconds while the page is in view. No third-party service and no browser-side database key are involved.
+  - The event edit page has the switch. An event with an open chat gets "Chat about this event: <link>" in its description.
+- **Limits of the moderation, stated plainly.**
+  - Nothing reads a message before it is shown. A harmful message is visible until the organizer removes it or three people report it.
+  - The no-links rule is a pattern, not a guarantee: "example dot com" passes.
+  - Two followers behind one network address (a school's Wi-Fi, a home) share one made-up name and one posting limit. One person on two networks gets two names, and so can report twice.
+  - With the web server's proof of address missing (local runs), every follower shares one name.
+  - The organizer is not told when a message is posted or reported; they have to look.
+  - No lawyer has reviewed hosting followers' messages. `/rules` and `/terms` were not changed.
+- **Tests.** `supabase/tests/036_event_chat.test.sql`, `apps/web/src/chat.test.ts`, `apps/web/src/feed.test.ts`.
+
+## D90 — The product is renamed Bumpdraft (2026-11-24)
+
+- **Owner's words.** "I want to rename it bumpdraft", and asked what "it" was: "The whole product".
+- **What changed.** Every user-facing "Calantern" became "Bumpdraft": pages, emails, the sign-in email template, the email worker's bounce messages, the calendar file's product name, the importer's user agent (`Bumpdraft-Importer/1.0`), the data export's file name (`bumpdraft-export-…`), and the current docs (DESIGN, SETUP, DATA-MODEL, the rollback runbook). 45 files, one word swapped each time.
+- **Capital B** is a choice made here; the owner typed it in lower case.
+- **What did not change, on purpose.**
+  - Internal names stay `feedcal`: the repository, packages, database, cookies, the Pages project and its address `feedcal-web.pages.dev`.
+  - Event UIDs still end `@feedcal.app`. Changing them would make every follower's calendar app see every event as new (D-rule from the first rename).
+  - Earlier entries in this file and in the changelog keep "Calantern": they record what was true then.
+- **Outside the repository, not changed by this commit** (each is the owner's to change):
+  - `EMAIL_FROM` on production, currently "Calantern <onboarding@resend.dev>".
+  - The sign-in email's subject and template on the hosted Supabase project, if they were set there by hand. The repository's copies are local-only settings.
+  - The app name on Google's consent screen.
+  - The Buy Me a Coffee page, and any printed flyers or QR codes that carry the old name (the links on them still work).
+- **Not checked.** Whether "Bumpdraft" is already in use as a product name or trademark, and whether a matching domain is free.

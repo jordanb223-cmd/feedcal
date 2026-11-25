@@ -257,11 +257,11 @@ otp_expiry = 900
 # Feedcal: links go to our own /auth/confirm page with a token hash, so the server
 # verifies them (and can say "expired or already used") instead of the browser.
 [auth.email.template.magic_link]
-subject = "Your Calantern sign-in link"
+subject = "Your Bumpdraft sign-in link"
 content_path = "./supabase/templates/magic_link.html"
 
 [auth.email.template.confirmation]
-subject = "Your Calantern sign-in link"
+subject = "Your Bumpdraft sign-in link"
 content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize notification email template

@@ -43,13 +43,13 @@ describe("review cards", () => {
     const html = String(await feedHomePage({ csrf: "t", feedId: "f", name: "R", drafts: [], upcoming: [],
       cards: [card({ reviewReasons: ["possible_injection"], confidence: 0.99, outcome: "new" })] }));
     expect(html).toContain('class="error">This email contains text aimed at the AI');
-    expect(html).not.toContain("Calantern is sure about");
+    expect(html).not.toContain("Bumpdraft is sure about");
     // One sure item needs no "add them all" button; two do.
     const one = String(await feedHomePage({ csrf: "t", feedId: "f", name: "R", drafts: [], upcoming: [], cards: [card({ reviewReasons: [], confidence: 0.9, outcome: "new" })] }));
-    expect(one).not.toContain("Calantern is sure about");
+    expect(one).not.toContain("Bumpdraft is sure about");
     const two = String(await feedHomePage({ csrf: "t", feedId: "f", name: "R", drafts: [], upcoming: [],
       cards: [card({ reviewReasons: [], confidence: 0.9, outcome: "new" }), card({ id: "c2", reviewReasons: [], confidence: 0.9, outcome: "new" })] }));
-    expect(two).toContain("Add the 2 Calantern is sure about");
+    expect(two).toContain("Add the 2 Bumpdraft is sure about");
   });
 
   it("has an empty state", async () => {
@@ -77,16 +77,16 @@ describe("review page grouped by email", () => {
     expect(html).toContain("<strong>1 thing needs you.</strong>");
     expect((html.match(/<article class="mailcard">/g) ?? []).length).toBe(1);
     expect(html).toContain("TGIF &lt;b&gt;");
-    expect(html).toContain("Calantern <strong>added 1 event</strong> and is <strong>unsure about 1</strong>.");
+    expect(html).toContain("Bumpdraft <strong>added 1 event</strong> and is <strong>unsure about 1</strong>.");
     expect(html).toContain("<strong>Thu, Nov 26 to Fri, Nov 27</strong> · All day");
-    expect(html).toContain("Why it's waiting: This was read from a picture, and Calantern was 40% sure. Pictures need 45% to go on by themselves.");
+    expect(html).toContain("Why it's waiting: This was read from a picture, and Bumpdraft was 40% sure. Pictures need 45% to go on by themselves.");
     expect(html).toContain('action="/feeds/f/drafts/d1/publish"');
     expect(html).toContain("Yes, add it");
     expect(html).toContain("Not an event");
     expect(html).toContain("Added to your calendar");
     expect(html).toContain("2 left out");
     expect(html).toContain("Dinosgiving</span>, Fri, Nov 20: the date has passed");
-    expect(html).toContain("1 other that didn't pass Calantern's checks");
+    expect(html).toContain("1 other that didn't pass Bumpdraft's checks");
     // One question, one dark button.
     expect((html.match(/<button type="submit">/g) ?? []).length).toBe(1);
   });
@@ -128,13 +128,13 @@ describe("review page grouped by email", () => {
   });
 
   it("explains the wait in one sentence", () => {
-    expect(whyWaiting({ confidence: 0.6 }, 0.7)).toBe("Calantern was 60% sure. It needs 70% to add something by itself.");
+    expect(whyWaiting({ confidence: 0.6 }, 0.7)).toBe("Bumpdraft was 60% sure. It needs 70% to add something by itself.");
     expect(whyWaiting({ confidence: 0.4, fromPicture: true }, 0.45)).toContain("Pictures need 45%");
     expect(whyWaiting({ confidence: 0.8, fromPicture: true }, 0.9)).toContain("Pictures need 90%");
     expect(whyWaiting({ confidence: 0.9, reviewReasons: ["ambiguous_date"] }, 0.7)).toContain("fits more than one date");
     expect(whyWaiting({ confidence: 0.9, outcome: "conflict" }, 0.7)).toContain("read this email again");
-    expect(whyWaiting({ confidence: 0.95 }, 0.7)).toBe("Calantern is 95% sure, but held this back to be safe.");
-    expect(whyWaiting({ confidence: null }, 0.7)).toBe("Calantern wasn't sure enough to add this by itself.");
+    expect(whyWaiting({ confidence: 0.95 }, 0.7)).toBe("Bumpdraft is 95% sure, but held this back to be safe.");
+    expect(whyWaiting({ confidence: null }, 0.7)).toBe("Bumpdraft wasn't sure enough to add this by itself.");
   });
 
   it("shows a date range only when the event runs past its first day", () => {

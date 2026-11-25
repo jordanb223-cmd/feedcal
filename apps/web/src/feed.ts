@@ -96,6 +96,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     }
     const { feed, events } = parsed.data;
 
+    const origin = originOf(c);
     const calendarEvents: CalendarEvent[] = events.map((e) => ({
       uid: e.uid,
       title: e.title,
@@ -112,13 +113,13 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
       createdAt: e.created_at,
       updatedAt: e.updated_at,
       source: e.source,
+      chatUrl: e.chat ? `${origin}/chat/${encodeURIComponent(e.uid)}` : null,
     }));
-    const origin = originOf(c);
     const { ics, warnings } = buildCalendar({ name: feed.name, description: [sourceLapsedNote(feed.source_lapsed_since), feed.description, NOTE_ACCURACY].filter(Boolean).join("\n\n") }, calendarEvents, {
       defaultTimeZone: DEFAULT_TIME_ZONE,
       askUrl: (uid) => `${origin}/ask/${encodeURIComponent(uid)}`,
       reportUrl: (uid) => `${origin}/report/${encodeURIComponent(uid)}`,
-      product: "Calantern",
+      product: "Bumpdraft",
       signOff: eventSignOff(feed.name, origin),
       // D87: every event ends with one short link to the calendar's health page; after a 20-day lapse it says why.
       statusLine: `Calendar Health${feed.source_lapsed_since ? " (may be missing newer events)" : ""}: ${origin}/h/${feed.id}`,

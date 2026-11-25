@@ -129,7 +129,7 @@ export function shareKitPage(opts: {
     ? html`<span class="kicker">You're set</span>
   <h1><span dir="auto">${opts.name}</span> is ready</h1>
   ${feedNav(opts.feedId, "share")}
-  <p role="status">Calantern is reading the emails now. Events appear as they're found, usually within a few minutes.</p>
+  <p role="status">Bumpdraft is reading the emails now. Events appear as they're found, usually within a few minutes.</p>
   <p><button type="button" class="wide" data-copy="${opts.pageUrl ? "page-link" : "feed-url"}" aria-live="polite">Copy share link</button></p>
   ${opts.pageUrl ? html`<p><a class="button secondary wide" href="${opts.pageUrl}">Add it to my calendar</a></p>` : ""}`
     : html`<h1>Share <span dir="auto">${opts.name}</span></h1>
@@ -209,9 +209,9 @@ export function flyerPage(opts: { name: string; url: string; qrSvg: string; feed
 }
 
 // D44: what a subscriber should know. They never see the terms page, so it's said here.
-/** D64: the last line of every event in a Calantern calendar, so people can tell where it came from. */
+/** D64: the last line of every event in a Bumpdraft calendar, so people can tell where it came from. */
 export const eventSignOff = (calendarName: string, origin: string) =>
-  `Added by Calantern for ${calendarName}. It fills calendars in automatically and can make mistakes, so check details with the organizer. Don't want this calendar any more? Unsubscribe in your calendar app: ${origin}/help/unsubscribe`;
+  `Added by Bumpdraft for ${calendarName}. It fills calendars in automatically and can make mistakes, so check details with the organizer. Don't want this calendar any more? Unsubscribe in your calendar app: ${origin}/help/unsubscribe`;
 /**
  * D86: what followers are told once the organizer's Gmail connection has been lapsed for 20 days.
  * Shown on the calendar's page and written into the calendar file's description.
@@ -245,7 +245,7 @@ export function statusPage(s: FeedStatus, now = Date.now(), timeZone = "America/
   const headline = off
     ? html`<p class="error" role="alert"><strong>Not getting new emails${day(g.disconnected_since) ? html` since ${day(g.disconnected_since)}` : ""}${n !== null && n > 0 ? ` (${n} ${n === 1 ? "day" : "days"})` : ""}.</strong> The organizer needs to reconnect it. Newer events may be missing.</p>`
     : g
-      ? html`<p class="status"><strong>Working.</strong> Calantern is checking the organizer's email for new events.</p>`
+      ? html`<p class="status"><strong>Working.</strong> Bumpdraft is checking the organizer's email for new events.</p>`
       : html`<p class="status">This calendar is filled in by its organizer, by hand or from emails they pass on.</p>`;
   const name = s.name ?? "Private calendar";
   return publicLayout(`${name}: Calendar Health`, html`<div class="card">
@@ -267,7 +267,7 @@ export function statusPage(s: FeedStatus, now = Date.now(), timeZone = "America/
 </div>`);
 }
 
-export const NOTE_ACCURACY = "Calantern fills this calendar in automatically, from emails and other calendars, and it can make mistakes. Check important details (dates, times, places) with the organizer.";
+export const NOTE_ACCURACY = "Bumpdraft fills this calendar in automatically, from emails and other calendars, and it can make mistakes. Check important details (dates, times, places) with the organizer.";
 export const NOTE_UNOFFICIAL = "Not run or endorsed by any school, team or group named in it, unless they say so.";
 export const NOTE_REFRESH = "Your calendar app checks for changes on its own schedule, so updates can take a few hours to show.";
 function subscriberNotes(verified: boolean) {

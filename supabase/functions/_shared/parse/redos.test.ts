@@ -17,7 +17,7 @@ Deno.test("address parsers stay fast on any 100,000-character line", () => {
 });
 
 Deno.test("a whole crafted email parses quickly", async () => {
-  const email = (fwdFrom: string) => ["From: Parent <parent@home.example>", "To: f@in.calantern.test", "Subject: Fwd: Picture day", "Message-ID: <x@home.example>",
+  const email = (fwdFrom: string) => ["From: Parent <parent@home.example>", "To: f@in.bumpdraft.test", "Subject: Fwd: Picture day", "Message-ID: <x@home.example>",
     "MIME-Version: 1.0", "Content-Type: text/plain; charset=utf-8", "", "See below.", "", "---------- Forwarded message ---------", `From: ${fwdFrom}`,
     "Date: Thu, 20 Nov 2026 09:00:00 -0800", "Subject: Picture day", "To: parents@school.example", "", "Picture day is Fri, Dec 5."].join("\r\n");
   for (const from of ["@".repeat(50_000), "a@".repeat(25_000), "<".repeat(50_000), "<@".repeat(25_000), `Office <${"x".repeat(50_000)}@school.example>`]) {

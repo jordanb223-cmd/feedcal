@@ -134,7 +134,7 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 
 **messages.uploaded_by (D61).** Set when the message is a file an organizer uploaded on the website rather than an email: no sender, `status` starts at `parsed`, `original_subject` is the file name, one `chosen` attachment. Counts as a trusted sender while that person is still an editor of the feed.
 
-**private.contact_messages (D63).** Contact-form messages: topic (bug, question, privacy, other), text (≤ 4000), optional reply address, the Calantern page it was sent from, and whether the sender was signed in. Deliberately not linked to an account. Kept 90 days (purged daily). Read only by the server; each one emails every row in `public.admins`.
+**private.contact_messages (D63).** Contact-form messages: topic (bug, question, privacy, other), text (≤ 4000), optional reply address, the Bumpdraft page it was sent from, and whether the sender was signed in. Deliberately not linked to an account. Kept 90 days (purged daily). Read only by the server; each one emails every row in `public.admins`.
 
 **private.upload_tickets (D61).** One per upload attempt: feed, user, cleaned file name, type, declared size (≤ 10 MB), and the storage spot the server chose (`<feed>/upload-<ticket>/file.<ext>` in `attachments`). Valid 15 minutes, works once. Unfinished ones are trashed hourly; all are dropped after 2 days. The daily limit (20 per person) counts them.
 

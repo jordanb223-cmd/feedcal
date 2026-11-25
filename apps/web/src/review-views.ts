@@ -19,7 +19,7 @@ export const REJECT_REASONS: Record<string, string> = {
   other: "Something else",
 };
 const REVIEW_LABELS: Record<string, string> = {
-  low_confidence: "Calantern isn't sure about this one.",
+  low_confidence: "Bumpdraft isn't sure about this one.",
   from_transcription: "Read from an image; compare with the picture.",
   possible_injection: "This email contains text aimed at the AI. Check it carefully before approving.",
   ambiguous_date: "The email's wording fits more than one date (like \"this Friday\" sent on a Friday). Check the date.",
@@ -33,6 +33,8 @@ const REVIEW_LABELS: Record<string, string> = {
 export const DONE: Record<string, string> = {
   approved: "Approved. It's on the calendar.",
   answered: "Answered. Followers can see it on the event's question page.",
+  chat_on: "The chat is on. This event now links to it in followers' calendars.",
+  chat_off: "The chat is off.",
   question_hidden: "Hidden. Nobody will see that question.",
   added_all: "Added. They're on the calendar.",
   rejected: "Rejected.",
@@ -43,7 +45,7 @@ export const DONE: Record<string, string> = {
   cancelled: "Event cancelled. Calendars will remove it.",
   settings: "Settings saved.",
   editor_added: "Editor added.",
-  editor_not_found: "No Calantern account uses that email yet. Ask them to sign in once, then add them again.",
+  editor_not_found: "No Bumpdraft account uses that email yet. Ask them to sign in once, then add them again.",
   editor_removed: "Editor removed.",
   rule_cleared: "Attachment rule cleared.",
   sender: "Sender updated.",
@@ -153,15 +155,15 @@ export function whyWaiting(i: { reviewReasons?: string[]; fromPicture?: boolean;
   const reason = (i.reviewReasons ?? []).find((r) => r !== "low_confidence" || (i.reviewReasons ?? []).length === 1);
   const label = reason && reason !== "low_confidence" ? REVIEW_LABELS[reason] : undefined;
   if (label) return label;
-  if (i.outcome === "conflict") return "Calantern read this email again and got a different time from the one on your calendar.";
-  if (i.outcome === "update" || i.outcome === "cancel" || i.outcome === "exdate") return "It changes something already on your calendar, and Calantern wasn't sure enough to do that by itself.";
+  if (i.outcome === "conflict") return "Bumpdraft read this email again and got a different time from the one on your calendar.";
+  if (i.outcome === "update" || i.outcome === "cancel" || i.outcome === "exdate") return "It changes something already on your calendar, and Bumpdraft wasn't sure enough to do that by itself.";
   const pct = (n: number) => `${Math.round(n * 100)}%`;
-  if (i.confidence === null) return "Calantern wasn't sure enough to add this by itself.";
+  if (i.confidence === null) return "Bumpdraft wasn't sure enough to add this by itself.";
   const need = i.fromPicture ? Math.max(bar, PICTURE_BAR) : bar;
-  if (i.confidence >= need) return `Calantern is ${pct(i.confidence)} sure, but held this back to be safe.`;
+  if (i.confidence >= need) return `Bumpdraft is ${pct(i.confidence)} sure, but held this back to be safe.`;
   return i.fromPicture
-    ? `This was read from a picture, and Calantern was ${pct(i.confidence)} sure. Pictures need ${pct(need)} to go on by themselves.`
-    : `Calantern was ${pct(i.confidence)} sure. It needs ${pct(need)} to add something by itself.`;
+    ? `This was read from a picture, and Bumpdraft was ${pct(i.confidence)} sure. Pictures need ${pct(need)} to go on by themselves.`
+    : `Bumpdraft was ${pct(i.confidence)} sure. It needs ${pct(need)} to add something by itself.`;
 }
 
 export const isSure = (c: { confidence: number; reviewReasons: string[]; outcome: string | null }) =>
@@ -189,7 +191,7 @@ export function feedHomePage(opts: {
   const sure = opts.cards.filter(isSure).length + opts.drafts.filter((d) => (d.confidence ?? 0) >= 0.85 && (d.reviewReasons ?? []).length === 0).length;
   const waiting = opts.cards.length + opts.drafts.length;
 
-  // One question: a change or new event Calantern wasn't sure enough to make itself.
+  // One question: a change or new event Bumpdraft wasn't sure enough to make itself.
   const ask = (c: ReviewCard) => html`<section class="part ask">
     <h3>Needs you</h3>
     <p class="q" dir="auto">${c.title}</p>
@@ -213,12 +215,12 @@ export function feedHomePage(opts: {
     <details><summary>Not right</summary>
       <form method="post" action="/feeds/${opts.feedId}/candidates/${c.id}/reject">${csrf(t)}
         <p><label for="r-${c.id}">Why?</label><select class="copy" id="r-${c.id}" name="reason">${Object.entries(REJECT_REASONS).map(([k, v]) => html`<option value="${k}">${v}</option>`)}</select></p>
-        <p><label for="n-${c.id}">Note (optional, helps Calantern learn)</label><input class="copy" id="n-${c.id}" name="note" maxlength="500"></p>
+        <p><label for="n-${c.id}">Note (optional, helps Bumpdraft learn)</label><input class="copy" id="n-${c.id}" name="note" maxlength="500"></p>
         <button type="submit" class="danger">Leave it out</button>
       </form>
     </details>
   </section>`;
-  // One question: an event Calantern found but did not put on the calendar.
+  // One question: an event Bumpdraft found but did not put on the calendar.
   const askDraft = (d: DraftCard) => html`<section class="part ask">
     <h3>Needs you</h3>
     <p class="q" dir="auto">${d.title}</p>
@@ -240,13 +242,13 @@ export function feedHomePage(opts: {
     if (n === 0) return "";
     return html`<details class="left"><summary>${n} left out</summary><ul>
       ${l.named.map((x) => html`<li><span dir="auto">${x.title}</span>, ${x.when}: ${x.why}</li>`)}
-      ${l.others > 0 ? html`<li>${l.others} ${l.others === 1 ? "other" : "others"} that didn't pass Calantern's checks</li>` : ""}
+      ${l.others > 0 ? html`<li>${l.others} ${l.others === 1 ? "other" : "others"} that didn't pass Bumpdraft's checks</li>` : ""}
     </ul></details>`;
   };
   const summary = (added: number, asks: number) => {
     const did = added > 0 ? html`<strong>added ${added} ${added === 1 ? "event" : "events"}</strong>` : "";
     const unsure = asks > 0 ? html`is <strong>unsure about ${asks}</strong>` : "";
-    return added > 0 && asks > 0 ? html`Calantern ${did} and ${unsure}.` : asks > 0 ? html`Calantern ${unsure}.` : html`Calantern ${did}.`;
+    return added > 0 && asks > 0 ? html`Bumpdraft ${did} and ${unsure}.` : asks > 0 ? html`Bumpdraft ${unsure}.` : html`Bumpdraft ${did}.`;
   };
 
   // D85: one button for an email with two or more new events waiting. Changes to events already on
@@ -276,8 +278,8 @@ export function feedHomePage(opts: {
   ${feedNav(opts.feedId, "home")}
   ${waiting === 0
     ? html`<p class="status muted">Nothing needs you. New emails are read within a few minutes of arriving.</p>`
-    : html`<p class="status"><strong>${waiting} ${waiting === 1 ? "thing needs" : "things need"} you.</strong> Everything else Calantern found is on the calendar.</p>
-  ${sure > 1 ? html`<form method="post" action="/feeds/${opts.feedId}/approve-sure">${csrf(t)}<button type="submit" class="secondary">Add the ${sure} Calantern is sure about</button></form>` : ""}`}
+    : html`<p class="status"><strong>${waiting} ${waiting === 1 ? "thing needs" : "things need"} you.</strong> Everything else Bumpdraft found is on the calendar.</p>
+  ${sure > 1 ? html`<form method="post" action="/feeds/${opts.feedId}/approve-sure">${csrf(t)}<button type="submit" class="secondary">Add the ${sure} Bumpdraft is sure about</button></form>` : ""}`}
 </div>
 ${questions.length > 0 ? html`<div class="card">
   <h2>${questions.length === 1 ? "A follower asked a question" : `Followers asked ${questions.length} questions`}</h2>
@@ -332,6 +334,8 @@ export function eventEditPage(opts: {
   csrf: string; feedId: string; eventId: string | null; error?: string; timezone: string;
   values: { title: string; date: string; time: string; end_date: string; end_time: string; all_day: boolean; location: string; description: string };
   status?: string; quote?: string | null; history: Revision[]; done?: string | undefined; undo?: { id: string; back: string } | null | undefined;
+  /** D89: this event's chat. `url` is its page; `over` means the event has ended, so it can't be open. */
+  chat?: { on: boolean; url: string; over: boolean } | undefined;
 }): Html {
   const v = opts.values;
   const action = opts.eventId ? `/feeds/${opts.feedId}/events/${opts.eventId}` : `/feeds/${opts.feedId}/events`;
@@ -357,9 +361,19 @@ export function eventEditPage(opts: {
     ? html`<form method="post" action="/feeds/${opts.feedId}/events/${opts.eventId}/cancel">${csrf(opts.csrf)}<button type="submit" class="danger">Cancel this event</button></form>`
     : ""}
 </div>
+${opts.eventId && opts.chat && opts.status !== "cancelled" ? html`<div class="card">
+  <h2>Chat</h2>
+  ${opts.chat.on
+    ? html`<p><strong>${opts.chat.over ? "On, but closed: the event is over." : "On."}</strong> Followers can chat about this event without giving a name. You see everything and can remove any message.</p>
+  <p><a class="button secondary" href="${opts.chat.url}">Open the chat</a></p>
+  <form method="post" action="/feeds/${opts.feedId}/events/${opts.eventId}/chat">${csrf(opts.csrf)}<input type="hidden" name="on" value="0"><button type="submit" class="link">Switch the chat off</button></form>`
+    : html`<p>Off. Switch it on to let followers talk about this event with you and each other, without giving a name. Text only, no links. It closes by itself when the event is over.</p>
+  <p class="muted">You're responsible for what stays up: you can remove any message, and a message several followers report is hidden.</p>
+  <form method="post" action="/feeds/${opts.feedId}/events/${opts.eventId}/chat">${csrf(opts.csrf)}<input type="hidden" name="on" value="1"><button type="submit" class="secondary">Switch the chat on</button></form>`}
+</div>` : ""}
 ${opts.quote ? html`<div class="card"><h2>Where it came from</h2><blockquote class="muted" dir="auto"><mark>${opts.quote}</mark></blockquote></div>` : ""}
 ${opts.history.length
-  ? html`<div class="card"><h2>History</h2><ul class="events">${opts.history.map((h) => html`<li>${CAUSES[h.cause] ?? h.cause}<span class="when">${new Date(h.at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: opts.timezone })} · ${h.actor === "ai" ? "Calantern" : h.actor.startsWith("user:") ? "a person" : h.actor}</span></li>`)}</ul></div>`
+  ? html`<div class="card"><h2>History</h2><ul class="events">${opts.history.map((h) => html`<li>${CAUSES[h.cause] ?? h.cause}<span class="when">${new Date(h.at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: opts.timezone })} · ${h.actor === "ai" ? "Bumpdraft" : h.actor.startsWith("user:") ? "a person" : h.actor}</span></li>`)}</ul></div>`
   : ""}`);
 }
 
@@ -387,7 +401,7 @@ export function settingsPage(opts: { csrf: string; feedId: string; s: SettingsDa
     <details class="more"><summary>More settings</summary>
     <p><label for="description">Description</label><textarea id="description" name="description" rows="2" maxlength="2000" dir="auto">${s.description}</textarea></p>
     <p><label for="timezone">Time zone</label><input class="copy" id="timezone" name="timezone" autocomplete="off" spellcheck="false" value="${s.timezone}" pattern="[A-Za-z]+(/[A-Za-z0-9_+-]+){0,2}"></p>
-    <p><label for="threshold">Publish automatically when Calantern is at least this sure (from trusted senders)</label>
+    <p><label for="threshold">Publish automatically when Bumpdraft is at least this sure (from trusted senders)</label>
       <select class="copy" id="threshold" name="threshold">${[0.45, 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1].map((n) => html`<option value="${n}" ${Math.abs(s.threshold - n) < 0.001 ? "selected" : ""}>${n === 1 ? "Never: I review everything" : `${Math.round(n * 100)}%`}</option>`)}</select></p>
     </details>
     <button type="submit">Save settings</button>

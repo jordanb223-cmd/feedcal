@@ -9,7 +9,7 @@ import { publicLayout } from "./views.js";
 const KINDS = [["bug", "Something isn't working"], ["question", "A question"], ["privacy", "A privacy or data request"], ["other", "Something else"]] as const;
 type Form = { kind?: string; message?: string; reply_to?: string; page?: string; error?: string };
 
-/** The page someone came from, if it was a Calantern page: the path only. */
+/** The page someone came from, if it was a Bumpdraft page: the path only. */
 function fromPage(c: Context<AppEnv>, value: string | undefined): string {
   if (!value) return "";
   try {
@@ -22,7 +22,7 @@ function fromPage(c: Context<AppEnv>, value: string | undefined): string {
 
 function contactForm(c: Context<AppEnv>, f: Form) {
   return publicLayout("Contact", html`<div class="card">
-  <h1>Contact Calantern</h1>
+  <h1>Contact Bumpdraft</h1>
   <p>Found a bug, have a question, or want to ask about your data? Send a message. If you'd like an answer, add your email address.</p>
   ${f.error ? html`<p class="error" role="alert">${f.error}</p>` : ""}
   <form method="post" action="/contact">
@@ -47,7 +47,7 @@ export function registerContactRoutes(app: Hono<AppEnv>): void {
     const f: Form = { kind: s("kind"), message: s("message").slice(0, 4000), reply_to: s("reply_to").trim().slice(0, 254), page: fromPage(c, s("page")) };
     if (!csrfValid(c, b.csrf)) return c.html(contactForm(c, { ...f, error: "Please try sending again." }), 403);
     const thanks = () => c.html(publicLayout("Message sent", html`<div class="card"><h1>Thanks, your message was sent</h1>
-      <p>${f.reply_to ? "We'll reply to the address you gave." : "You didn't add an email address, so we can't reply, but we'll read it."}</p><p><a href="/">Back to Calantern</a></p></div>`));
+      <p>${f.reply_to ? "We'll reply to the address you gave." : "You didn't add an email address, so we can't reply, but we'll read it."}</p><p><a href="/">Back to Bumpdraft</a></p></div>`));
     if (s("website")) return thanks(); // the hidden field: only bots fill it in
     if (!f.message?.trim()) return c.html(contactForm(c, { ...f, error: "Please write a message." }), 400);
     const ip = c.req.header("cf-connecting-ip");

@@ -18,6 +18,8 @@ export const FeedCalendarEvent = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   source: z.string().max(253).nullable(),
+  /** D89: this event has a chat that is open right now. */
+  chat: z.boolean().optional(),
 });
 
 export const FeedCalendarData = z.object({

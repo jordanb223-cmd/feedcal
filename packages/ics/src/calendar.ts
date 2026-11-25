@@ -24,6 +24,8 @@ export interface CalendarEvent {
   sequence: number;
   createdAt: string;
   updatedAt: string;
+  /** D89: link to the event's chat, when its organizer has one open. */
+  chatUrl?: string | null;
   /** Short source label shown in the description, e.g. the sender's domain. */
   source?: string | null;
 }
@@ -129,6 +131,7 @@ function eventLines(e: CalendarEvent, tz: string, opts: BuildOptions, warnings: 
   const description = [
     e.description ?? "",
     e.source ? `Source: forwarded email from ${e.source}` : "",
+    e.chatUrl ? `Chat about this event: ${e.chatUrl}` : "",
     opts.askUrl ? `Ask the organizer: ${opts.askUrl(wellFormed(e.uid))}` : "",
     opts.reportUrl ? `Report a problem: ${opts.reportUrl(wellFormed(e.uid))}` : "",
     opts.signOff ? `— ${opts.signOff}` : "",

@@ -9,7 +9,7 @@ const env: Bindings = { ENVIRONMENT: "local", SUPABASE_URL: "https://ref.supabas
 const app = createApp({ version: "1", commit: "c", logSink: () => {}, supabase: () => ({
   auth: { getUser: async () => ({ data: { user: null }, error: { message: "x" } }) },
 }) as unknown as Supa });
-const page = async (p: string) => (await app.request(`https://calantern.test${p}`, { headers: { accept: "text/html" } }, env)).text();
+const page = async (p: string) => (await app.request(`https://bumpdraft.test${p}`, { headers: { accept: "text/html" } }, env)).text();
 
 describe("footer and cookies (D62)", () => {
   it.each(["/", "/login", "/privacy", "/terms", "/rules", "/takedown", "/about/costs", "/nope"])("%s shows the disclaimer in the footer", async (p) => {

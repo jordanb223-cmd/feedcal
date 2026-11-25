@@ -147,6 +147,64 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"event_chat_messages": {
+                  Row: {
+                    "author_hash": string,"author_name": string,"body": string,"created_at": string,"event_id": string,"feed_id": string,"id": string,"is_organizer": boolean,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_hash": string,"author_name": string,"body": string,"created_at"?: string,"event_id": string,"feed_id": string,"id"?: string,"is_organizer"?: boolean,"status"?: string
+                  }
+                  Update: {
+                    "author_hash"?: string,"author_name"?: string,"body"?: string,"created_at"?: string,"event_id"?: string,"feed_id"?: string,"id"?: string,"is_organizer"?: boolean,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_chat_messages_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_chat_messages_feed_id_fkey"
+      columns: ["feed_id"]
+isOneToOne: false
+      referencedRelation: "feeds"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"event_chats": {
+                  Row: {
+                    "changed_at": string,"changed_by": string | null,"enabled": boolean,"event_id": string,"feed_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "changed_at"?: string,"changed_by"?: string | null,"enabled"?: boolean,"event_id": string,"feed_id": string
+                  }
+                  Update: {
+                    "changed_at"?: string,"changed_by"?: string | null,"enabled"?: boolean,"event_id"?: string,"feed_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_chats_changed_by_fkey"
+      columns: ["changed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_chats_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: true
+      referencedRelation: "events"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_chats_feed_id_fkey"
+      columns: ["feed_id"]
+isOneToOne: false
+      referencedRelation: "feeds"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"event_questions": {
                   Row: {
                     "answer": string | null,"answered_at": string | null,"answered_by": string | null,"asker_hash": string | null,"body": string,"created_at": string,"event_id": string,"feed_id": string,"id": string,"status": string
@@ -640,6 +698,18 @@ isOneToOne: false
 "cancel_event":
 { Args: { "p_event_id": string }; Returns: string
                            },
+"chat_page":
+{ Args: { "p_event_uid": string }; Returns: Json
+                           },
+"chat_post":
+{ Args: { "p_body": string,"p_client_ip"?: string,"p_event_uid": string }; Returns: string
+                           },
+"chat_remove":
+{ Args: { "p_message_id": string }; Returns: boolean
+                           },
+"chat_report":
+{ Args: { "p_client_ip"?: string,"p_message_id": string }; Returns: boolean
+                           },
 "choose_attachment":
 { Args: { "p_attachment_id": string }; Returns: Json
                            },
@@ -885,6 +955,9 @@ isOneToOne: false
                            },
 "save_event":
 { Args: { "p_event_id": string,"p_feed_id": string,"p_fields": Json }; Returns: string
+                           },
+"set_event_chat":
+{ Args: { "p_event_id": string,"p_on": boolean }; Returns: boolean
                            },
 "set_sender_large_attachments":
 { Args: { "p_allow": boolean,"p_source_id": string }; Returns: boolean

@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Use POST." }, 405);
   if (carriesUser(req)) return notScheduler();
   const site = (Deno.env.get("SITE_URL") ?? "http://localhost:8788").replace(/\/$/, "");
-  const from = Deno.env.get("EMAIL_FROM") ?? "Calantern <notifications@feedcal.test>";
+  const from = Deno.env.get("EMAIL_FROM") ?? "Bumpdraft <notifications@feedcal.test>";
   const resendKey = Deno.env.get("RESEND_API_KEY");
   const mailpitUrl = Deno.env.get("MAILPIT_URL");
   const sender: Sender | null = resendKey ? resend(resendKey) : mailpitUrl ? mailpit(mailpitUrl) : null;

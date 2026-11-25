@@ -28,7 +28,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     if (error || !data) return c.html(messagePage("Something went wrong", "Please try again in a minute.", { href: "/account", text: "Back" }), 503);
     c.get("log").info("data_exported");
     c.header("content-type", "application/json; charset=utf-8");
-    c.header("content-disposition", `attachment; filename="calantern-export-${new Date().toISOString().slice(0, 10)}.json"`);
+    c.header("content-disposition", `attachment; filename="bumpdraft-export-${new Date().toISOString().slice(0, 10)}.json"`);
     c.header("cache-control", "private, no-store");
     return c.body(JSON.stringify(data, null, 2));
   });
@@ -48,7 +48,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
       createdAt: e.created_at ?? e.starts_at, updatedAt: e.updated_at ?? e.starts_at, source: null,
     }));
     const { ics } = buildCalendar({ name: found.feed.name, description: found.feed.description ?? null }, events, {
-      defaultTimeZone: found.feed.timezone ?? "America/Los_Angeles", reportUrl: (uid) => `${originOf(c)}/report/${encodeURIComponent(uid)}`, product: "Calantern", signOff: eventSignOff(found.feed.name, originOf(c)),
+      defaultTimeZone: found.feed.timezone ?? "America/Los_Angeles", reportUrl: (uid) => `${originOf(c)}/report/${encodeURIComponent(uid)}`, product: "Bumpdraft", signOff: eventSignOff(found.feed.name, originOf(c)),
     });
     c.header("content-type", "text/calendar; charset=utf-8");
     c.header("content-disposition", `attachment; filename="${found.feed.slug}-export.ics"`);
@@ -57,7 +57,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
   });
 
   app.get("/privacy", (c) => c.html(publicLayout("Privacy", html`<div class="card"><h1>Privacy</h1>${DRAFT}
-  <p>Calantern turns emails you forward into calendars. This page says what we keep, for how long, and what you can do about it.</p>
+  <p>Bumpdraft turns emails you forward into calendars. This page says what we keep, for how long, and what you can do about it.</p>
   <h2>What we keep</h2>
   <ul>
     <li><strong>Your account:</strong> your email address and, if you add one, your name.</li>
@@ -67,15 +67,15 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li><strong>No card details:</strong> if you donate, Buy Me a Coffee takes the payment; we never see your card.</li>
     <li><strong>Counts, not people:</strong> how many calendar apps check a feed, and how many times subscribe buttons are tapped. We store a scrambled code instead of an address, and the code can't be traced back after 2 days.</li>
   </ul>
-  <p><strong>Please don't forward emails or upload files with medical, legal or other sensitive details.</strong> Calantern reads everything you send it, and an AI service reads it too, so it can find events.</p>
+  <p><strong>Please don't forward emails or upload files with medical, legal or other sensitive details.</strong> Bumpdraft reads everything you send it, and an AI service reads it too, so it can find events.</p>
   <p>We don't sell data, show ads, or use tracking cookies. Our only cookies keep you signed in and protect forms. They're deleted when you close your browser.</p>
   <h2>If you connect Gmail</h2>
   <ul>
-    <li>Calantern only reads emails <strong>from the one sender you picked</strong>, plus the example you chose. It never sends, changes or deletes anything in your Gmail (read-only access).</li>
+    <li>Bumpdraft only reads emails <strong>from the one sender you picked</strong>, plus the example you chose. It never sends, changes or deletes anything in your Gmail (read-only access).</li>
     <li>Those emails are handled like forwarded ones: kept 30 days, read by the AI service to find events, then deleted.</li>
-    <li>Disconnecting Gmail removes Calantern's access at once and deletes every email it read from Gmail. You can also remove access in your Google Account settings.</li>
-    <li>Calantern doesn't use Gmail data for ads, sell it, or use it to train AI models. People at Calantern don't read it unless you ask us to, it's needed for security, or the law requires it.</li>
-    <li>Calantern's use of information received from Google APIs complies with the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</li>
+    <li>Disconnecting Gmail removes Bumpdraft's access at once and deletes every email it read from Gmail. You can also remove access in your Google Account settings.</li>
+    <li>Bumpdraft doesn't use Gmail data for ads, sell it, or use it to train AI models. People at Bumpdraft don't read it unless you ask us to, it's needed for security, or the law requires it.</li>
+    <li>Bumpdraft's use of information received from Google APIs complies with the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</li>
   </ul>
   <h2>How long we keep it</h2>
   <ul>
@@ -90,16 +90,16 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li>Your account: until you delete it. After you ask, we wait 14 days (you can change your mind), then delete your personal data. Calendars you own go to a co-editor if they have one; otherwise they're deleted.</li>
   </ul>
   <h2>Who processes it</h2>
-  <p>Supabase (database), Cloudflare (website and email receiving), Anthropic (the AI that reads forwarded emails), and Resend (emails we send). If you donate, Buy Me a Coffee handles the payment. See <a href="/about/costs">what Calantern costs</a>.</p>
-  <p>Calantern's database, sign-in records and stored files are kept in the United States. The other companies above may handle data in other places as part of their own service.</p>
+  <p>Supabase (database), Cloudflare (website and email receiving), Anthropic (the AI that reads forwarded emails), and Resend (emails we send). If you donate, Buy Me a Coffee handles the payment. See <a href="/about/costs">what Bumpdraft costs</a>.</p>
+  <p>Bumpdraft's database, sign-in records and stored files are kept in the United States. The other companies above may handle data in other places as part of their own service.</p>
   <h2 id="cookies">Cookies and trackers</h2>
-  <p>Calantern only uses the cookies it needs to work:</p>
+  <p>Bumpdraft only uses the cookies it needs to work:</p>
   <ul>
     <li><strong>A security cookie</strong> on pages with forms, so other websites can't send forms in your name.</li>
     <li><strong>Sign-in cookies</strong> once you sign in, so you stay signed in as you move between pages.</li>
   </ul>
   <p>All of them are deleted when you close your browser, can't be read by scripts on the page, and are only sent over a secure connection. Calendar pages, the directory, and the calendar link your calendar app checks set no cookies at all.</p>
-  <p><strong>No trackers, ads or analytics.</strong> While you use Calantern, your browser loads nothing from other companies: no ad networks, social media buttons or tracking scripts. The site's security settings tell browsers to refuse them. If you choose "Sign in with Google", you go to Google's own page for that step.</p>
+  <p><strong>No trackers, ads or analytics.</strong> While you use Bumpdraft, your browser loads nothing from other companies: no ad networks, social media buttons or tracking scripts. The site's security settings tell browsers to refuse them. If you choose "Sign in with Google", you go to Google's own page for that step.</p>
   <h2>Your choices</h2>
   <ul>
     <li><a href="/account/export">Download everything we hold about you</a> (a JSON file), or each calendar as a calendar file from your account page.</li>
@@ -107,5 +107,5 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li>Turn off any email from us with the link at the bottom of it.</li>
   </ul>
   <p>Questions, bug reports or privacy requests: use the <a href="/contact">contact form</a>.</p>
-</div>`, seoHead(c, "Privacy", "What Calantern keeps, how long it keeps it, who processes it, and how to download or delete your data."))));
+</div>`, seoHead(c, "Privacy", "What Bumpdraft keeps, how long it keeps it, who processes it, and how to download or delete your data."))));
 }

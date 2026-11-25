@@ -5,7 +5,7 @@ import type { Context, Hono } from "hono";
 import type { AppEnv } from "./types.js";
 
 export const APP_CSS = `
-/* Calantern, "Lantern paper" (DESIGN.md part 4). Tokens first; every colour pair below was
+/* Bumpdraft, "Lantern paper" (DESIGN.md part 4). Tokens first; every colour pair below was
    computed for contrast: ink on paper 15.4:1, soft ink 6.4:1, accent text 5.2:1, white on accent 5.2:1. */
 @font-face{font-family:"Young Serif";src:url(/fonts/young-serif-latin-400.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
 :root{--paper:#f6efe2;--card:#fffaf0;--ink:#1c1813;--soft:#5e5546;--line:#e2d6bf;--field:#857a66;--accent:#c2410c;--accent-text:#b23a08;--mark:#fbd9a5;--danger:#8a1c1c;--ring:#1a4fd6;
@@ -49,6 +49,14 @@ main:has(.notes) footer>p:first-child{display:none}
 .mailcard .from{font-size:.875rem;color:var(--soft);margin:0}
 .mailcard .sum{margin:.625rem 0 0}
 .mailcard .addall{margin:.75rem 0 0}
+ol.chat{list-style:none;margin:1rem 0;padding:0;max-height:60vh;overflow-y:auto;border-top:1px solid var(--line)}
+ol.chat li{padding:.625rem 0;border-bottom:1px solid var(--line)}
+ol.chat li.org{background:#fff6e6;padding-left:.625rem;padding-right:.625rem}
+ol.chat p{margin:0}
+ol.chat .who{font-size:.875rem}
+ol.chat .said{margin:.125rem 0;overflow-wrap:anywhere}
+ol.chat form{margin:0}
+ol.chat button.link{font-size:.8125rem;color:var(--soft)}
 dl.qa{margin:0}
 dl.qa dt{font-weight:600;margin:1rem 0 .25rem}
 dl.qa dt::before{content:"Q. ";color:var(--soft)}
@@ -321,6 +329,29 @@ export const APP_JS = `"use strict";
     }
   });
 })();
+// D89: an open chat's message list refreshes itself every 5 seconds while the page is in view.
+(() => {
+  const list = document.getElementById("chat");
+  const url = list && list.dataset.live;
+  if (!url) return;
+  let last = "";
+  const tick = async () => {
+    if (document.visibilityState !== "visible") return;
+    try {
+      const res = await fetch(url, { headers: { accept: "text/html" }, credentials: "same-origin" });
+      if (!res.ok) return;
+      const text = await res.text();
+      // Compare without the form tokens, which differ on every answer.
+      const plain = text.replace(/name="csrf" value="[^"]*"/g, "");
+      if (plain === last) return;
+      const first = last === "";
+      last = plain;
+      if (!first) list.innerHTML = text;
+    } catch { /* offline: try again next time */ }
+  };
+  tick();
+  setInterval(tick, 5000);
+})();
 document.addEventListener("click", async (ev) => {
   const target = ev.target instanceof Element ? ev.target : null;
   if (!target) return;
@@ -356,8 +387,8 @@ function shortHash(s: string): string {
 export const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#1c1813"/><rect x="12" y="16" width="40" height="36" rx="5" fill="#fffaf0"/><rect x="12" y="16" width="40" height="10" rx="5" fill="#c2410c"/><rect x="20" y="10" width="5" height="12" rx="2" fill="#1c1813"/><rect x="39" y="10" width="5" height="12" rx="2" fill="#1c1813"/><path d="M22 39l7 7 13-14" fill="none" stroke="#1c1813" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 export const MANIFEST = JSON.stringify({
-  name: "Calantern",
-  short_name: "Calantern",
+  name: "Bumpdraft",
+  short_name: "Bumpdraft",
   description: "Turn school and team emails into a calendar families can subscribe to.",
   start_url: "/",
   scope: "/",
