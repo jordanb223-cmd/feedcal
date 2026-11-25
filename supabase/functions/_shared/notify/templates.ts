@@ -126,6 +126,15 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
     const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;color:#1d1d1b">${drill ? "<p><strong>This is a drill. Nothing is wrong.</strong></p>" : ""}<p><strong>${esc(a.title)}.</strong></p><p>Details: <code>${esc(detail)}</code></p><p>What to do: ${esc(a.check)}</p><p><a href="${esc(site)}/admin">Operations panel</a></p><hr style="border:0;border-top:1px solid #e3e3df;margin:2rem 0 1rem"><p style="color:#4f4f4b;font-size:14px">You get this because you're a Calantern admin.</p></body></html>`;
     return { subject, text: `${body}\n\n—\nYou get this because you're a Calantern admin.`, html };
   }
+  if (kind === "report" && p.question === true) {
+    // D88: an anonymous question about an event, sent under the same setting as reports.
+    const subject = `A follower asked about "${p.event_title}"`;
+    const link = `${site}/feeds/${p.feed_id}`;
+    const whenText = when(String(p.starts_at), Boolean(p.all_day), String(p.timezone));
+    const body = `Someone following ${p.feed_name} asked about:\n\n${p.event_title} (${whenText})\n\n"${p.details}"\n\nOnly you can see the question. If you answer it, the question and your answer show on that event's question page for all followers: ${link}\n\nIf it isn't a real question, you can hide it there.`;
+    const html = `<p>Someone following <strong>${esc(p.feed_name)}</strong> asked about:</p><p><strong>${esc(p.event_title)}</strong><br>${esc(whenText)}</p><blockquote style="border-left:4px solid #e6e6e6;margin:0 0 1rem;padding-left:.75rem">${esc(p.details)}</blockquote><p>Only you can see the question. If you answer it, the question and your answer show on that event's question page for all followers.</p><p><a href="${esc(link)}">Answer it</a></p>`;
+    return { subject, ...wrap(site, unsubscribe, "You get this because you run this calendar and asked to hear about reports right away.", body, html) };
+  }
   if (kind === "report") {
     const what = REPORT_KINDS[String(p.kind)] ?? "something needs a look";
     const subject = `Someone spotted a problem with "${p.event_title}"`;

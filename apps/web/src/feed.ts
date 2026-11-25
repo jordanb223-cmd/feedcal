@@ -116,6 +116,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
     const origin = originOf(c);
     const { ics, warnings } = buildCalendar({ name: feed.name, description: [sourceLapsedNote(feed.source_lapsed_since), feed.description, NOTE_ACCURACY].filter(Boolean).join("\n\n") }, calendarEvents, {
       defaultTimeZone: DEFAULT_TIME_ZONE,
+      askUrl: (uid) => `${origin}/ask/${encodeURIComponent(uid)}`,
       reportUrl: (uid) => `${origin}/report/${encodeURIComponent(uid)}`,
       product: "Calantern",
       signOff: eventSignOff(feed.name, origin),

@@ -850,3 +850,17 @@ What was checked, against what, and what changed:
 - **Name and placement, set by the owner after seeing it:** "It should be a very small hyperlink at bottom of each event ... Dub it 'Calendar Health'". The page is headed Calendar Health, its address is `/h/<feed id>` (short, to keep the link small), and the link is the last line of each event's description: "Calendar Health: <link>", or "Calendar Health (may be missing newer events): <link>" after a 20-day lapse. Where this entry says "status page" and `/status/`, read Calendar Health and `/h/`. An event's description is plain text, so the link's size is whatever the calendar app draws; it could be made last and short, not small.
 - **Tests.** `supabase/tests/034_gmail_lapse.test.sql`, `apps/web/src/subscribe.test.ts`, `apps/web/src/feed.test.ts`.
 - **Not checked.** Whether calendar apps make a link in an event's description tappable; that differs by app. Existing events pick the line up the next time each app re-reads the calendar.
+
+## D88 — "Ask the organizer": anonymous questions on an event, answered in public by the organizer (2026-11-24)
+
+- **How it came about.** The owner asked: "Can each event have a live chat room? Live anonymous chat room". Three sizes were put to them: (1) questions only the organizer sees and can answer for everyone, (2) a chat the organizer switches on per event and moderates, (3) open anonymous chat on every event. The concerns given were unaccountable messages beside school and children's events, nobody watching hundreds of rooms, and legal duties that come with hosting anonymous public messages. The owner's answer: "1 and 2 make sense." This entry is (1). (2) is not built yet. (3) is not planned.
+- **What.**
+  - `public.event_questions`: the question (500 characters), its answer (1000), status `open` / `answered` / `hidden`. Members of the calendar can read it; the column used for the hourly limit is not readable by anyone through the API.
+  - `ask_question(event uid, text, ip)`: any published, uncancelled event of a calendar that isn't hidden. Shares the reports' limit (10 an hour from one place) and allows at most 30 unanswered questions per event. Emails the calendar's people as a `report` email with its own wording, so the existing "instant reports" setting governs it.
+  - `event_questions_page(event uid)`: the event and its answered questions, for anyone. A private calendar's event gives no title or calendar name.
+  - `answer_question`, `hide_question`: members only. Hiding also takes a given answer off the page.
+  - `GET/POST /ask/<event uid>` for followers; a "Followers asked" card at the top of the Review page for the organizer.
+  - Each event's description gains "Ask the organizer: <link>", above "Report a problem".
+- **What followers can and can't do.** They can ask, and read what the organizer chose to answer. They cannot see other followers' unanswered questions or reply to each other. An unanswered or hidden question is seen only by the calendar's people.
+- **Tests.** `supabase/tests/035_ask_the_organizer.test.sql`, `apps/web/src/notify.test.ts`, `apps/web/src/review.test.ts`, `apps/web/src/feed.test.ts`, `notify/notify.test.ts`.
+- **Not covered.** No filter reads a question for abuse before the organizer sees it; the limits bound the volume, not the content. An editor's answer is published without the owner's review. Questions on past events stay open until answered or hidden.

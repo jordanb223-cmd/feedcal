@@ -116,6 +116,17 @@ describe("review page grouped by email", () => {
     expect(one).not.toContain("/add-all");
   });
 
+  it("D88: a follower's question shows with an answer box and a hide button; none, no section", async () => {
+    const q = { id: "q1", body: "Packed lunch? <i>", asked: "Nov 24", eventId: "e9", eventTitle: "Field trip", when: WHEN };
+    const html = String(await feedHomePage({ csrf: "t", feedId: "f", name: "Room F", cards: [], drafts: [], emails: [], upcoming: [], questions: [q] }));
+    expect(html).toContain("A follower asked a question");
+    expect(html).toContain("Packed lunch? &lt;i&gt;");
+    expect(html).toContain('action="/feeds/f/questions/q1/answer"');
+    expect(html).toContain('action="/feeds/f/questions/q1/hide"');
+    expect(html).toContain("Only you can see these.");
+    expect(await page({})).not.toContain("asked a question");
+  });
+
   it("explains the wait in one sentence", () => {
     expect(whyWaiting({ confidence: 0.6 }, 0.7)).toBe("Calantern was 60% sure. It needs 70% to add something by itself.");
     expect(whyWaiting({ confidence: 0.4, fromPicture: true }, 0.45)).toContain("Pictures need 45%");

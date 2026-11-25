@@ -65,6 +65,8 @@ describe("GET /f/<token>.ics", () => {
     const fine = setup(() => ({ data: calendarData(), error: null }));
     const plain = (await (await fine.request(`/f/${TOKEN}.ics`)).text()).replace(/\r\n[ \t]/g, "");
     expect(plain).not.toContain("stopped getting new emails");
+    // D88: every event has an "Ask the organizer" link.
+    expect(plain).toMatch(new RegExp(`Ask the organizer: ${BASE}/ask/[0-9a-f-]{36}%40feedcal\\.app`));
     // The last line of the event, after everything else.
     expect(plain).toMatch(new RegExp(`Calendar Health: ${BASE}/h/${FEED_ID}\\r?\\nEND:VEVENT`));
   });

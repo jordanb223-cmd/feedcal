@@ -147,6 +147,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"event_questions": {
+                  Row: {
+                    "answer": string | null,"answered_at": string | null,"answered_by": string | null,"asker_hash": string | null,"body": string,"created_at": string,"event_id": string,"feed_id": string,"id": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "answer"?: string | null,"answered_at"?: string | null,"answered_by"?: string | null,"asker_hash"?: string | null,"body": string,"created_at"?: string,"event_id": string,"feed_id": string,"id"?: string,"status"?: string
+                  }
+                  Update: {
+                    "answer"?: string | null,"answered_at"?: string | null,"answered_by"?: string | null,"asker_hash"?: string | null,"body"?: string,"created_at"?: string,"event_id"?: string,"feed_id"?: string,"id"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_questions_answered_by_fkey"
+      columns: ["answered_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_questions_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_questions_feed_id_fkey"
+      columns: ["feed_id"]
+isOneToOne: false
+      referencedRelation: "feeds"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"event_revisions": {
                   Row: {
                     "actor": string,"cause": string,"created_at": string,"diff": NonNullable<Json>,"event_id": string,"id": number,"sequence": number
@@ -590,11 +622,17 @@ isOneToOne: false
 "admin_unsuspend_user":
 { Args: { "p_reason": string,"p_user_id": string }; Returns: undefined
                            },
+"answer_question":
+{ Args: { "p_answer": string,"p_question_id": string }; Returns: boolean
+                           },
 "approve_all_sure":
 { Args: { "p_feed_id": string }; Returns: number
                            },
 "approve_candidate":
 { Args: { "p_candidate_id": string,"p_edits"?: Json }; Returns: string
+                           },
+"ask_question":
+{ Args: { "p_body": string,"p_client_ip"?: string,"p_event_uid": string }; Returns: string
                            },
 "cancel_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: undefined
@@ -654,6 +692,9 @@ isOneToOne: false
                            },
 "due_account_deletions":
 { Args: Record<PropertyKey, never>; Returns: string[]
+                           },
+"event_questions_page":
+{ Args: { "p_event_uid": string }; Returns: Json
                            },
 "export_my_data":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -752,6 +793,9 @@ isOneToOne: false
                            },
 "health_check":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"hide_question":
+{ Args: { "p_question_id": string }; Returns: boolean
                            },
 "ingest_commit":
 { Args: { "p_attachment_count": number,"p_body_sha256": string,"p_dkim"?: string,"p_dmarc"?: string,"p_gmail_confirmation"?: Json,"p_message_id_header": string,"p_path": string,"p_raw_bytes": number,"p_sender": string,"p_spf"?: string,"p_subject": string,"p_ticket": string }; Returns: Json

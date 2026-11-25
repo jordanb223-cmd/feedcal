@@ -49,6 +49,10 @@ main:has(.notes) footer>p:first-child{display:none}
 .mailcard .from{font-size:.875rem;color:var(--soft);margin:0}
 .mailcard .sum{margin:.625rem 0 0}
 .mailcard .addall{margin:.75rem 0 0}
+dl.qa{margin:0}
+dl.qa dt{font-weight:600;margin:1rem 0 .25rem}
+dl.qa dt::before{content:"Q. ";color:var(--soft)}
+dl.qa dd{margin:0;padding-left:.875rem;border-left:3px solid var(--line)}
 dl.facts{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:.375rem 1.25rem;margin:1rem 0}
 dl.facts dt{color:var(--soft)}
 dl.facts dd{margin:0;font-weight:600}

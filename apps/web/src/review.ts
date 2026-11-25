@@ -252,7 +252,18 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
           .map((e) => ({ id: e.id, title: e.title, when: { starts_at: e.starts_at, ends_at: e.ends_at, all_day: e.all_day, timezone: e.timezone }, location: e.location, status: e.status })),
         leftOut: leftOutOf(m.extraction, feed.timezone ?? "America/Los_Angeles"),
       }));
+    // D88: followers' questions that have no answer yet.
+    const { data: asked } = await sb.from("event_questions").select("id, body, created_at, event_id").eq("feed_id", feed.id).eq("status", "open").order("created_at").limit(30);
+    const askedIds = [...new Set((asked ?? []).map((q) => q.event_id))];
+    const { data: askedEvents } = askedIds.length ? await sb.from("events").select("id, title, starts_at, ends_at, all_day, timezone").in("id", askedIds) : { data: [] };
+    const tz = feed.timezone ?? "America/Los_Angeles";
+    const questions = (asked ?? []).flatMap((q) => {
+      const e = (askedEvents ?? []).find((x) => x.id === q.event_id);
+      return e ? [{ id: q.id, body: q.body, eventId: e.id, eventTitle: e.title, when: { starts_at: e.starts_at, ends_at: e.ends_at, all_day: e.all_day, timezone: e.timezone },
+        asked: new Intl.DateTimeFormat("en-US", { timeZone: tz, month: "short", day: "numeric" }).format(new Date(q.created_at)) }] : [];
+    });
     return c.html(feedHomePage({
+      questions,
       csrf: csrfToken(c), feedId: feed.id, name: feed.name, cards, drafts: draftCards, emails,
       bar: feed.auto_publish_threshold === null ? 0.45 : Number(feed.auto_publish_threshold),
       upcoming: upcoming.map((e) => ({ id: e.id, title: e.title, when: { starts_at: e.starts_at, all_day: e.all_day, timezone: e.timezone }, location: e.location, status: e.status })),
@@ -296,6 +307,9 @@ export function registerReviewRoutes(app: Hono<AppEnv>): void {
     for (const id of ids(f.drafts)) await sb.rpc("publish_draft", { p_event_id: id });
     return { error: null };
   }, "added_all");
+  // D88: answer or hide a follower's question. The functions check that the user runs the calendar.
+  act("/feeds/:id/questions/:item/answer", (c, f, ids) => c.get("supabase").rpc("answer_question", { p_question_id: ids.item, p_answer: (f.answer ?? "").slice(0, 1000) }), "answered");
+  act("/feeds/:id/questions/:item/hide", (c, _f, ids) => c.get("supabase").rpc("hide_question", { p_question_id: ids.item }), "question_hidden");
   act("/feeds/:id/approve-sure", (c, _f, ids) => c.get("supabase").rpc("approve_all_sure", { p_feed_id: ids.feed }), "sure");
 
   // ---------------------------------------------------------------- events

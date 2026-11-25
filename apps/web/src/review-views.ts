@@ -32,6 +32,8 @@ const REVIEW_LABELS: Record<string, string> = {
 
 export const DONE: Record<string, string> = {
   approved: "Approved. It's on the calendar.",
+  answered: "Answered. Followers can see it on the event's question page.",
+  question_hidden: "Hidden. Nobody will see that question.",
   added_all: "Added. They're on the calendar.",
   rejected: "Rejected.",
   published: "Published.",
@@ -123,6 +125,8 @@ export interface DraftCard {
   id: string; messageId?: string | null; title: string; when: When; location: string | null; confidence: number | null; quote: string | null;
   reviewReasons?: string[]; fromPicture?: boolean;
 }
+/** D88: an anonymous question about an event, waiting for the organizer. */
+export interface QuestionRow { id: string; body: string; asked: string; eventId: string; eventTitle: string; when: When }
 export interface EventRow { id: string; title: string; when: When; location: string | null; status: string }
 /** One email and what its latest read did (D81). */
 export interface EmailGroup {
@@ -175,10 +179,13 @@ export function feedHomePage(opts: {
   csrf: string; feedId: string; name: string; cards: ReviewCard[]; drafts: DraftCard[]; upcoming: EventRow[];
   /** D81: the emails things came from. Without it, everything waiting is shown in one group. */
   emails?: EmailGroup[]; bar?: number;
+  /** D88: followers' questions that have no answer yet. */
+  questions?: QuestionRow[];
   done?: string | undefined; undo?: { id: string; back: string } | null | undefined;
 }): Html {
   const t = opts.csrf;
   const bar = opts.bar ?? STANDARD_BAR;
+  const questions = opts.questions ?? [];
   const sure = opts.cards.filter(isSure).length + opts.drafts.filter((d) => (d.confidence ?? 0) >= 0.85 && (d.reviewReasons ?? []).length === 0).length;
   const waiting = opts.cards.length + opts.drafts.length;
 
@@ -272,6 +279,19 @@ export function feedHomePage(opts: {
     : html`<p class="status"><strong>${waiting} ${waiting === 1 ? "thing needs" : "things need"} you.</strong> Everything else Calantern found is on the calendar.</p>
   ${sure > 1 ? html`<form method="post" action="/feeds/${opts.feedId}/approve-sure">${csrf(t)}<button type="submit" class="secondary">Add the ${sure} Calantern is sure about</button></form>` : ""}`}
 </div>
+${questions.length > 0 ? html`<div class="card">
+  <h2>${questions.length === 1 ? "A follower asked a question" : `Followers asked ${questions.length} questions`}</h2>
+  <p class="muted">Only you can see these. When you answer one, the question and your answer show on that event's question page for all followers.</p>
+  ${questions.map((q) => html`<section class="part ask">
+    <p class="q" dir="auto">${q.body}</p>
+    <p class="qwhen">About <a href="/feeds/${opts.feedId}/events/${q.eventId}"><strong dir="auto">${q.eventTitle}</strong></a> · ${formatWhen(q.when)} · asked ${q.asked}</p>
+    <form method="post" action="/feeds/${opts.feedId}/questions/${q.id}/answer">${csrf(t)}
+      <p><label for="a-${q.id}">Your answer</label><textarea id="a-${q.id}" name="answer" rows="2" maxlength="1000" required dir="auto"></textarea></p>
+      <div class="row"><button type="submit">Answer for everyone</button></div>
+    </form>
+    <form method="post" action="/feeds/${opts.feedId}/questions/${q.id}/hide">${csrf(t)}<button type="submit" class="link">Hide this question</button></form>
+  </section>`)}
+</div>` : ""}
 ${hasCards ? html`<div class="split"><div>` : ""}
 ${busy.map((g) => html`<article class="mailcard">
     <header>${head(g.m)}

@@ -123,3 +123,12 @@ Deno.test("D77: the auto-publish email lists each change with the words it was r
     { event_id: "e1", title: "Picture day", starts_at: "2026-11-25T20:00:00Z", all_day: true, timezone: "America/Los_Angeles", quote: "q", what: "cancelled" }] }, SITE, UNSUB);
   assertEquals(one.subject, 'Room F: cancelled "Picture day" from "TGIF Bcc: x@y.z"', "one line, whatever the email's subject held");
 });
+
+Deno.test("D88: a follower's question reaches the organizer as its own email, escaped", () => {
+  const r = render("report", { question: true, feed_id: "f", feed_name: "Room 12", event_id: "e", event_title: "Field trip", starts_at: "2026-11-21T16:30:00Z", all_day: false,
+    timezone: "America/Los_Angeles", details: "<b>Packed lunch?</b>" }, SITE, UNSUB);
+  assertEquals(r.subject, 'A follower asked about "Field trip"');
+  assert(r.text.includes('"<b>Packed lunch?</b>"') && r.text.includes("Only you can see the question."));
+  assert(r.html.includes("&lt;b&gt;Packed lunch?&lt;/b&gt;") && !r.html.includes("<b>Packed"));
+  assertEquals((r.text.match(/https?:\/\/\S+/g) ?? []).filter((l) => l.endsWith("/feeds/f")).length, 1);
+});
