@@ -16,12 +16,12 @@ Deno.test("report email: says what and where, escapes the subscriber's text, has
   // Every email also says how to stop following a calendar in the calendar app, with the steps page.
   assert(r.text.includes(`Unsubscribe from it in your calendar app. Steps for each app: ${SITE}/help/unsubscribe`));
   assert(r.html.includes(`<a href="${SITE}/help/unsubscribe">your calendar app</a>`));
-  assert(r.text.startsWith("Hi,\n\n") && r.text.includes("Thanks,\nCalantern"));
+  assert(r.text.startsWith("Hi,\n\n") && r.text.includes("Thanks,\nBumpdraft"));
 });
 
 Deno.test("weekly digest: what needs you first, the follower guess last and small", () => {
   const r = render("weekly_digest", { feeds: [{ id: "f1", name: "Room 12", subscribers: 14, subscribers_last_week: 9, taps: 3, events_added: 4, needs_review: 2, reports: 0 }] }, SITE, UNSUB);
-  assertEquals(r.subject, "Your Calantern week: 2 to review");
+  assertEquals(r.subject, "Your Bumpdraft week: 2 to review");
   assert(r.text.includes("Here's your week. 2 events need a quick look from you."));
   assert(r.text.includes("2 events waiting for your OK.\n  4 new events this week.\n  Open it: https://feedcal.example/feeds/f1\n  Roughly 14 calendars follow it (a rough guess)."));
   assert(!r.text.includes("up from") && !r.text.includes("subscribe taps"), "no trend or tap counts");
@@ -43,7 +43,7 @@ Deno.test("senders call the right APIs", async () => {
     calls.push({ url, body: JSON.parse(String(init.body)), headers: new Headers(init.headers) });
     return Promise.resolve(new Response(JSON.stringify({ id: "r1", ID: "m1" }), { status: 200 }));
   }) as unknown as typeof fetch;
-  const msg = { to: "o@x.test", from: "Calantern <hello@feedcal.test>", subject: "s", text: "t", html: "h", headers: { "List-Unsubscribe": "<u>" }, idempotencyKey: "k1" };
+  const msg = { to: "o@x.test", from: "Bumpdraft <hello@feedcal.test>", subject: "s", text: "t", html: "h", headers: { "List-Unsubscribe": "<u>" }, idempotencyKey: "k1" };
   assertEquals(await resend("re_test", fake).send(msg), { ok: true, id: "r1" });
   assertEquals(calls[0]?.url, "https://api.resend.com/emails");
   assertEquals(calls[0]?.headers.get("authorization"), "Bearer re_test");
@@ -54,7 +54,7 @@ Deno.test("senders call the right APIs", async () => {
 
 Deno.test("ops alert email (D38): says what and where to look, marks drills, has no unsubscribe", () => {
   const real = render("ops_alert", { kind: "queue_backlog", detail: { queue: "extract_message", oldest_minutes: 22 }, drill: false }, "https://feedcal.test", "https://feedcal.test/unsubscribe?x");
-  assert(real.subject.startsWith("Calantern alert: Emails are waiting"));
+  assert(real.subject.startsWith("Bumpdraft alert: Emails are waiting"));
   assert(real.text.includes("extract_message") && real.text.includes("queue-backlog.md"));
   assert(!real.text.includes("unsubscribe") && !real.html.includes("unsubscribe"), "no unsubscribe link");
   const drill = render("ops_alert", { kind: "abuse_spike", detail: {}, drill: true }, "https://feedcal.test", "x");
@@ -93,7 +93,7 @@ Deno.test("subjects stay one line whatever the names and titles contain (D60)", 
 Deno.test("contact message email (D63): escaped, one-line subject, safe Reply-To, no unsubscribe", () => {
   const r = render("contact", { kind: "bug", message: "<img src=x onerror=alert(1)>\r\nBcc: evil@example.test\nThe flyer is blank", reply_to: "parent@example.test", page: "/feeds/x/flyer", signed_in: false }, SITE, UNSUB);
   assert(!r.html.includes("<img src=x") && r.html.includes("&lt;img src=x"), "message is escaped");
-  assert(!/[\r\n]/.test(r.subject) && r.subject.startsWith("Calantern bug report:"), r.subject);
+  assert(!/[\r\n]/.test(r.subject) && r.subject.startsWith("Bumpdraft bug report:"), r.subject);
   assertEquals(r.replyTo, "parent@example.test");
   assert(r.text.includes("Reply to: parent@example.test") && r.text.includes("Page: /feeds/x/flyer"));
   assert(NO_UNSUBSCRIBE.has("contact") && !r.text.includes("Stop these emails"));
@@ -104,7 +104,7 @@ Deno.test("contact message email (D63): escaped, one-line subject, safe Reply-To
 
 Deno.test("backup alarm email (D65) names the problem and where to look", () => {
   const r = render("ops_alert", { kind: "backup_stale", detail: { last_backup: "2026-11-21T22:57:27Z", hours: 31 }, drill: false }, SITE, UNSUB);
-  assertEquals(r.subject, "Calantern alert: No database backup in over 30 hours");
+  assertEquals(r.subject, "Bumpdraft alert: No database backup in over 30 hours");
   assert(r.text.includes("restore.md") && r.text.includes("\"hours\":31"));
 });
 

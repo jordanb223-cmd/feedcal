@@ -23,7 +23,7 @@ export function importForm(feedId: string, t: string, back: "setup" | "settings"
     <p><label for="import-url">Calendar link (.ics or webcal)</label>
       <input class="copy" id="import-url" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false" required maxlength="2000" placeholder="https://…/calendar.ics"></p>
     <p><label class="check"><input type="checkbox" name="keep" value="1">
-      <span>Keep checking this link every day <span class="muted">(otherwise Calantern copies the events once, and you keep them up to date)</span></span></label></p>
+      <span>Keep checking this link every day <span class="muted">(otherwise Bumpdraft copies the events once, and you keep them up to date)</span></span></label></p>
     <button type="submit" class="secondary">Copy events</button></form>`;
 }
 
@@ -37,7 +37,7 @@ export function importStatus(feedId: string, t: string, s: ImportStatus) {
 }
 
 const NOTICES: Record<string, string> = {
-  started: "Got it. Calantern will copy the events within about 10 minutes.",
+  started: "Got it. Bumpdraft will copy the events within about 10 minutes.",
   stopped: "Stopped. The events already copied are still on the calendar.",
 };
 export const importNotice = (k: string | undefined) => (k ? NOTICES[k] : undefined);

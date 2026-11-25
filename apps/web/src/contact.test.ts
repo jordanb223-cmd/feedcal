@@ -19,7 +19,7 @@ const send = (a: ReturnType<typeof app>["a"], fields: Record<string, string>) =>
 }, env);
 
 describe("contact form (D63)", () => {
-  it("shows the form, remembering only a Calantern page someone came from", async () => {
+  it("shows the form, remembering only a Bumpdraft page someone came from", async () => {
     const { a } = app();
     const own = await (await a.request("http://localhost:8788/contact?from=/feeds/abc/flyer", {}, env)).text();
     expect(own).toContain('name="page" value="/feeds/abc/flyer"');

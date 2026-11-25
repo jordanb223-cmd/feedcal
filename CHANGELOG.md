@@ -7,6 +7,9 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Changed
+- Calantern is now called Bumpdraft. The name changes on every page, in every email, and in the calendar files. Nothing else changes: your calendars, their links, your followers' subscriptions and your sign-in all stay as they are. Entries below this one keep the old name, because that is what it was called then.
+
 ### Added
 - Event chat. On an event's page you can switch on a chat for that event. Followers reach it from a "Chat about this event" link in the event, and write without giving a name: each gets a made-up one like "Blue Heron". You post as Organizer.
   - It is off unless you switch it on, one event at a time, and you can switch it off again.

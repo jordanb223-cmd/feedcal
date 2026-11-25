@@ -10,8 +10,8 @@ const app = (signedIn: boolean) => createApp({ version: "1", commit: "c", logSin
 }) as unknown as Supa });
 
 describe("home page (D55)", () => {
-  it("visitors see what Calantern is, the 3 steps and both ways in", async () => {
-    const res = await app(false).request("https://calantern.test/", {}, env);
+  it("visitors see what Bumpdraft is, the 3 steps and both ways in", async () => {
+    const res = await app(false).request("https://bumpdraft.test/", {}, env);
     expect(res.status).toBe(200);
     const html = await res.text();
     expect(html).toContain("<h1>Events that <span>add themselves.</span></h1>");
@@ -22,12 +22,12 @@ describe("home page (D55)", () => {
     expect(html).toContain('href="/directory">Find a calendar</a>');
     expect((html.match(/<span class="n" aria-hidden="true">/g) ?? []).length).toBe(3);
     expect(html).toContain("Got a flyer?");
-    expect(html).toContain("<title>Events that add themselves · Calantern</title>");
-    expect(html).toContain('<meta name="description" content="Calantern reads');
+    expect(html).toContain("<title>Events that add themselves · Bumpdraft</title>");
+    expect(html).toContain('<meta name="description" content="Bumpdraft reads');
     expect(html).not.toContain("&lt;meta"); // the description is a tag, not visible text
   });
   it("signed-in organizers go straight to their account", async () => {
-    const res = await app(true).request("https://calantern.test/", {}, env);
+    const res = await app(true).request("https://bumpdraft.test/", {}, env);
     expect(res.status).toBe(303);
     expect(res.headers.get("location")).toBe("/account");
   });

@@ -119,7 +119,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>): void {
       defaultTimeZone: DEFAULT_TIME_ZONE,
       askUrl: (uid) => `${origin}/ask/${encodeURIComponent(uid)}`,
       reportUrl: (uid) => `${origin}/report/${encodeURIComponent(uid)}`,
-      product: "Calantern",
+      product: "Bumpdraft",
       signOff: eventSignOff(feed.name, origin),
       // D87: every event ends with one short link to the calendar's health page; after a 20-day lapse it says why.
       statusLine: `Calendar Health${feed.source_lapsed_since ? " (may be missing newer events)" : ""}: ${origin}/h/${feed.id}`,

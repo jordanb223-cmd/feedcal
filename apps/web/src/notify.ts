@@ -20,7 +20,7 @@ const KINDS: Record<z.infer<typeof Kind>, string> = {
 };
 const UnsubKind = z.enum(["weekly_digest", "report", "stale_nudge", "milestone", "supporter_thanks", "events_published", "all"]);
 const UNSUB_LABELS: Record<z.infer<typeof UnsubKind>, string> = {
-  weekly_digest: "the weekly summary", report: "instant report notices", stale_nudge: "reminders about quiet calendars", milestone: "milestone thank-yous", events_published: "notices when Calantern changes a calendar by itself", supporter_thanks: "supporter thank-yous (sent only once)", all: "all Calantern emails",
+  weekly_digest: "the weekly summary", report: "instant report notices", stale_nudge: "reminders about quiet calendars", milestone: "milestone thank-yous", events_published: "notices when Bumpdraft changes a calendar by itself", supporter_thanks: "supporter thank-yous (sent only once)", all: "all Bumpdraft emails",
 };
 
 async function form(c: Context<AppEnv>): Promise<Record<string, string>> {

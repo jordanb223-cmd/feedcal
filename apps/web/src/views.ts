@@ -2,7 +2,7 @@ import { html } from "hono/html";
 import { ASSET_PATHS } from "./assets.js";
 
 /** D62: shown at the foot of every page (calendar pages also carry the longer notes). */
-export const FOOTER_DISCLAIMER = "Calantern fills calendars in automatically and can make mistakes. It isn't run by any school or team.";
+export const FOOTER_DISCLAIMER = "Bumpdraft fills calendars in automatically and can make mistakes. It isn't run by any school or team.";
 import type { HtmlEscapedString } from "hono/utils/html";
 
 type Html = HtmlEscapedString | Promise<HtmlEscapedString>;
@@ -19,12 +19,12 @@ export type Audience = "organizer" | "public" | "minimal";
 
 function siteHeader(audience: Audience): Html {
   if (audience === "public") {
-    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/directory">Calantern</a><a href="/directory">Find a calendar</a></nav>`;
+    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/directory">Bumpdraft</a><a href="/directory">Find a calendar</a></nav>`;
   }
   if (audience === "minimal") {
-    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Calantern</a></nav>`;
+    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Bumpdraft</a></nav>`;
   }
-  return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Calantern</a><a href="/feeds">Your calendars</a><a href="/account">Account</a></nav>`;
+  return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Bumpdraft</a><a href="/feeds">Your calendars</a><a href="/account">Account</a></nav>`;
 }
 
 /** For pages anyone can see without signing in. */
@@ -38,7 +38,7 @@ export function layout(title: string, body: Html, head: Html | string = "", audi
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${title} · Calantern</title>
+<title>${title} · Bumpdraft</title>
 ${head}
 <link rel="stylesheet" href="${ASSET_PATHS.css}">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -47,7 +47,7 @@ ${head}
 <script src="${ASSET_PATHS.js}" defer></script>
 </head>
 <body><a class="skip" href="#main">Skip to content</a><main id="main">${siteHeader(audience)}${body}
-<footer class="no-print"><p>${FOOTER_DISCLAIMER}</p><nav aria-label="Footer"><a href="/directory">Find a calendar</a><a href="/rules">Community rules</a><a href="/terms">Terms</a><a href="/takedown">Reports</a><a href="/privacy">Privacy</a><a href="/contact">Contact</a><a href="/about/costs">Support Calantern</a></nav></footer></main></body>
+<footer class="no-print"><p>${FOOTER_DISCLAIMER}</p><nav aria-label="Footer"><a href="/directory">Find a calendar</a><a href="/rules">Community rules</a><a href="/terms">Terms</a><a href="/takedown">Reports</a><a href="/privacy">Privacy</a><a href="/contact">Contact</a><a href="/about/costs">Support Bumpdraft</a></nav></footer></main></body>
 </html>`;
 }
 
@@ -57,7 +57,7 @@ export function loginPage(opts: { csrf: string; googleEnabled: boolean; error?: 
   return publicLayout(
     "Sign in",
     html`<div class="card panel">
-  <h1>Sign in to Calantern</h1>
+  <h1>Sign in to Bumpdraft</h1>
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
   <form method="post" action="/login">
     ${csrfField(opts.csrf)}
@@ -160,10 +160,10 @@ export function accountPage(opts: {
 <div class="split">
 <div>
 <div class="card">
-  <h2>Emails from Calantern</h2>
+  <h2>Emails from Bumpdraft</h2>
   <form method="post" action="/account/notifications">
     ${csrfField(opts.csrf)}
-    <p><label class="check"><input type="checkbox" name="published_events" value="1" ${n.published_events === false ? "" : "checked"}> Right away when Calantern adds or changes an event by itself</label></p>
+    <p><label class="check"><input type="checkbox" name="published_events" value="1" ${n.published_events === false ? "" : "checked"}> Right away when Bumpdraft adds or changes an event by itself</label></p>
     <p><label class="check"><input type="checkbox" name="weekly_digest" value="1" ${n.weekly_digest ? "checked" : ""}> A weekly summary every Monday</label></p>
     <p><label class="check"><input type="checkbox" name="instant_reports" value="1" ${n.instant_reports ? "checked" : ""}> Right away when a subscriber reports a problem</label></p>
     <p><label class="check"><input type="checkbox" name="staleness" value="1" ${n.staleness ? "checked" : ""}> A reminder when a calendar goes quiet</label></p>
@@ -175,12 +175,12 @@ export function accountPage(opts: {
 <aside>
 <div class="card">
   <h2>Your data</h2>
-  <p><a href="/account/export">Download everything Calantern holds about you</a> (JSON).</p>
+  <p><a href="/account/export">Download everything Bumpdraft holds about you</a> (JSON).</p>
   ${opts.feeds.length > 0 ? html`<p>Each calendar as a file: ${opts.feeds.map((f, i) => html`${i > 0 ? ", " : ""}<a href="/account/export/${f.id}.ics" dir="auto">${f.name}</a>`)}.</p>` : ""}
-  <p class="muted"><a href="/privacy">How Calantern handles your data</a></p>
+  <p class="muted"><a href="/privacy">How Bumpdraft handles your data</a></p>
 </div>
 <div class="card">
-  <h2>Supporting Calantern</h2>
+  <h2>Supporting Bumpdraft</h2>
   <p><a href="/account/support">Link your Buy Me a Coffee support</a> or choose whether you're listed as a supporter.</p>
 </div>
 </aside>

@@ -16,9 +16,9 @@ const app = createApp({ version: "1", commit: "c", logSink: () => {}, supabase: 
 
 describe("search and link previews (D60)", () => {
   it.each(["/", "/privacy", "/terms", "/rules", "/takedown", "/about/costs", "/help/unsubscribe"])("%s has a description, canonical link and preview tags", async (path) => {
-    const html = await (await app.request(`https://calantern.test${path}`, {}, env)).text();
+    const html = await (await app.request(`https://bumpdraft.test${path}`, {}, env)).text();
     expect(html).toMatch(/<meta name="description" content="[^"]{40,}">/);
-    expect(html).toContain(`<link rel="canonical" href="https://calantern.test${path}">`);
+    expect(html).toContain(`<link rel="canonical" href="https://bumpdraft.test${path}">`);
     for (const p of ["og:type", "og:site_name", "og:title", "og:description", "og:url"]) expect(html).toContain(`property="${p}"`);
     expect((html.match(/<meta name="description"/g) ?? []).length).toBe(1);
   });

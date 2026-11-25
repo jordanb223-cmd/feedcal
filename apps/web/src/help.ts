@@ -1,6 +1,6 @@
-// How to stop following a calendar, in each calendar app. Every email Calantern sends links
+// How to stop following a calendar, in each calendar app. Every email Bumpdraft sends links
 // here (LEAVE_PATH in supabase/functions/_shared/notify/templates.ts). Following happens in the
-// person's own calendar app, so leaving does too: Calantern keeps no list of who follows.
+// person's own calendar app, so leaving does too: Bumpdraft keeps no list of who follows.
 import type { Hono } from "hono";
 import { html } from "hono/html";
 import { seoHead } from "./seo.js";
@@ -44,6 +44,6 @@ export function registerHelpRoutes(app: Hono<AppEnv>): void {
     </ol>
   </details>
   <p class="muted">Something wrong with the calendar instead? Each event has a "Report a problem" link, or <a href="/contact">tell us</a>.</p>
-</div>`, seoHead(c, "Stop following a calendar", "How to unsubscribe from a Calantern calendar in Apple Calendar, Google Calendar and Outlook.")));
+</div>`, seoHead(c, "Stop following a calendar", "How to unsubscribe from a Bumpdraft calendar in Apple Calendar, Google Calendar and Outlook.")));
   });
 }

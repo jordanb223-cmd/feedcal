@@ -886,3 +886,19 @@ What was checked, against what, and what changed:
   - The organizer is not told when a message is posted or reported; they have to look.
   - No lawyer has reviewed hosting followers' messages. `/rules` and `/terms` were not changed.
 - **Tests.** `supabase/tests/036_event_chat.test.sql`, `apps/web/src/chat.test.ts`, `apps/web/src/feed.test.ts`.
+
+## D90 — The product is renamed Bumpdraft (2026-11-24)
+
+- **Owner's words.** "I want to rename it bumpdraft", and asked what "it" was: "The whole product".
+- **What changed.** Every user-facing "Calantern" became "Bumpdraft": pages, emails, the sign-in email template, the email worker's bounce messages, the calendar file's product name, the importer's user agent (`Bumpdraft-Importer/1.0`), the data export's file name (`bumpdraft-export-…`), and the current docs (DESIGN, SETUP, DATA-MODEL, the rollback runbook). 45 files, one word swapped each time.
+- **Capital B** is a choice made here; the owner typed it in lower case.
+- **What did not change, on purpose.**
+  - Internal names stay `feedcal`: the repository, packages, database, cookies, the Pages project and its address `feedcal-web.pages.dev`.
+  - Event UIDs still end `@feedcal.app`. Changing them would make every follower's calendar app see every event as new (D-rule from the first rename).
+  - Earlier entries in this file and in the changelog keep "Calantern": they record what was true then.
+- **Outside the repository, not changed by this commit** (each is the owner's to change):
+  - `EMAIL_FROM` on production, currently "Calantern <onboarding@resend.dev>".
+  - The sign-in email's subject and template on the hosted Supabase project, if they were set there by hand. The repository's copies are local-only settings.
+  - The app name on Google's consent screen.
+  - The Buy Me a Coffee page, and any printed flyers or QR codes that carry the old name (the links on them still work).
+- **Not checked.** Whether "Bumpdraft" is already in use as a product name or trademark, and whether a matching domain is free.

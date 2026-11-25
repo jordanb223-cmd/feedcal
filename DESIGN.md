@@ -1,4 +1,4 @@
-# Calantern design guide
+# Bumpdraft design guide
 
 Every page follows this file. It has four parts: what ten real sites in our niche do well, the
 rules we take from them, what is banned, and the direction we chose.
@@ -56,7 +56,7 @@ where the reading clearly landed on the main headline or main button.
 8. **Cozi.** Same idea in blue: a full colour field, a short promise ("The Whole Family. Finally
    In Sync."), one white button, and a row of plain ticks ("Cozi is free", "iPhone, Android &
    Web") that answer the first questions.
-9. **AddEvent.** The closest to what Calantern does. The headline is the job in plain words:
+9. **AddEvent.** The closest to what Bumpdraft does. The headline is the job in plain words:
    "Get your events on your attendees' calendars". Lots of white space, one blue, one button and
    one outlined button. Trust is a single quiet line with a number.
 10. **Howbout.** A dark page with one glowing phone. The headline is conversational and long, set
@@ -74,7 +74,7 @@ where the reading clearly landed on the main headline or main button.
 Counts are out of the ten references, from the screenshots.
 
 1. **Show the calendar.** Eight of ten put the product or a phone above the fold (all but Luma
-   and AddEvent). Calantern's home page shows no calendar at all. Every public page gets a real
+   and AddEvent). Bumpdraft's home page shows no calendar at all. Every public page gets a real
    picture of what it makes: an email turning into an event, or an event list.
 2. **One promise, in plain words, set big.** Of the eight headlines measured, seven run 55 to 88 px
    on desktop (Fantastical's is 40) and six of seven run 32 to 56 px on a phone (TimeTree's is
@@ -91,13 +91,13 @@ Counts are out of the ten references, from the screenshots.
    Cal.com's carry a shadow, and Howbout shows only store badges. Corners are either a full pill
    or 6 to 12 px. Pick one and use it everywhere.
 6. **Pick an edge.** Pages are either fully centred (Luma, Cal.com, Notion) or fully
-   left-aligned (SavvyCal, AddEvent, Howbout). None mix. Each Calantern page picks one.
+   left-aligned (SavvyCal, AddEvent, Howbout). None mix. Each Bumpdraft page picks one.
 7. **Say the first answers right under the button.** Cozi's ticks and SavvyCal's guarantee line
    do this. Ours: "Free. No app. Works with iPhone, Google and Outlook."
 8. **Space is part of it.** Luma and AddEvent leave half the first screen empty. On our dense
    pages (Email, Share, Account) this means fewer cards, not smaller text.
 
-### Rules from Calantern itself
+### Rules from Bumpdraft itself
 
 - **Phone first.** A teacher prints one QR code; families open it on a phone. Every page is
   designed at 375 px wide first and must have no sideways scroll.
@@ -184,7 +184,7 @@ limit for small text.
 
 ### Components (the shadcn/ui question)
 
-shadcn/ui and Magic UI are React libraries. Calantern has no React: pages are HTML built on the
+shadcn/ui and Magic UI are React libraries. Bumpdraft has no React: pages are HTML built on the
 server, and the security policy forbids the inline scripts and styles those libraries inject. So
 the site follows their conventions in plain CSS instead of installing them:
 

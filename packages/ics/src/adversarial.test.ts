@@ -25,7 +25,7 @@ it("survives every generated attack on its text fields, dates and rules", () => 
     if (field === "feedName") feed.name = p; else if (field === "feedDescription") feed.description = p; else (ev as unknown as Record<string, string>)[field] = p;
     const label = `${field}:${JSON.stringify(p.slice(0, 30))}`;
     let ics: string;
-    try { ics = buildCalendar(feed, [ev, { ...base(), uid: "e2@feedcal.app", title: "Second" }], { defaultTimeZone: "America/Los_Angeles", reportUrl: (u) => `https://x.test/report/${encodeURIComponent(u)}`, product: "Calantern" }).ics; }
+    try { ics = buildCalendar(feed, [ev, { ...base(), uid: "e2@feedcal.app", title: "Second" }], { defaultTimeZone: "America/Los_Angeles", reportUrl: (u) => `https://x.test/report/${encodeURIComponent(u)}`, product: "Bumpdraft" }).ics; }
     catch { add("build throws", label); continue; }
     // eslint-disable-next-line no-control-regex -- the test looks for forbidden characters on purpose
     if (new RegExp("[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]").test(ics)) add("raw control char in output", label);

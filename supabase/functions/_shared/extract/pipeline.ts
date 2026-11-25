@@ -58,7 +58,7 @@ function ends(e: ExtractedEvent): string | null {
 /**
  * D82: an end on a later day is kept only when the quoted words state that day. Models often give
  * "the next day" as the end of a one-day event (the calendar-file habit of an exclusive end), and
- * Calantern reads an end as the event's last day, so the event showed on two days. With no stated
+ * Bumpdraft reads an end as the event's last day, so the event showed on two days. With no stated
  * later day, the event has no end: it is the one day (or the one start time) the words give.
  */
 export function withoutUnstatedEnd(e: ExtractedEvent): ExtractedEvent {

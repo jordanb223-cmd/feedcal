@@ -12,7 +12,7 @@ export const MESSAGES = {
   badEmail: "Please enter a valid email address.",
   tooMany: "Too many sign-in emails were sent. Please wait a few minutes and try again.",
   ourLimit: "You've asked for several sign-in links in the last hour. Please use the newest email we sent, or wait an hour and try again.",
-  intlEmail: "Calantern can't send to addresses with accented or non-Latin letters yet. Please use another address.",
+  intlEmail: "Bumpdraft can't send to addresses with accented or non-Latin letters yet. Please use another address.",
   unavailable: "We couldn't send a sign-in link just now. Please try again in a minute.",
   signInFailed: "We couldn't sign you in. Please try again.",
   // Supabase's built-in email links only finish in the browser that asked for them (PKCE).

@@ -8,7 +8,7 @@ const ALERT_TEXT: Record<string, { title: string; check: string }> = {
   queue_backlog: { title: "Emails are waiting in a queue", check: "Open docs/runbooks/queue-backlog.md. Check the Edge Function logs for the named queue." },
   ai_spend_daily: { title: "AI spend is over today's budget", check: "Open docs/runbooks/bad-extraction-wave.md. Look for one feed sending many emails." },
   ai_throttle: { title: "AI work is paused: the month's budget is 80% used", check: "Emails wait until next month or a higher budget. See docs/runbooks/ai-outage.md." },
-  email_failures: { title: "Many emails from Calantern are failing", check: "Check the email provider's dashboard for bounces or a suspended key." },
+  email_failures: { title: "Many emails from Bumpdraft are failing", check: "Check the email provider's dashboard for bounces or a suspended key." },
   purge_stuck: { title: "Account deletions are overdue", check: "Open docs/runbooks/purge-stuck.md." },
   abuse_spike: { title: "Many requests are being rate-limited", check: "Open docs/runbooks/spam-wave.md." },
   backup_stale: { title: "No database backup in over 30 hours", check: "Open docs/runbooks/restore.md (\"When backups stop\"). Run the Backup workflow by hand, then check its log." },
@@ -41,14 +41,14 @@ export const LEAVE_PATH = "/help/unsubscribe";
 /** One look for every email people get: the name on top, the message, a quiet footer. */
 function shell(bodyHtml: string, footHtml: string): string {
   return `<!doctype html><html><body style="font:16px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;color:#111111;max-width:32rem;margin:0 auto;padding:1.25rem 1rem">
-<p style="font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:0 0 1.25rem">Calantern</p>${bodyHtml}
+<p style="font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:0 0 1.25rem">Bumpdraft</p>${bodyHtml}
 <hr style="border:0;border-top:1px solid #e6e6e6;margin:2rem 0 1rem"><p style="color:#5c5c5c;font-size:14px">${footHtml}</p></body></html>`;
 }
 
 function wrap(site: string, unsubscribe: string, why: string, bodyText: string, bodyHtml: string): { text: string; html: string } {
   const leave = `${site}${LEAVE_PATH}`;
-  const text = `Hi,\n\n${bodyText}\n\nThanks,\nCalantern\n\n—\nFollowing a calendar on your own phone and don't want it updating by itself any more? Unsubscribe from it in your calendar app. Steps for each app: ${leave}\n\n${why}\nStop these emails: ${unsubscribe}\nAll settings: ${site}/account`;
-  const html = shell(`<p>Hi,</p>${bodyHtml}<p>Thanks,<br>Calantern</p>`,
+  const text = `Hi,\n\n${bodyText}\n\nThanks,\nBumpdraft\n\n—\nFollowing a calendar on your own phone and don't want it updating by itself any more? Unsubscribe from it in your calendar app. Steps for each app: ${leave}\n\n${why}\nStop these emails: ${unsubscribe}\nAll settings: ${site}/account`;
+  const html = shell(`<p>Hi,</p>${bodyHtml}<p>Thanks,<br>Bumpdraft</p>`,
     `Following a calendar on your own phone and don't want it updating by itself any more? Unsubscribe from it in <a href="${esc(leave)}">your calendar app</a>. On an iPhone: Calendar → Calendars → ⓘ next to it → Unsubscribe.<br><br>${esc(why)}<br><a href="${esc(unsubscribe)}">Stop these emails</a> · <a href="${esc(site)}/account">All settings</a>`);
   return { text, html };
 }
@@ -75,13 +75,13 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
     const days = typeof p.days_lapsed === "number" && p.days_lapsed >= 20 ? Math.floor(p.days_lapsed) : 0;
     const subject = days ? `Gmail for ${name} has been disconnected for ${days} days` : expired ? `Reconnect Gmail for ${name}` : `Reconnect Gmail for ${name} by tomorrow`;
     const lead = days
-      ? `Calantern hasn't been able to check Gmail for ${name} for ${days} days. New emails are not reaching the calendar, and the calendar now tells its followers that it may be missing newer events.`
+      ? `Bumpdraft hasn't been able to check Gmail for ${name} for ${days} days. New emails are not reaching the calendar, and the calendar now tells its followers that it may be missing newer events.`
       : expired
-      ? `Calantern can't check Gmail for ${name} any more: Google ended the connection. Until you reconnect, new emails won't reach the calendar.`
-      : `Google ends Calantern's Gmail connection for ${name} tomorrow (it lasts 7 days while Calantern is in Google's test mode).`;
-    const why = "You get this because you connected Gmail to a Calantern calendar. Disconnecting stops these emails.";
-    const body = `Hi,\n\n${lead}\n\nReconnecting takes one click, and your sender and schedule are kept: ${link}\n\nThanks,\nCalantern`;
-    const html = shell(`<p>Hi,</p><p>${esc(lead)}</p><p>Reconnecting takes one click, and your sender and schedule are kept.</p><p><a href="${esc(link)}">Reconnect Gmail</a></p><p>Thanks,<br>Calantern</p>`, esc(why));
+      ? `Bumpdraft can't check Gmail for ${name} any more: Google ended the connection. Until you reconnect, new emails won't reach the calendar.`
+      : `Google ends Bumpdraft's Gmail connection for ${name} tomorrow (it lasts 7 days while Bumpdraft is in Google's test mode).`;
+    const why = "You get this because you connected Gmail to a Bumpdraft calendar. Disconnecting stops these emails.";
+    const body = `Hi,\n\n${lead}\n\nReconnecting takes one click, and your sender and schedule are kept: ${link}\n\nThanks,\nBumpdraft`;
+    const html = shell(`<p>Hi,</p><p>${esc(lead)}</p><p>Reconnecting takes one click, and your sender and schedule are kept.</p><p><a href="${esc(link)}">Reconnect Gmail</a></p><p>Thanks,<br>Bumpdraft</p>`, esc(why));
     return { subject, text: `${body}\n\n—\n${why}`, html };
   }
   if (kind === "events_published") {
@@ -99,10 +99,10 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
     const lines = items.map(line);
     const n = lines.length;
     const subject = `${name}: ${n === 1 ? `${lines[0]!.verb.toLowerCase()} "${lines[0]!.title}"` : `${n} calendar changes`} from ${from}`;
-    const lead = `Calantern read ${from} and updated ${name} without asking you. Please check ${n === 1 ? "it" : "them"} against the email. If anything is wrong, open it to fix or remove it; followers' calendars update on their own.`;
+    const lead = `Bumpdraft read ${from} and updated ${name} without asking you. Please check ${n === 1 ? "it" : "them"} against the email. If anything is wrong, open it to fix or remove it; followers' calendars update on their own.`;
     const text = lines.map((l) => `${l.verb}: ${l.title}\n  ${l.date}\n  Read from${l.picture ? " a picture" : ""}: "${l.quote}"\n  Fix or remove: ${l.link}`).join("\n\n");
     const html = lines.map((l) => `<p><strong>${esc(l.verb)}: ${esc(l.title)}</strong><br>${esc(l.date)}<br><span style="color:#5c5c5c">Read from${l.picture ? " a picture" : ""}: “${esc(l.quote)}”</span><br><a href="${esc(l.link)}">Fix or remove</a></p>`).join("");
-    const w = wrap(site, unsubscribe, "You get this because Calantern changed a calendar you own without asking first.", `${lead}\n\n${text}`, `<p>${esc(lead)}</p>${html}`);
+    const w = wrap(site, unsubscribe, "You get this because Bumpdraft changed a calendar you own without asking first.", `${lead}\n\n${text}`, `<p>${esc(lead)}</p>${html}`);
     return { subject, ...w };
   }
   if (kind === "contact") {
@@ -112,19 +112,19 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
     const page = typeof p.page === "string" && p.page ? p.page : null;
     const who = replyTo ? `Reply to: ${replyTo} (just reply to this email)` : "No reply address given.";
     const signedIn = p.signed_in === true ? "Sent while signed in." : "Sent while signed out.";
-    const subject = `Calantern ${label.toLowerCase()}: ${message.slice(0, 60)}${message.length > 60 ? "…" : ""}`;
-    const text = `${label} from the contact form.\n\n${message}\n\n${page ? `Page: ${page}\n` : ""}${who}\n${signedIn}\n\n—\nYou get this because you're a Calantern admin.`;
-    const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;color:#1d1d1b"><p><strong>${esc(label)}</strong> from the contact form.</p><blockquote style="white-space:pre-wrap;border-left:3px solid #e3e3df;margin:0;padding:.5rem 1rem">${esc(message)}</blockquote>${page ? `<p>Page: ${esc(page)}</p>` : ""}<p>${esc(who)}<br>${esc(signedIn)}</p><hr style="border:0;border-top:1px solid #e3e3df;margin:2rem 0 1rem"><p style="color:#4f4f4b;font-size:14px">You get this because you're a Calantern admin.</p></body></html>`;
+    const subject = `Bumpdraft ${label.toLowerCase()}: ${message.slice(0, 60)}${message.length > 60 ? "…" : ""}`;
+    const text = `${label} from the contact form.\n\n${message}\n\n${page ? `Page: ${page}\n` : ""}${who}\n${signedIn}\n\n—\nYou get this because you're a Bumpdraft admin.`;
+    const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;color:#1d1d1b"><p><strong>${esc(label)}</strong> from the contact form.</p><blockquote style="white-space:pre-wrap;border-left:3px solid #e3e3df;margin:0;padding:.5rem 1rem">${esc(message)}</blockquote>${page ? `<p>Page: ${esc(page)}</p>` : ""}<p>${esc(who)}<br>${esc(signedIn)}</p><hr style="border:0;border-top:1px solid #e3e3df;margin:2rem 0 1rem"><p style="color:#4f4f4b;font-size:14px">You get this because you're a Bumpdraft admin.</p></body></html>`;
     return { subject, text, html, ...(replyTo ? { replyTo } : {}) };
   }
   if (kind === "ops_alert") {
     const a = ALERT_TEXT[String(p.kind)] ?? { title: `Alert: ${String(p.kind)}`, check: "See docs/RUNBOOKS.md." };
     const drill = p.drill === true;
-    const subject = `${drill ? "[Drill] " : ""}Calantern alert: ${a.title}`;
+    const subject = `${drill ? "[Drill] " : ""}Bumpdraft alert: ${a.title}`;
     const detail = JSON.stringify(p.detail ?? {});
     const body = `${drill ? "This is a drill. Nothing is wrong.\n\n" : ""}${a.title}.\n\nDetails: ${detail}\n\nWhat to do: ${a.check}\n\nOperations panel: ${site}/admin`;
-    const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;color:#1d1d1b">${drill ? "<p><strong>This is a drill. Nothing is wrong.</strong></p>" : ""}<p><strong>${esc(a.title)}.</strong></p><p>Details: <code>${esc(detail)}</code></p><p>What to do: ${esc(a.check)}</p><p><a href="${esc(site)}/admin">Operations panel</a></p><hr style="border:0;border-top:1px solid #e3e3df;margin:2rem 0 1rem"><p style="color:#4f4f4b;font-size:14px">You get this because you're a Calantern admin.</p></body></html>`;
-    return { subject, text: `${body}\n\n—\nYou get this because you're a Calantern admin.`, html };
+    const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;color:#1d1d1b">${drill ? "<p><strong>This is a drill. Nothing is wrong.</strong></p>" : ""}<p><strong>${esc(a.title)}.</strong></p><p>Details: <code>${esc(detail)}</code></p><p>What to do: ${esc(a.check)}</p><p><a href="${esc(site)}/admin">Operations panel</a></p><hr style="border:0;border-top:1px solid #e3e3df;margin:2rem 0 1rem"><p style="color:#4f4f4b;font-size:14px">You get this because you're a Bumpdraft admin.</p></body></html>`;
+    return { subject, text: `${body}\n\n—\nYou get this because you're a Bumpdraft admin.`, html };
   }
   if (kind === "report" && p.question === true) {
     // D88: an anonymous question about an event, sent under the same setting as reports.
@@ -145,9 +145,9 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
     return { subject, ...wrap(site, unsubscribe, "You get this because you run this calendar and asked to hear about reports right away.", body, html) };
   }
   if (kind === "supporter_thanks") {
-    const subject = "Thank you for supporting Calantern";
-    const body = `Thank you, truly. Your support keeps Calantern free for schools, teams and families.\n\nYour account now shows a supporter badge. If you'd like your name on the supporters page, you can choose that here: ${site}/account`;
-    const html = `<p>Thank you, truly. Your support keeps Calantern free for schools, teams and families.</p><p>Your account now shows a supporter badge. If you'd like your name on the supporters page, <a href="${esc(site)}/account">you can choose that here</a>.</p>`;
+    const subject = "Thank you for supporting Bumpdraft";
+    const body = `Thank you, truly. Your support keeps Bumpdraft free for schools, teams and families.\n\nYour account now shows a supporter badge. If you'd like your name on the supporters page, you can choose that here: ${site}/account`;
+    const html = `<p>Thank you, truly. Your support keeps Bumpdraft free for schools, teams and families.</p><p>Your account now shows a supporter badge. If you'd like your name on the supporters page, <a href="${esc(site)}/account">you can choose that here</a>.</p>`;
     return { subject, ...wrap(site, unsubscribe, "You get this once, because you linked your Buy Me a Coffee support to your account.", body, html) };
   }
   if (kind === "stale_nudge") {
@@ -168,7 +168,7 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
   // weekly_digest: what needs the organizer first; the follower estimate last and small.
   const feeds = (p.feeds as Record<string, number | string>[] | undefined) ?? [];
   const review = feeds.reduce((n, f) => n + Number(f.needs_review), 0);
-  const subject = review > 0 ? `Your Calantern week: ${review} to review` : "Your Calantern week";
+  const subject = review > 0 ? `Your Bumpdraft week: ${review} to review` : "Your Bumpdraft week";
   const waiting = (f: Record<string, number | string>) => (Number(f.needs_review) > 0 ? `${plural(f.needs_review, "event")} waiting for your OK` : "Nothing waiting for you");
   const added = (f: Record<string, number | string>) => `${plural(f.events_added, "new event")} this week${Number(f.reports) > 0 ? `, ${plural(f.reports, "problem report")}` : ""}`;
   const guess = (f: Record<string, number | string>) => (Number(f.subscribers) > 0 ? `Roughly ${plural(f.subscribers, "calendar follows", "calendars follow")} it (a rough guess).` : "");
@@ -176,5 +176,5 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
   const lines = feeds.map((f) => `${f.name}\n  ${waiting(f)}.\n  ${added(f)}.\n  Open it: ${site}/feeds/${f.id}${guess(f) ? `\n  ${guess(f)}` : ""}`);
   const body = `${intro}\n\n${lines.join("\n\n") || `You don't have a calendar yet. Make one: ${site}/feeds/new`}`;
   const html = `<p>${esc(intro)}</p>${feeds.map((f) => `<p><a href="${esc(site)}/feeds/${esc(f.id)}"><strong>${esc(f.name)}</strong></a><br>${Number(f.needs_review) > 0 ? `<strong>${esc(waiting(f))}</strong>` : esc(waiting(f))} · ${esc(added(f))}${guess(f) ? `<br><span style="color:#5c5c5c;font-size:14px">${esc(guess(f))}</span>` : ""}</p>`).join("") || `<p>You don't have a calendar yet. <a href="${esc(site)}/feeds/new">Make one</a>.</p>`}`;
-  return { subject, ...wrap(site, unsubscribe, "You get this every Monday because you run a Calantern calendar.", body, html) };
+  return { subject, ...wrap(site, unsubscribe, "You get this every Monday because you run a Bumpdraft calendar.", body, html) };
 }

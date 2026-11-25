@@ -64,7 +64,7 @@ export function chatPage(csrf: string, uid: string, p: ChatPage, note?: { error?
     ? "You run this calendar: your messages show as Organizer, and you can remove any message."
     : "You're anonymous here: you get a made-up name, and we don't ask for yours. Everyone following this event can read what you write, so don't share anything private. No links. The organizer can remove messages."}</p>`
     : html`<p class="status">This chat is closed because the event is over.</p>`}`}
-  <p class="muted">Messages here are from followers, not from Calantern, and may be wrong. For the facts, trust the event itself.</p>
+  <p class="muted">Messages here are from followers, not from Bumpdraft, and may be wrong. For the facts, trust the event itself.</p>
 </div>`);
 }
 
