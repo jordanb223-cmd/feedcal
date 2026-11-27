@@ -154,6 +154,14 @@ export function shareKitPage(opts: {
   <p><label for="chat-text">Copy and paste into your group chat</label><textarea id="chat-text" rows="4" readonly>${opts.chatText}</textarea></p>
   <p><button type="button" class="secondary" data-copy="chat-text">Copy message</button></p>
 </div>
+<div class="card">
+  <h2>Email it</h2>
+  <p><label for="invite-to">Their email address</label>
+    <span class="muted" id="invite-hint">Optional. For several people, put a comma between addresses.</span>
+    <input id="invite-to" type="email" multiple autocomplete="off" spellcheck="false" maxlength="1000" aria-describedby="invite-hint"></p>
+  <p><a class="button secondary" href="${inviteMailto(opts.name, opts.pageUrl ?? opts.feedUrl)}" data-mailto="invite-to">Open my email app</a></p>
+  <p class="muted">This opens your own email app with the message written and the link in it. You press send. Bumpdraft doesn't see or keep the address.</p>
+</div>
 </div>
 <aside>
 <div class="card">
@@ -181,6 +189,13 @@ ${opts.stats
   </form>
 </details>`,
   );
+}
+
+/** D93: a mailto: link that opens the organizer's own mail app with the invitation written. */
+export function inviteMailto(name: string, url: string): string {
+  const subject = `Add ${name} to your phone's calendar`;
+  const body = `Hi,\n\nI've set up a calendar for ${name}. Open this link to add it to your phone's calendar:\n\n${url}\n\nIt updates on its own when dates change.\n\nIt's filled in automatically by Bumpdraft from the emails we get, so it can make mistakes. If something looks wrong, check with me.`;
+  return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body.replace(/\n/g, "\r\n"))}`;
 }
 
 /**
