@@ -21,12 +21,39 @@ Deno.test("report email: says what and where, escapes the subscriber's text, has
 
 Deno.test("weekly digest: what needs you first, the follower guess last and small", () => {
   const r = render("weekly_digest", { feeds: [{ id: "f1", name: "Room 12", subscribers: 14, subscribers_last_week: 9, taps: 3, events_added: 4, needs_review: 2, reports: 0 }] }, SITE, UNSUB);
-  assertEquals(r.subject, "Your Bumpdraft week: 2 to review");
-  assert(r.text.includes("Here's your week. 2 events need a quick look from you."));
-  assert(r.text.includes("2 events waiting for your OK.\n  4 new events this week.\n  Open it: https://feedcal.example/feeds/f1\n  Roughly 14 calendars follow it (a rough guess)."));
+  assertEquals(r.subject, "Needs you this week: 2 to review");
+  assert(r.text.includes("Here's what needs you this week: 2 events. Nothing below goes on a calendar until you say so."));
+  // An email queued before D91 has counts and no item list: it still reads right.
+  assert(r.text.includes("2 events waiting for your OK.\n  4 new events this week.\n  Go through them: https://feedcal.example/feeds/f1\n  Roughly 14 calendars follow it (a rough guess)."));
   assert(!r.text.includes("up from") && !r.text.includes("subscribe taps"), "no trend or tap counts");
   const quiet = render("weekly_digest", { feeds: [{ id: "f1", name: "Room 12", subscribers: 0, subscribers_last_week: 0, taps: 0, events_added: 1, needs_review: 0, reports: 1 }] }, SITE, UNSUB);
-  assert(quiet.text.includes("Nothing waiting for you.\n  1 new event this week, 1 problem report.") && !quiet.text.includes("Roughly"));
+  assertEquals(quiet.subject, "Your Bumpdraft week");
+  assert(quiet.text.includes("Nothing needs you right now."));
+  assert(quiet.text.includes("Nothing waiting for you.\n  1 new event this week, 1 problem report.\n  Open it: ") && !quiet.text.includes("Roughly") && !quiet.html.includes("Go through them"));
+});
+
+Deno.test("weekly digest (D91): each waiting item and open question is listed, with why", () => {
+  const items = [
+    { title: "Picture day", starts_at: "2026-12-04T17:00:00Z", all_day: false, timezone: "America/Los_Angeles", reasons: ["from_transcription", "time_unlikely"], outcome: "new", change_kind: "new" },
+    { title: "Winter concert", starts_at: "2026-12-10T08:00:00Z", all_day: true, timezone: "America/Los_Angeles", reasons: [], outcome: "update", change_kind: "changed" },
+    { title: "Field trip <b>", starts_at: "2026-12-11T08:00:00Z", all_day: true, timezone: "America/Los_Angeles", reasons: [], outcome: "cancel", change_kind: "cancelled" },
+  ];
+  const questions = [{ body: "Do we bring <lunch>?", event_title: "Zoo trip", starts_at: "2026-12-15T08:00:00Z", all_day: true, timezone: "America/Los_Angeles" }];
+  const r = render("weekly_digest", { feeds: [{ id: "f1", name: "Room 12", subscribers: 0, events_added: 0, needs_review: 5, reports: 0, open_questions: 1, items, questions }] }, SITE, UNSUB);
+  assertEquals(r.subject, "Needs you this week: 5 to review, 1 question");
+  assert(r.text.includes("Here's what needs you this week: 5 events and 1 follower question."));
+  assert(r.text.includes("  - Picture day (Fri, Dec 4, 9:00 AM)\n    The time has no AM or PM, and this is the less usual reading."), "a specific reason beats \"read from a picture\"");
+  assert(r.text.includes("  - Change: Winter concert (Thu, Dec 10)\n    It changes something already on your calendar."));
+  assert(r.text.includes("  - Cancel: Field trip <b> (Fri, Dec 11)"));
+  assert(r.text.includes("  and 2 more events.\n  1 follower question waiting for an answer.\n  - About Zoo trip (Tue, Dec 15): \"Do we bring <lunch>?\""));
+  assert(r.html.includes("<strong>Field trip &lt;b&gt;</strong>") && r.html.includes("“Do we bring &lt;lunch&gt;?”"), "titles and questions are escaped");
+  assert(r.html.includes(`<a href="${SITE}/feeds/f1" style=`) && r.html.includes(">Go through them</a>"));
+  // The email only links to the Review page. Nothing in it approves or rejects.
+  assert(!/\/(approve|reject|publish|discard|add-all|answer)\b/.test(r.html + r.text));
+  // Only a question waiting: the subject and intro say so.
+  const q = render("weekly_digest", { feeds: [{ id: "f1", name: "Room 12", subscribers: 0, events_added: 0, needs_review: 0, reports: 0, open_questions: 2, questions }] }, SITE, UNSUB);
+  assertEquals(q.subject, "Needs you this week: 2 questions");
+  assert(q.text.includes("Nothing waiting for you.\n  2 follower questions waiting for an answer.") && q.text.includes("  and 1 more question."));
 });
 
 Deno.test("stale nudge and milestone wording", () => {

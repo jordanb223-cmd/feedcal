@@ -7,6 +7,9 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Changed
+- The Monday email now lists what needs you: each event waiting for your OK, with its date and why it is waiting, and each follower question nobody has answered. Before, it gave only a count. It links to your Review page; nothing in the email adds or removes an event.
+
 ## [0.19.0] - 2026-11-24
 
 ### Changed
