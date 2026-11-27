@@ -24,15 +24,20 @@ Deno.serve(async (req) => {
   let sent = 0;
   let failed = 0;
   for (const r of (rows ?? []) as { id: string; kind: Kind; payload: Record<string, unknown>; email: string | null; user_id: string; unsubscribe_token: string }[]) {
-    if (!r.email) {
+    // D94: an invitation goes to the address the organizer typed, not to the organizer.
+    const invite = r.kind === "invite";
+    const to = invite ? (typeof r.payload.to === "string" ? r.payload.to : null) : r.email;
+    if (!to) {
       await db.rpc("mark_outbox", { p_id: r.id, p_sent: false, p_error: "no_email" });
       failed++;
       continue;
     }
-    const unsubscribe = `${site}/unsubscribe?u=${r.user_id}&k=${r.kind}&t=${r.unsubscribe_token}`;
+    const unsubscribe = invite
+      ? `${site}/invite/stop/${String(r.payload.stop ?? "")}`
+      : `${site}/unsubscribe?u=${r.user_id}&k=${r.kind}&t=${r.unsubscribe_token}`;
     const m = render(r.kind, r.payload, site, unsubscribe);
     const result = await sender.send({
-      to: r.email, from, subject: m.subject, text: m.text, html: m.html, idempotencyKey: r.id,
+      to, from, subject: m.subject, text: m.text, html: m.html, idempotencyKey: r.id,
       // RFC 8058 one-click unsubscribe: mail apps POST to this URL. Admin alerts have none (D38).
       headers: {
         ...(NO_UNSUBSCRIBE.has(r.kind) ? {} : { "List-Unsubscribe": `<${unsubscribe}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" }),

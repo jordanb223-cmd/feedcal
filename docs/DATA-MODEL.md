@@ -136,6 +136,8 @@ Signed-in non-members don't read public feeds from the tables. Public pages go t
 
 **private.contact_messages (D63).** Contact-form messages: topic (bug, question, privacy, other), text (≤ 4000), optional reply address, the Bumpdraft page it was sent from, and whether the sender was signed in. Deliberately not linked to an account. Kept 90 days (purged daily). Read only by the server; each one emails every row in `public.admins`.
 
+**private.invites and private.invite_optouts (D94).** One row per invitation Bumpdraft sent: the calendar, who sent it, and a keyed SHA-256 of the invited address (never the address), kept 90 days for the sending limits. `invite_optouts` holds the same hash for anyone who chose "Don't email me again", kept until they ask otherwise. The address itself is only in the queued email (`private.email_outbox.payload.to`) until that email is sent or has finally failed.
+
 **private.upload_tickets (D61).** One per upload attempt: feed, user, cleaned file name, type, declared size (≤ 10 MB), and the storage spot the server chose (`<feed>/upload-<ticket>/file.<ext>` in `attachments`). Valid 15 minutes, works once. Unfinished ones are trashed hourly; all are dropped after 2 days. The daily limit (20 per person) counts them.
 
 Status changes on `events`, `messages`, `attachments` and `reports` are limited to the moves in docs/STATE-MACHINES.md (enforced by a trigger).

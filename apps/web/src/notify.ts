@@ -140,6 +140,28 @@ export function registerNotifyRoutes(app: Hono<AppEnv>): void {
     return c.html(messagePage("Thank you", "Your report was sent to the person who runs this calendar."));
   });
 
+  // D94: "Don't email me again" from an invitation. GET shows a button (link scanners can't opt
+  // you out); POST does it, and also serves mail apps' one-click POST. The token in the path is
+  // the keyed hash of the invited address, so only someone who was invited holds one.
+  const StopToken = z.string().regex(/^[0-9a-f]{64}$/);
+  app.get("/invite/stop/:token", (c) => {
+    const t = StopToken.safeParse(c.req.param("token"));
+    if (!t.success) return c.html(messagePage("Link not valid", "This link isn't complete. Open it again from the invitation email."), 400);
+    c.header("cache-control", "no-store");
+    c.header("referrer-policy", "no-referrer");
+    return c.html(publicLayout("Stop invitations", html`<div class="card"><h1>Stop invitations from Bumpdraft?</h1>
+      <p>Bumpdraft will not email this address another invitation, for any calendar. People can still email you themselves.</p>
+      <form method="post" action="/invite/stop/${t.data}"><button type="submit">Yes, don't email me again</button></form></div>`));
+  });
+  app.post("/invite/stop/:token", async (c) => {
+    const t = StopToken.safeParse(c.req.param("token"));
+    if (!t.success) return c.html(messagePage("Link not valid", "This link isn't complete."), 400);
+    const { data } = await c.get("supabase").rpc("invite_stop", { p_token: t.data });
+    if (data !== true) return c.html(messagePage("Link not valid", "This link isn't valid. Open it again from the invitation email."), 400);
+    c.get("log").info("invite_stopped");
+    return c.html(messagePage("Done", "Bumpdraft won't email this address another invitation."));
+  });
+
   // Unsubscribe from an email link. GET shows a button (link scanners can't unsubscribe you);
   // POST does it, and also serves mail apps' RFC 8058 one-click POST, which carries no Origin
   // header and no CSRF cookie: the signed token in the URL is the authorisation (D33).

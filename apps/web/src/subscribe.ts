@@ -2,9 +2,9 @@ import type { Context, Hono } from "hono";
 import { renderSVG } from "uqr";
 import { z } from "zod";
 import { PublicFeedPage } from "@feedcal/shared";
-import { currentUser } from "./auth.js";
+import { currentUser, MESSAGES } from "./auth.js";
 import { feedUrl } from "./feed.js";
-import { csrfToken, originOf } from "./security.js";
+import { csrfToken, csrfValid, originOf } from "./security.js";
 import { detectDevice, GO_TARGETS, platformOf, subscribeLinks, type GoTarget } from "./subscribe-links.js";
 import { flyerPage, shareKitPage, statusPage, subscribePage } from "./subscribe-views.js";
 import type { AppEnv } from "./types.js";
@@ -111,8 +111,24 @@ export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
     const kit = await loadShareKit(c, id.data);
     if (!kit) return c.html(messagePage("Calendar not found", "That calendar doesn't exist, or it isn't yours."), 404);
     const notice = c.req.query("rotated") === "1" ? "New link made. The old link has stopped working; anyone using it needs the new one." : undefined;
+    const inviteNotice = INVITE_NOTICES[c.req.query("invite") ?? ""];
     const ready = c.req.query("ready") === "gmail"; // D47: the end of Gmail setup
-    return c.html(shareKitPage({ csrf: csrfToken(c), ...kit, ...(notice ? { notice } : {}), ready }));
+    return c.html(shareKitPage({ csrf: csrfToken(c), ...kit, ...(notice ? { notice } : {}), ...(inviteNotice ? { inviteNotice } : {}), ready }));
+  });
+
+  // D94: Bumpdraft emails one person an invitation. The limits and checks are in public.send_invite.
+  app.post("/feeds/:id/invite", async (c) => {
+    const id = FeedId.safeParse(c.req.param("id"));
+    if (!id.success) return c.html(messagePage("Calendar not found", "That calendar doesn't exist."), 404);
+    const user = await currentUser(c);
+    if (!user) return c.redirect(`/login?next=${encodeURIComponent(`/feeds/${id.data}/share`)}`, 303);
+    const body = await c.req.parseBody().catch(() => ({} as Record<string, unknown>));
+    if (!csrfValid(c, body.csrf)) return c.html(messagePage("Please try again", MESSAGES.badForm, { href: `/feeds/${id.data}/share`, text: "Back" }), 403);
+    const email = typeof body.email === "string" ? body.email.trim().slice(0, 320) : "";
+    const { data, error } = await c.get("supabase").rpc("send_invite", { p_feed_id: id.data, p_email: email });
+    const outcome = !error && typeof data === "string" && data in INVITE_NOTICES ? data : "error";
+    c.get("log").info("invite", { outcome });
+    return c.redirect(`/feeds/${id.data}/share?invite=${outcome}#email-it`, 303);
   });
 
   app.get("/feeds/:id/flyer", async (c) => {
@@ -132,6 +148,19 @@ export function registerSubscribeRoutes(app: Hono<AppEnv>): void {
     return id.success ? c.redirect(`/feeds/${id.data}/share`, 301) : c.html(messagePage("Calendar not found", "That calendar doesn't exist."), 404);
   });
 }
+
+/** What the Share page says after "Send the invitation". The words come from public.send_invite. */
+const INVITE_NOTICES: Record<string, string> = {
+  sent: "Invitation on its way. It should arrive within a few minutes.",
+  invalid: "That doesn't look like an email address. Check it and try again.",
+  already: "That person was already invited to this calendar in the last 30 days.",
+  opted_out: "That person has asked Bumpdraft not to send them invitations. You can still email them yourself.",
+  limit: "You've sent 10 invitations today, which is the daily limit. You can still email people yourself, or send more tomorrow.",
+  busy: "Bumpdraft has sent all the invitations it can today. You can still email people yourself, or try again tomorrow.",
+  private: "This calendar is private, so Bumpdraft can't send an invitation for it. You can still email the link yourself.",
+  not_allowed: "Only the people who run this calendar can send invitations.",
+  error: "The invitation couldn't be sent. Please try again in a minute.",
+};
 
 async function loadShareKit(c: Context<AppEnv>, feedId: string) {
   const sb = c.get("supabase");
