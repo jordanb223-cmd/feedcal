@@ -85,6 +85,8 @@ export const requireSameOrigin: MiddlewareHandler<AppEnv> = async (c, next) => {
   // RFC 8058 one-click unsubscribe: mail apps POST from their servers with no Origin. The signed
   // token in the URL authorises it, and it can only turn emails off (D33).
   if (c.req.method === "POST" && new URL(c.req.url).pathname === "/unsubscribe") return next();
+  // D94: the same for an invitation's "don't email me again" link. It can only add to that list.
+  if (c.req.method === "POST" && /^\/invite\/stop\/[0-9a-f]{64}$/.test(new URL(c.req.url).pathname)) return next();
   const expected = originOf(c);
   const origin = c.req.header("origin");
   let actual: string | null = origin && origin !== "null" ? origin : null;

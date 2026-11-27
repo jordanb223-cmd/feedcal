@@ -1,6 +1,6 @@
 // Notification emails, as plain text and simple HTML. Plain English; every email says why it
 // was sent and has a one-click unsubscribe for that kind.
-export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks" | "ops_alert" | "gmail_reconnect" | "contact" | "events_published";
+export type Kind = "weekly_digest" | "report" | "stale_nudge" | "milestone" | "supporter_thanks" | "ops_alert" | "gmail_reconnect" | "contact" | "events_published" | "invite";
 
 /** Operations alerts (D38) go to admins and have no unsubscribe: an ignored alert is the failure. */
 export const NO_UNSUBSCRIBE: ReadonlySet<Kind> = new Set<Kind>(["ops_alert", "gmail_reconnect", "contact"]);
@@ -90,6 +90,30 @@ export function render(kind: Kind, p: Record<string, unknown>, site: string, uns
 }
 
 function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsubscribe: string): Rendered {
+  if (kind === "invite") {
+    // D94: an invitation to follow a calendar, sent to someone the organizer named. `unsubscribe`
+    // is that person's "don't email me again" link. The calendar's name and the organizer's name
+    // are typed by the organizer, so both are escaped and neither is ever a link.
+    const name = String(p.feed_name ?? "a calendar");
+    const from = typeof p.from_name === "string" && p.from_name.trim() ? p.from_name.trim() : "";
+    const link = `${site}/c/${encodeURIComponent(String(p.slug ?? ""))}`;
+    const lead = from ? `${from} invited you to follow the ${name} calendar.` : `You've been invited to follow the ${name} calendar.`;
+    const steps = [
+      "Tap the button. It opens the calendar's page.",
+      "Tap the subscribe button there. Your calendar app opens and asks if you want to subscribe. Say yes.",
+      "That's it. New dates and changes show up on their own from then on.",
+    ];
+    const caution = "The calendar is filled in automatically by Bumpdraft from the group's emails, so it can make mistakes. If something looks wrong, check with the person who invited you.";
+    const why = "You got this because someone who runs this calendar typed your address into Bumpdraft. Bumpdraft has not kept your address, only a scrambled code so it won't invite you twice.";
+    const text = `Hi,\n\n${lead}\n\n1. Open this link: ${link}\n2. ${steps[1]}\n3. ${steps[2]}\n\n${caution}\n\n—\n${why}\nDon't email me again: ${unsubscribe}\nReport this calendar: ${link}/report`;
+    const html = shell(
+      `<p>Hi,</p><p>${esc(lead)}</p>`
+      + `<p style="margin:1.5rem 0"><a href="${esc(link)}" style="display:inline-block;background:#2f6f4e;color:#ffffff;padding:.8rem 1.5rem;border-radius:999px;text-decoration:none;font-weight:700">Add to my calendar</a></p>`
+      + `<ol style="padding-left:1.25rem;margin:1rem 0">${steps.map((s) => `<li style="margin:0 0 .5rem">${esc(s)}</li>`).join("")}</ol>`
+      + `<p style="color:#5c5c5c;font-size:14px">${esc(caution)}</p>`,
+      `${esc(why)}<br><a href="${esc(unsubscribe)}">Don't email me again</a> · <a href="${esc(link)}/report">Report this calendar</a>`);
+    return { subject: `Add ${name} to your phone's calendar`, text, html };
+  }
   if (kind === "gmail_reconnect") {
     // Unverified Google apps get 7-day connections (D39); this is the one email that keeps checks running.
     const name = String(p.feed_name ?? "your calendar");

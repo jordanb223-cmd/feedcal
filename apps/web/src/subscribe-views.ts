@@ -119,6 +119,8 @@ export function shareKitPage(opts: {
   chatText: string;
   stats: { subscribers_at_least: number; clicks_30d: Record<string, number> } | null;
   notice?: string;
+  /** D94: what happened to the invitation just sent; shown inside "Email it". */
+  inviteNotice?: string;
   ready?: boolean;
 }): Html {
   const clicks = opts.stats ? Object.values(opts.stats.clicks_30d).reduce((a, b) => a + b, 0) : 0;
@@ -154,13 +156,24 @@ export function shareKitPage(opts: {
   <p><label for="chat-text">Copy and paste into your group chat</label><textarea id="chat-text" rows="4" readonly>${opts.chatText}</textarea></p>
   <p><button type="button" class="secondary" data-copy="chat-text">Copy message</button></p>
 </div>
-<div class="card">
+<div class="card" id="email-it">
   <h2>Email it</h2>
-  <p><label for="invite-to">Their email address</label>
+  ${opts.inviteNotice ? html`<p role="status"><strong>${opts.inviteNotice}</strong></p>` : ""}
+  ${opts.pageUrl
+    ? html`<form method="post" action="/feeds/${opts.feedId}/invite">
+    <input type="hidden" name="csrf" value="${opts.csrf}">
+    <p><label for="invite-to">Their email address</label>
+      <input id="invite-to" name="email" type="email" autocomplete="off" spellcheck="false" maxlength="254" required></p>
+    <p><button type="submit">Send the invitation</button></p>
+  </form>
+  <p class="muted">Bumpdraft emails them an invitation with an "Add to my calendar" button and three short steps. One person at a time, up to 10 a day. Bumpdraft doesn't keep the address after the email is sent.</p>
+  <p><a href="${inviteMailto(opts.name, opts.pageUrl, false)}" data-mailto="invite-to">Or write it yourself in my email app</a> <span class="muted">(plain text, from your own address)</span></p>`
+    : html`<p><label for="invite-to">Their email address</label>
     <span class="muted" id="invite-hint">Optional. For several people, put a comma between addresses.</span>
     <input id="invite-to" type="email" multiple autocomplete="off" spellcheck="false" maxlength="1000" aria-describedby="invite-hint"></p>
-  <p><a class="button secondary" href="${inviteMailto(opts.name, opts.pageUrl ?? opts.feedUrl)}" data-mailto="invite-to">Open my email app</a></p>
+  <p><a class="button secondary" href="${inviteMailto(opts.name, opts.feedUrl, true)}" data-mailto="invite-to">Open my email app</a></p>
   <p class="muted">This opens your own email app with the message written and the link in it. You press send. Bumpdraft doesn't see or keep the address.</p>
+  <p class="muted">This calendar is private, so Bumpdraft can't send a designed invitation with a button for it. Set it to "Anyone with the link" in Settings to use that.</p>`}
 </div>
 </div>
 <aside>
@@ -191,10 +204,22 @@ ${opts.stats
   );
 }
 
-/** D93: a mailto: link that opens the organizer's own mail app with the invitation written. */
-export function inviteMailto(name: string, url: string): string {
+/**
+ * D93: a mailto: link that opens the organizer's own mail app with the invitation written.
+ * `direct` is true when the link is the calendar link itself (a private calendar, which has no page).
+ */
+export function inviteMailto(name: string, url: string, direct = false): string {
   const subject = `Add ${name} to your phone's calendar`;
-  const body = `Hi,\n\nI've set up a calendar for ${name}. Open this link to add it to your phone's calendar:\n\n${url}\n\nIt updates on its own when dates change.\n\nIt's filled in automatically by Bumpdraft from the emails we get, so it can make mistakes. If something looks wrong, check with me.`;
+  const steps = direct
+    ? ["Tap the link below.", "Your calendar app opens and asks if you want to subscribe. Say yes."]
+    : ["Tap the link below.", "Tap the subscribe button on the page. Your calendar app opens and asks if you want to subscribe. Say yes."];
+  const body = [
+    "Hi,",
+    `I've set up a calendar for ${name}. Here's how to get it on your phone:`,
+    [...steps, "That's it. New dates and changes show up on their own from then on."].map((t, n) => `${n + 1}. ${t}`).join("\n"),
+    url,
+    "It's filled in automatically by Bumpdraft from the emails we get, so it can make mistakes. If something looks wrong, check with me.",
+  ].join("\n\n");
   return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body.replace(/\n/g, "\r\n"))}`;
 }
 

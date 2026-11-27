@@ -69,6 +69,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li><strong>Messages you send us</strong> through the contact form, and your email address if you add one, so we can read and answer them.</li>
     <li><strong>Questions to an organizer:</strong> the text of your question and the organizer's answer. We don't ask who you are. A scrambled code is kept for up to a day so one person can't send too many.</li>
     <li><strong>Event chat:</strong> your messages and a made-up name we give you. We don't ask for your real name. A scrambled code stays with each message so one person keeps one made-up name and can't flood the chat. Everyone following the event can read the chat.</li>
+    <li><strong>Invitations:</strong> if someone who runs a calendar asks Bumpdraft to email you an invitation, your address is held only until that email is sent. After that we keep a scrambled code, not the address, so we don't invite you twice and can honor "Don't email me again".</li>
     <li><strong>No card details:</strong> if you donate, Buy Me a Coffee takes the payment; we never see your card.</li>
     <li><strong>Counts, not people:</strong> how many calendar apps check a feed, and how many times subscribe buttons are tapped. We store a scrambled code instead of an address, and the code can't be traced back after 2 days.</li>
   </ul>
@@ -87,6 +88,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li>Contact form messages: 90 days.</li>
     <li>Forwarded emails, their attachments, and uploaded files: 30 days. An upload that's started but never finished is deleted within about 2 hours.</li>
     <li>Questions to organizers and chat messages: until 30 days after the event is over. For a repeating event, that's 30 days after its last date.</li>
+    <li>An invited address: until the invitation is sent, usually a few minutes. The scrambled code: 90 days, or for as long as you've asked not to be emailed.</li>
     <li>Cancelled events: 30 days in calendars, so phones remove them.</li>
     <li>The "Undo" record after a change: 1 day.</li>
     <li>Sign-in and rate-limit records: 1 hour.</li>

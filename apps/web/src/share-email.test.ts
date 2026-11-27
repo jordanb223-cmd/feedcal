@@ -15,16 +15,40 @@ describe("Email it (D93)", () => {
     expect(body).toContain("https://bumpdraft.test/c/room-f");
     expect(body).toContain("it can make mistakes");
     expect(body).toContain("\r\n\r\n");
+    expect(body).toContain("1. Tap the link below.\r\n2. Tap the subscribe button on the page.");
+    expect(body).toContain("3. That's it. New dates and changes show up on their own from then on.");
   });
 
-  it("the Share page shows the section, with an address box that is never posted anywhere", async () => {
+  it("a private calendar's steps skip the page, because the link opens the calendar app itself", () => {
+    const body = new URL(inviteMailto("Room F", "webcal://x/f/tok.ics", true)).searchParams.get("body") ?? "";
+    expect(body).toContain("2. Your calendar app opens and asks if you want to subscribe. Say yes.");
+    expect(body).not.toContain("subscribe button");
+  });
+
+  it("a calendar with a page offers the invitation Bumpdraft sends, and the mail-app link beside it", async () => {
     const html = String(await shareKitPage(kit));
-    expect(html).toContain("<h2>Email it</h2>");
+    expect(html).toContain('<div class="card" id="email-it">');
+    expect(html).toMatch(/<form method="post" action="\/feeds\/aaaaaaaa-0000-4000-8000-000000000001\/invite">\s*<input type="hidden" name="csrf" value="x">/);
+    expect(html).toMatch(/<input id="invite-to" name="email" type="email"[^>]* required>/);
+    expect(html).toContain("<button type=\"submit\">Send the invitation</button>");
+    expect(html).toContain("up to 10 a day");
+    expect(html).toMatch(/<a href="mailto:\?subject=[^"]+" data-mailto="invite-to">Or write it yourself in my email app<\/a>/);
+    expect(html.indexOf("Group chat message")).toBeLessThan(html.indexOf("Email it"));
+  });
+
+  it("what happened to an invitation is said inside the section, where the page lands", async () => {
+    const html = String(await shareKitPage({ ...kit, inviteNotice: "Invitation on its way." }));
+    expect(html).toMatch(/<h2>Email it<\/h2>\s*<p role="status"><strong>Invitation on its way\.<\/strong><\/p>/);
+  });
+
+  it("a private calendar offers only the mail-app link, with a box that is never posted", async () => {
+    const html = String(await shareKitPage({ ...kit, visibility: "private", pageUrl: null }));
+    expect(html).not.toContain("/invite");
     expect(html).toMatch(/<input id="invite-to" type="email" multiple[^>]*>/);
     expect(html).not.toMatch(/<input id="invite-to"[^>]* name=/);
     expect(html).toMatch(/<a class="button secondary" href="mailto:\?subject=[^"]+" data-mailto="invite-to">Open my email app<\/a>/);
     expect(html).toContain("Bumpdraft doesn't see or keep the address.");
-    expect(html.indexOf("Group chat message")).toBeLessThan(html.indexOf("Email it"));
+    expect(html).toContain("Set it to \"Anyone with the link\" in Settings");
   });
 
   it("a private calendar's message carries the calendar link", async () => {

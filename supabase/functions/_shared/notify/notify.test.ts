@@ -159,3 +159,27 @@ Deno.test("D88: a follower's question reaches the organizer as its own email, es
   assert(r.html.includes("&lt;b&gt;Packed lunch?&lt;/b&gt;") && !r.html.includes("<b>Packed"));
   assertEquals((r.text.match(/https?:\/\/\S+/g) ?? []).filter((l) => l.endsWith("/feeds/f")).length, 1);
 });
+
+Deno.test("D94: an invitation has a button to the calendar's page, the steps, and a stop link", () => {
+  const stop = "https://feedcal.example/invite/stop/" + "a".repeat(64);
+  const r = render("invite", { to: "pat@example.test", feed_name: "Room <F>", slug: "room-f", from_name: "Jordan <b>", stop: "a".repeat(64) }, SITE, stop);
+  assertEquals(r.subject, "Add Room <F> to your phone's calendar");
+  assert(r.text.includes("Jordan <b> invited you to follow the Room <F> calendar."));
+  assert(r.text.includes("1. Open this link: https://feedcal.example/c/room-f"));
+  assert(r.text.includes("3. That's it. New dates and changes show up on their own from then on."));
+  assert(r.text.includes(`Don't email me again: ${stop}`) && r.text.includes("Report this calendar: https://feedcal.example/c/room-f/report"));
+  assert(!r.text.includes("pat@example.test") && !r.html.includes("pat@example.test"), "the address is not repeated in the email");
+  assert(r.html.includes('<a href="https://feedcal.example/c/room-f" style="display:inline-block;background:#2f6f4e'), "the button goes to the page");
+  assert(r.html.includes(">Add to my calendar</a>"));
+  assert(r.html.includes("Jordan &lt;b&gt; invited you") && r.html.includes("Room &lt;F&gt;") && !r.html.includes("<b>"), "names are escaped");
+  assertEquals((r.html.match(/<li /g) ?? []).length, 3);
+  assert(r.html.includes(`<a href="${stop}">Don't email me again</a>`));
+  // Every link in it is ours: the page, its report form, the stop link.
+  for (const href of r.html.match(/href="[^"]+"/g) ?? []) assert(href.startsWith('href="https://feedcal.example/'), href);
+});
+
+Deno.test("D94: with no organizer name the invitation still reads as a sentence, and the slug can't leave the path", () => {
+  const r = render("invite", { feed_name: "Room F", slug: "../x?y", from_name: "  " }, SITE, "https://feedcal.example/invite/stop/x");
+  assert(r.text.includes("You've been invited to follow the Room F calendar."));
+  assert(r.text.includes("https://feedcal.example/c/..%2Fx%3Fy"));
+});

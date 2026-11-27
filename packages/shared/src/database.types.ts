@@ -873,6 +873,9 @@ isOneToOne: false
 "ingest_start":
 { Args: { "p_bytes": number,"p_local_part": string }; Returns: Json
                            },
+"invite_stop":
+{ Args: { "p_token": string }; Returns: boolean
+                           },
 "link_supporter":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -955,6 +958,9 @@ isOneToOne: false
                            },
 "save_event":
 { Args: { "p_event_id": string,"p_feed_id": string,"p_fields": Json }; Returns: string
+                           },
+"send_invite":
+{ Args: { "p_email": string,"p_feed_id": string }; Returns: string
                            },
 "set_event_chat":
 { Args: { "p_event_id": string,"p_on": boolean }; Returns: boolean
