@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-11-27
+
 ### Added
 - The sign-in page, the "Ask the organizer" form and the event chat form now say that using them means you agree to the Terms and Community rules.
 - Terms: who can use Bumpdraft (18 or older), what the AI does, copyright, and how changes to the terms are announced.
