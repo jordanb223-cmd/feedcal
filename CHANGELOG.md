@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-11-27
+
 ### Added
 - Share page: "Send the invitation". For a calendar with a page, Bumpdraft emails one person an invitation with an "Add to my calendar" button and three short steps. Up to 10 a day per organizer. Every invitation has a "Don't email me again" link, and the address is not kept once the email is sent.
 
