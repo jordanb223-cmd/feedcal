@@ -116,7 +116,8 @@ Locally, emails go to Mailpit (http://127.0.0.1:54324): `supabase/functions/.env
 ## 11. Moderation (Phase 14)
 - [x] Make yourself an admin (done; confirmed in production 2026-11-22, added 2026-11-21): in the SQL editor, `insert into public.admins (user_id) select id from auth.users where email = '<your email>';`. **Needed for contact-form messages (D63) and operations alerts to reach you**: they're emailed to everyone in `public.admins`, and stored either way.
 - [ ] Check that TOTP MFA is on for each hosted project (Authentication → Multi-Factor; Supabase's docs say it's on by default). Then open `/admin`: it asks you to set up an authenticator app before showing the queue.
-- [ ] Have a lawyer review `/terms`, `/rules` and `/takedown` (drafts) before public launch.
+- [ ] Have a lawyer review `/terms`, `/rules` and `/takedown` (drafts) before public launch. The Terms have no limit on liability and no governing-law clause yet (D92); those are for the lawyer to write.
+- [ ] **Copyright agent (D92).** Choose who receives copyright notices, with a postal address, phone number and email address that can be public. Register that agent with the U.S. Copyright Office (`UNVERIFIED`: the fee and the form). Then give Claude the details to put on `/takedown`. Until this is done the copyright safe harbor does not apply.
 
 ## 12. Buy Me a Coffee donations (Phase 15), optional
 - [x] Create a Buy Me a Coffee page (free; BMC takes a fee on donations). Done 2026-11-21: `buymeacoffee.com/jordanb223`. Its page name is the repository variable `BMC_USERNAME`, which each deploy passes to its Pages project. Without it, no donation link is shown.

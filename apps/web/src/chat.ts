@@ -58,6 +58,7 @@ export function chatPage(csrf: string, uid: string, p: ChatPage, note?: { error?
     ? html`<form method="post" action="/chat/${uid}">
     <input type="hidden" name="csrf" value="${csrf}">
     <p><label for="message">Your message</label><textarea id="message" name="message" rows="2" maxlength="300" required dir="auto"></textarea></p>
+    <p>By posting, you agree to the <a href="/rules">Community rules</a> and <a href="/terms">Terms</a>.</p>
     <button type="submit">Send</button>
   </form>
   <p class="muted">${p.moderator

@@ -205,23 +205,50 @@ export function registerPolicyRoutes(app: Hono<AppEnv>): void {
       <li>No spam, advertising for unrelated products, or hateful, violent or sexual content.</li>
       <li>Keep children safe: no children's full names, home addresses, phone numbers or photos in public calendars. School and youth calendars start as "anyone with the link" for this reason.</li>
       <li>Keep events accurate. If plans change, update or cancel them.</li>
+      <li>The same rules apply in event chats and in questions to organizers. No harassment, no private details about other people, no links.</li>
+      <li>Bumpdraft is for adults. Don't let children post.</li>
     </ul>
     <p>Breaking these rules can get a calendar hidden or an account suspended. <a href="/takedown">How reports and takedowns work</a>.</p></div>`, seoHead(c, "Community rules", "How Bumpdraft calendars stay useful and safe: what can be shared, and what isn't allowed."))));
   app.get("/terms", (c) => c.html(publicLayout("Terms of use", html`<div class="card"><h1>Terms of use</h1>${DRAFT}
     <p>Bumpdraft is a free service that turns forwarded emails into calendars people can subscribe to.</p>
     <ul>
+      <li><strong>Who can use Bumpdraft.</strong> You must be 18 or older to create an account, post in a chat, or send a question. Bumpdraft is for parents, organizers and other adults. It is not for children to use.</li>
       <li><strong>Your content.</strong> You keep the rights to what you send. You let Bumpdraft store and process it to run your calendars, and publish what you choose to publish.</li>
       <li><strong>Your responsibilities.</strong> Follow the <a href="/rules">community rules</a>. Check what Bumpdraft publishes for you; it uses AI and can make mistakes.</li>
+      <li><strong>What the AI does.</strong> Bumpdraft reads the emails you send it and writes calendar events from them. It can get dates, times and places wrong. Events on your calendars are published under your account, and you are responsible for checking them.</li>
+      <li><strong>Copyright.</strong> Only send Bumpdraft material you have the right to share. We remove material when we get a valid copyright notice (see <a href="/takedown#copyright">Reports and takedowns</a>). We close the accounts of people who repeatedly infringe copyright.</li>
       <li><strong>No guarantees.</strong> Bumpdraft is provided as is. Don't rely on it for anything where a missed or wrong event would cause harm.</li>
       <li><strong>Ending.</strong> You can delete your account at any time from your account page. We may hide calendars or suspend accounts that break the rules.</li>
       <li><strong>Email.</strong> Forwarded emails and attachments are deleted after 30 days.</li>
+      <li><strong>Changes to these terms.</strong> If we change these terms in a way that matters, we'll email account holders at least 14 days before the change takes effect. If you keep using Bumpdraft after that date, you accept the new terms.</li>
     </ul></div>`, seoHead(c, "Terms of use", "The terms for using Bumpdraft, the free service that turns emails into calendars people can subscribe to."))));
   app.get("/takedown", (c) => c.html(publicLayout("Reports and takedowns", html`<div class="card"><h1>Reports and takedowns</h1>${DRAFT}
     <p>Anyone can report a calendar with the "Report this calendar" link on its page, or report one event from the link inside it in their calendar.</p>
     <ul>
       <li><strong>Safety issues</strong> (a child's private information, threats): we aim to act within 1 business day, usually by hiding the calendar while we look.</li>
       <li><strong>Impersonation, spam, wrong information</strong>: we aim to respond within 2 business days.</li>
-      <li><strong>Copyright or other legal requests</strong>: send the details through the <a href="/contact">contact form</a>; we aim to respond within 5 business days.</li>
+      <li><strong>Copyright</strong>: see below.</li>
+      <li><strong>Other legal requests</strong>: send the details through the <a href="/contact">contact form</a>; we aim to respond within 5 business days.</li>
     </ul>
-    <p>Hidden calendars stop updating subscribers at once. Organizers are told what happened and can ask for another look.</p></div>`, seoHead(c, "Reports and takedowns", "How to report a calendar or an event on Bumpdraft, and how takedown requests are handled."))));
+    <p>Hidden calendars stop updating subscribers at once. Organizers are told what happened and can ask for another look.</p>
+    <h2 id="copyright">Copyright</h2>
+    <p>If you believe something on Bumpdraft copies your work without permission, send a notice through the <a href="/contact">contact form</a>. Your notice must include:</p>
+    <ul>
+      <li>Your signature, typed or handwritten.</li>
+      <li>What work of yours was copied.</li>
+      <li>Where it is on Bumpdraft: the calendar's link and the event's name and date.</li>
+      <li>How to reach you: an address, phone number, or email address.</li>
+      <li>A statement that you believe in good faith the use is not allowed by the copyright owner, its agent, or the law.</li>
+      <li>A statement that the notice is accurate and, under penalty of perjury, that you are the owner or are allowed to act for the owner.</li>
+    </ul>
+    <p>We remove or hide the material promptly after a complete notice, and tell the organizer who posted it.</p>
+    <p><strong>If your material was removed by mistake,</strong> send a counter-notice the same way, with:</p>
+    <ul>
+      <li>Your signature.</li>
+      <li>What was removed and where it was.</li>
+      <li>A statement, under penalty of perjury, that you believe in good faith it was removed by mistake or misidentification.</li>
+      <li>Your name, address and phone number, and a statement that you accept the jurisdiction of the federal district court where you live (or, outside the United States, any district where Bumpdraft can be found), and that you will accept service of process from the person who sent the notice.</li>
+    </ul>
+    <p>We send your counter-notice to the person who complained. Unless they tell us they have filed a court action, we put the material back 10 to 14 business days after we receive your counter-notice.</p>
+    <p><strong>Repeat infringers.</strong> We close the accounts of people who repeatedly infringe copyright.</p></div>`, seoHead(c, "Reports and takedowns", "How to report a calendar or an event on Bumpdraft, and how takedown requests are handled."))));
 }

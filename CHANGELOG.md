@@ -7,6 +7,17 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Added
+- The sign-in page, the "Ask the organizer" form and the event chat form now say that using them means you agree to the Terms and Community rules.
+- Terms: who can use Bumpdraft (18 or older), what the AI does, copyright, and how changes to the terms are announced.
+- Reports and takedowns: a copyright section with what a notice and a counter-notice must contain.
+- Privacy: follower questions and event chat, Google, children, "Do Not Track", the date the page last changed, and how changes are announced.
+- Community rules: the rules now cover chats and questions.
+
+### Changed
+- Follower questions and chat messages are deleted 30 days after their event is over. Before, they stayed until the event or calendar was deleted.
+- The scrambled code stored with a follower's question is cleared within about a day.
+
 ## [0.20.0] - 2026-11-26
 
 ### Changed

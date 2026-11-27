@@ -59,6 +59,7 @@ export function loginPage(opts: { csrf: string; googleEnabled: boolean; error?: 
     html`<div class="card panel">
   <h1>Sign in to Bumpdraft</h1>
   ${opts.error ? html`<p class="error" role="alert">${opts.error}</p>` : ""}
+  <p id="agree">By signing in, you agree to Bumpdraft's <a href="/terms">Terms</a> and <a href="/rules">Community rules</a>, and confirm you've read the <a href="/privacy">Privacy</a> page.</p>
   <form method="post" action="/login">
     ${csrfField(opts.csrf)}
     <label for="email">Email address</label>
