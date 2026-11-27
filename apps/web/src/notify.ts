@@ -61,6 +61,7 @@ export function askPage(csrf: string, uid: string, p: QuestionsPage, error?: str
   <form method="post" action="/ask/${uid}">
     <input type="hidden" name="csrf" value="${csrf}">
     <p><label for="question">Your question</label><textarea id="question" name="question" rows="3" maxlength="500" required dir="auto" placeholder="For example: should we bring a packed lunch?"></textarea></p>
+    <p>By sending, you agree to the <a href="/rules">Community rules</a> and <a href="/terms">Terms</a>.</p>
     <button type="submit">Send to the organizer</button>
   </form>
   <p class="muted">Only the person who runs this calendar sees your question. We don't ask for your name or email. If they answer, the question and the answer appear here for everyone, so don't include anything private.</p>

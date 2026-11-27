@@ -11,6 +11,8 @@ import { originOf } from "./security.js";
 import type { AppEnv } from "./types.js";
 import { messagePage, publicLayout } from "./views.js";
 
+/** The day the Privacy page's wording last changed. Change it with the wording. */
+const PRIVACY_CHANGED = "November 27, 2026";
 const DRAFT = html`<p class="muted"><strong>Draft.</strong> To be reviewed by a lawyer before public launch (see BUILD-PLAN "Non-negotiables").</p>`;
 
 const ExportEvent = z.object({
@@ -57,6 +59,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
   });
 
   app.get("/privacy", (c) => c.html(publicLayout("Privacy", html`<div class="card"><h1>Privacy</h1>${DRAFT}
+  <p class="muted">Last changed ${PRIVACY_CHANGED}.</p>
   <p>Bumpdraft turns emails you forward into calendars. This page says what we keep, for how long, and what you can do about it.</p>
   <h2>What we keep</h2>
   <ul>
@@ -64,6 +67,8 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li><strong>Your calendars:</strong> their events, the senders you trust, and your settings.</li>
     <li><strong>Forwarded emails, their attachments, and files you upload:</strong> so we can find events and show you where each one came from.</li>
     <li><strong>Messages you send us</strong> through the contact form, and your email address if you add one, so we can read and answer them.</li>
+    <li><strong>Questions to an organizer:</strong> the text of your question and the organizer's answer. We don't ask who you are. A scrambled code is kept for up to a day so one person can't send too many.</li>
+    <li><strong>Event chat:</strong> your messages and a made-up name we give you. We don't ask for your real name. A scrambled code stays with each message so one person keeps one made-up name and can't flood the chat. Everyone following the event can read the chat.</li>
     <li><strong>No card details:</strong> if you donate, Buy Me a Coffee takes the payment; we never see your card.</li>
     <li><strong>Counts, not people:</strong> how many calendar apps check a feed, and how many times subscribe buttons are tapped. We store a scrambled code instead of an address, and the code can't be traced back after 2 days.</li>
   </ul>
@@ -81,6 +86,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
   <ul>
     <li>Contact form messages: 90 days.</li>
     <li>Forwarded emails, their attachments, and uploaded files: 30 days. An upload that's started but never finished is deleted within about 2 hours.</li>
+    <li>Questions to organizers and chat messages: until 30 days after the event is over. For a repeating event, that's 30 days after its last date.</li>
     <li>Cancelled events: 30 days in calendars, so phones remove them.</li>
     <li>The "Undo" record after a change: 1 day.</li>
     <li>Sign-in and rate-limit records: 1 hour.</li>
@@ -90,7 +96,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li>Your account: until you delete it. After you ask, we wait 14 days (you can change your mind), then delete your personal data. Calendars you own go to a co-editor if they have one; otherwise they're deleted.</li>
   </ul>
   <h2>Who processes it</h2>
-  <p>Supabase (database), Cloudflare (website and email receiving), Anthropic (the AI that reads forwarded emails), and Resend (emails we send). If you donate, Buy Me a Coffee handles the payment. See <a href="/about/costs">what Bumpdraft costs</a>.</p>
+  <p>Supabase (database), Cloudflare (website and email receiving), Anthropic (the AI that reads forwarded emails), Resend (emails we send), and Google (only if you choose "Sign in with Google" or connect Gmail). If you donate, Buy Me a Coffee handles the payment. See <a href="/about/costs">what Bumpdraft costs</a>.</p>
   <p>Bumpdraft's database, sign-in records and stored files are kept in the United States. The other companies above may handle data in other places as part of their own service.</p>
   <h2 id="cookies">Cookies and trackers</h2>
   <p>Bumpdraft only uses the cookies it needs to work:</p>
@@ -100,6 +106,10 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
   </ul>
   <p>All of them are deleted when you close your browser, can't be read by scripts on the page, and are only sent over a secure connection. Calendar pages, the directory, and the calendar link your calendar app checks set no cookies at all.</p>
   <p><strong>No trackers, ads or analytics.</strong> While you use Bumpdraft, your browser loads nothing from other companies: no ad networks, social media buttons or tracking scripts. The site's security settings tell browsers to refuse them. If you choose "Sign in with Google", you go to Google's own page for that step.</p>
+  <p>Bumpdraft doesn't track you across other websites, so it has nothing to change when your browser sends a "Do Not Track" signal.</p>
+  <h2 id="children">Children</h2>
+  <p>Bumpdraft is for adults. You must be 18 or older to create an account, post in a chat, or send a question. We don't knowingly collect personal information from children under 13. If you think a child has given us personal information, tell us through the <a href="/contact">contact form</a> and we'll delete it.</p>
+  <p>Calendars often list school and youth events. Our <a href="/rules">community rules</a> don't allow children's full names, home addresses, phone numbers or photos in public calendars.</p>
   <h2>Your choices</h2>
   <ul>
     <li><a href="/account/export">Download everything we hold about you</a> (a JSON file), or each calendar as a calendar file from your account page.</li>
@@ -107,5 +117,7 @@ export function registerPrivacyRoutes(app: Hono<AppEnv>): void {
     <li>Turn off any email from us with the link at the bottom of it.</li>
   </ul>
   <p>Questions, bug reports or privacy requests: use the <a href="/contact">contact form</a>.</p>
+  <h2>Changes to this page</h2>
+  <p>If we change this page in a way that matters, we'll email account holders and change the date at the top before the change takes effect.</p>
 </div>`, seoHead(c, "Privacy", "What Bumpdraft keeps, how long it keeps it, who processes it, and how to download or delete your data."))));
 }
