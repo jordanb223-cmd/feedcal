@@ -35,6 +35,30 @@ function when(iso: string, allDay: boolean, tz: string): string {
 
 const plural = (n: unknown, one: string, many = `${one}s`) => `${Number(n)} ${Number(n) === 1 ? one : many}`;
 
+interface DigestItem { title: string; starts_at?: string; all_day?: boolean; timezone?: string; reasons?: string[]; outcome?: string | null; change_kind?: string | null }
+interface DigestQuestion { body: string; event_title: string; starts_at?: string; all_day?: boolean; timezone?: string }
+interface DigestFeed { id: string; name: string; subscribers: number; events_added: number; needs_review: number; reports: number; open_questions?: number; items?: DigestItem[]; questions?: DigestQuestion[] }
+
+/** D91: one short line on why an item is waiting. The Review page says the same in more words. */
+const ITEM_WHY: Record<string, string> = {
+  possible_injection: "The email has text aimed at the AI. Check it carefully.",
+  ambiguous_date: "The wording fits more than one date.",
+  date_mismatch: "The date doesn't match what the email says.",
+  weekday_mismatch: "The weekday and the date in the email don't agree.",
+  time_mismatch: "The time doesn't match the time written in the email.",
+  time_unlikely: "The time has no AM or PM, and this is the less usual reading.",
+  before_email: "The date is before the email was sent.",
+  from_transcription: "Read from a picture.",
+};
+function itemWhy(i: DigestItem): string {
+  const reasons = i.reasons ?? [];
+  for (const [r, why] of Object.entries(ITEM_WHY)) if (reasons.includes(r)) return why;
+  if (i.outcome === "conflict") return "Bumpdraft read the email again and got a different time.";
+  if (i.outcome === "update" || i.outcome === "cancel" || i.outcome === "exdate") return "It changes something already on your calendar.";
+  return "Bumpdraft wasn't sure enough to add it by itself.";
+}
+const itemVerb = (i: DigestItem) => (i.change_kind === "cancelled" ? "Cancel: " : i.outcome === "update" || i.outcome === "conflict" ? "Change: " : "");
+
 /** The steps for leaving a calendar in each calendar app live on the site (apps/web/src/help.ts). */
 export const LEAVE_PATH = "/help/unsubscribe";
 
@@ -165,16 +189,41 @@ function renderParts(kind: Kind, p: Record<string, unknown>, site: string, unsub
     const html = `<p>Thank you for keeping <strong>${esc(p.feed_name)}</strong> going. Every family that follows it is one that doesn't have to copy dates by hand.</p><p style="color:#5c5c5c">Our best guess is that around ${esc(p.milestone)} calendars follow it now. It's only a guess: the real number is hard to measure.</p><p><a href="${esc(link)}">See the thank-you card</a></p>`;
     return { subject, ...wrap(site, unsubscribe, "You get this when a calendar you own reaches about 10, 50 or 100 followers.", body, html) };
   }
-  // weekly_digest: what needs the organizer first; the follower estimate last and small.
-  const feeds = (p.feeds as Record<string, number | string>[] | undefined) ?? [];
+  // weekly_digest (D91): what needs the organizer, item by item; the follower estimate last and small.
+  const feeds = (p.feeds as DigestFeed[] | undefined) ?? [];
   const review = feeds.reduce((n, f) => n + Number(f.needs_review), 0);
-  const subject = review > 0 ? `Your Bumpdraft week: ${review} to review` : "Your Bumpdraft week";
-  const waiting = (f: Record<string, number | string>) => (Number(f.needs_review) > 0 ? `${plural(f.needs_review, "event")} waiting for your OK` : "Nothing waiting for you");
-  const added = (f: Record<string, number | string>) => `${plural(f.events_added, "new event")} this week${Number(f.reports) > 0 ? `, ${plural(f.reports, "problem report")}` : ""}`;
-  const guess = (f: Record<string, number | string>) => (Number(f.subscribers) > 0 ? `Roughly ${plural(f.subscribers, "calendar follows", "calendars follow")} it (a rough guess).` : "");
-  const intro = review > 0 ? `Here's your week. ${plural(review, "event needs", "events need")} a quick look from you.` : "Here's your week. Nothing needs you right now.";
-  const lines = feeds.map((f) => `${f.name}\n  ${waiting(f)}.\n  ${added(f)}.\n  Open it: ${site}/feeds/${f.id}${guess(f) ? `\n  ${guess(f)}` : ""}`);
-  const body = `${intro}\n\n${lines.join("\n\n") || `You don't have a calendar yet. Make one: ${site}/feeds/new`}`;
-  const html = `<p>${esc(intro)}</p>${feeds.map((f) => `<p><a href="${esc(site)}/feeds/${esc(f.id)}"><strong>${esc(f.name)}</strong></a><br>${Number(f.needs_review) > 0 ? `<strong>${esc(waiting(f))}</strong>` : esc(waiting(f))} · ${esc(added(f))}${guess(f) ? `<br><span style="color:#5c5c5c;font-size:14px">${esc(guess(f))}</span>` : ""}</p>`).join("") || `<p>You don't have a calendar yet. <a href="${esc(site)}/feeds/new">Make one</a>.</p>`}`;
+  const asked = feeds.reduce((n, f) => n + Number(f.open_questions ?? 0), 0);
+  const parts = [review > 0 ? `${review} to review` : "", asked > 0 ? plural(asked, "question") : ""].filter(Boolean);
+  const subject = parts.length ? `Needs you this week: ${parts.join(", ")}` : "Your Bumpdraft week";
+  const added = (f: DigestFeed) => `${plural(f.events_added, "new event")} this week${Number(f.reports) > 0 ? `, ${plural(f.reports, "problem report")}` : ""}`;
+  const guess = (f: DigestFeed) => (Number(f.subscribers) > 0 ? `Roughly ${plural(f.subscribers, "calendar follows", "calendars follow")} it (a rough guess).` : "");
+  const needs = [review > 0 ? plural(review, "event") : "", asked > 0 ? plural(asked, "follower question") : ""].filter(Boolean).join(" and ");
+  const intro = needs ? `Here's what needs you this week: ${needs}. Nothing below goes on a calendar until you say so.` : "Here's your week. Nothing needs you right now.";
+  const itemWhen = (i: { starts_at?: string; all_day?: boolean; timezone?: string }) => { try { return when(String(i.starts_at), Boolean(i.all_day), String(i.timezone)); } catch { return ""; } };
+  const more = (total: unknown, shown: number, one: string, many: string) => (Number(total) > shown ? `and ${Number(total) - shown} more ${Number(total) - shown === 1 ? one : many}` : "");
+  const blocks = feeds.map((f) => {
+    const items = f.items ?? [], qs = f.questions ?? [];
+    const link = `${site}/feeds/${f.id}`;
+    const moreItems = f.items ? more(f.needs_review, items.length, "event", "events") : "";
+    const moreQs = f.questions ? more(f.open_questions ?? 0, qs.length, "question", "questions") : "";
+    const waiting = Number(f.needs_review) > 0 ? `${plural(f.needs_review, "event")} waiting for your OK` : "Nothing waiting for you";
+    const t: string[] = [`${f.name}`, `  ${waiting}.`];
+    for (const i of items) t.push(`  - ${itemVerb(i)}${i.title} (${itemWhen(i)})\n    ${itemWhy(i)}`);
+    if (moreItems) t.push(`  ${moreItems}.`);
+    if (Number(f.open_questions ?? 0) > 0) t.push(`  ${plural(f.open_questions, "follower question")} waiting for an answer.`);
+    for (const q of qs) t.push(`  - About ${q.event_title} (${itemWhen(q)}): "${q.body}"`);
+    if (moreQs) t.push(`  ${moreQs}.`);
+    t.push(`  ${added(f)}.`, `  ${Number(f.needs_review) + Number(f.open_questions ?? 0) > 0 ? "Go through them" : "Open it"}: ${link}`);
+    if (guess(f)) t.push(`  ${guess(f)}`);
+    const li = (inner: string) => `<li style="margin:0 0 .6rem">${inner}</li>`;
+    const h = `<p style="margin:1.5rem 0 .25rem"><a href="${esc(link)}"><strong>${esc(f.name)}</strong></a><br>${Number(f.needs_review) > 0 ? `<strong>${esc(waiting)}</strong>` : esc(waiting)} · ${esc(added(f))}</p>`
+      + (items.length ? `<ul style="padding-left:1.1rem;margin:.5rem 0">${items.map((i) => li(`${esc(itemVerb(i))}<strong>${esc(i.title)}</strong> · ${esc(itemWhen(i))}<br><span style="color:#5c5c5c;font-size:14px">${esc(itemWhy(i))}</span>`)).join("")}${moreItems ? li(esc(`${moreItems}.`)) : ""}</ul>` : "")
+      + (Number(f.open_questions ?? 0) > 0 ? `<p style="margin:.75rem 0 .25rem"><strong>${esc(plural(f.open_questions, "follower question"))} waiting for an answer</strong></p><ul style="padding-left:1.1rem;margin:.5rem 0">${qs.map((q) => li(`About <strong>${esc(q.event_title)}</strong> · ${esc(itemWhen(q))}<br>“${esc(q.body)}”`)).join("")}${moreQs ? li(esc(`${moreQs}.`)) : ""}</ul>` : "")
+      + (Number(f.needs_review) + Number(f.open_questions ?? 0) > 0 ? `<p><a href="${esc(link)}" style="display:inline-block;background:#111111;color:#ffffff;padding:.55rem .9rem;border-radius:8px;text-decoration:none">Go through them</a></p>` : "")
+      + (guess(f) ? `<p style="color:#5c5c5c;font-size:14px">${esc(guess(f))}</p>` : "");
+    return { text: t.join("\n"), html: h };
+  });
+  const body = `${intro}\n\n${blocks.map((b) => b.text).join("\n\n") || `You don't have a calendar yet. Make one: ${site}/feeds/new`}`;
+  const html = `<p>${esc(intro)}</p>${blocks.map((b) => b.html).join("") || `<p>You don't have a calendar yet. <a href="${esc(site)}/feeds/new">Make one</a>.</p>`}`;
   return { subject, ...wrap(site, unsubscribe, "You get this every Monday because you run a Bumpdraft calendar.", body, html) };
 }

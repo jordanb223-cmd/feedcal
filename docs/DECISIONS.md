@@ -902,3 +902,20 @@ What was checked, against what, and what changed:
   - The app name on Google's consent screen.
   - The Buy Me a Coffee page, and any printed flyers or QR codes that carry the old name (the links on them still work).
 - **Not checked.** Whether "Bumpdraft" is already in use as a product name or trademark, and whether a matching domain is free.
+
+## D91 — The Monday email lists what needs the organizer (2026-11-26)
+
+- **Owner's words.** "can the 'needs you' be an email sent to the organizer 1x a week?"
+- **What was there.** A Monday email (15:00 UTC) already went to everyone who runs a calendar. It gave a count per calendar ("3 events waiting for your OK") and named nothing.
+- **What changed.**
+  - `private.digest_payload` now carries, per calendar, the first 8 waiting items soonest first (changes held back, and events found but not added) with title, time and review reasons; the count of open follower questions (D88); and the first 5 of them with the event each is about.
+  - The email lists them. Each item has one short line on why it waits; a specific reason (a date or time check) is shown before "Read from a picture". Past 8 items or 5 questions it says "and N more".
+  - The subject is "Needs you this week: 5 to review, 1 question" when something waits, and "Your Bumpdraft week" when nothing does.
+- **The email changes nothing.** It links to the calendar's Review page and has no approve or reject link. Mail scanners open links in emails; a link that added an event would let a scanner add it.
+- **Left as they were, on purpose** (the owner was asked and has not chosen):
+  - The email still goes out in a week when nothing waits.
+  - A follower's question still also sends its own email right away, under the reports setting.
+  - Monday, 15:00 UTC, and the unsubscribe link.
+- **Privacy.** Event titles and follower questions now sit in the email queue and in the organizer's inbox. The same person already sees both on the Review page, and question emails (D88) already carried them.
+- **Not checked.** Whether production has sent any Monday email; the send log was not read.
+- **Tests.** `supabase/tests/037_weekly_needs_you.test.sql`, `supabase/functions/_shared/notify/notify.test.ts`.
