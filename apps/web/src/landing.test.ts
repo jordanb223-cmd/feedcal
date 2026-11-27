@@ -26,9 +26,9 @@ describe("home page (D55)", () => {
     expect(html).toContain('<meta name="description" content="Bumpdraft reads');
     expect(html).not.toContain("&lt;meta"); // the description is a tag, not visible text
   });
-  it("signed-in organizers go straight to their account", async () => {
+  it("signed-in organizers go straight to Your calendars", async () => {
     const res = await app(true).request("https://bumpdraft.test/", {}, env);
     expect(res.status).toBe(303);
-    expect(res.headers.get("location")).toBe("/account");
+    expect(res.headers.get("location")).toBe("/feeds");
   });
 });

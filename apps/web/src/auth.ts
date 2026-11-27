@@ -60,7 +60,8 @@ function googleEnabled(c: Context<AppEnv>): boolean {
 
 export function registerAuthRoutes(app: Hono<AppEnv>): void {
   // D55: visitors get the home page; signed-in organizers go straight to their account.
-  app.get("/", async (c) => ((await currentUser(c)) ? c.redirect("/account", 303) : c.html(landingPage(seoHead(c, "Events that add themselves", HOME_DESCRIPTION)))));
+  // Signed in, "home" is Your calendars (owner's choice, 2026-11-27); it used to be the account page.
+  app.get("/", async (c) => ((await currentUser(c)) ? c.redirect("/feeds", 303) : c.html(landingPage(seoHead(c, "Events that add themselves", HOME_DESCRIPTION)))));
 
   app.get("/login", async (c) => {
     const next = safeNext(c.req.query("next"));
