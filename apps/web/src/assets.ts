@@ -277,6 +277,7 @@ form:has(.choice input[value=public]:not(:checked)) .area{display:none}
 // Behaviour hooks are data attributes; no inline handlers anywhere (the CSP would block them).
 //   data-copy="<input id>"  copy that input's value; data-count="<url>" also reports the tap
 //   data-print              print the page
+//   data-mailto="<input id>" on a mailto: link: put that input's addresses in the To line
 //   data-countdown="10"     remove this element after N seconds; [data-countdown-left] shows N
 export const APP_JS = `"use strict";
 // A picture that can't be shown (a phone format this browser can't read, or a damaged file) is
@@ -356,6 +357,14 @@ document.addEventListener("click", async (ev) => {
   const target = ev.target instanceof Element ? ev.target : null;
   if (!target) return;
   if (target.closest("[data-print]")) { window.print(); return; }
+  const mail = target.closest("a[data-mailto]");
+  if (mail) {
+    // The addresses go straight into the link the mail app opens; they are never sent to Bumpdraft.
+    const to = (document.getElementById(mail.dataset.mailto)?.value ?? "").split(/[\\s,;]+/).filter(Boolean)
+      .map((a) => encodeURIComponent(a).replace(/%40/g, "@")).join(",");
+    mail.href = "mailto:" + to + mail.href.slice(mail.href.indexOf("?"));
+    return;
+  }
   const btn = target.closest("[data-copy]");
   if (!btn) return;
   const input = document.getElementById(btn.dataset.copy);

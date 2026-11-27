@@ -931,3 +931,13 @@ What was checked, against what, and what changed:
 - **Promises the code does not yet keep.** The Terms and Privacy pages say account holders are emailed before a material change. There is no such email yet; it would be sent by hand or built when the first change comes.
 - **Not researched.** 16 C.F.R. Part 312, FTC Act § 5, the CCPA and other states' privacy laws, CAN-SPAM, FERPA, Google's API data policy, and case law on § 230 and AI-written content.
 - **Tests.** `supabase/tests/038_question_and_chat_retention.test.sql`, `apps/web/src/policy.test.ts`.
+
+## D93 — "Email it" opens the organizer's own mail app (2026-11-27)
+
+- **Why.** The owner asked whether the organizer's page had a quick way to email someone the link. It did not: the Share page had a copy button, a group chat message, a QR code and a flyer.
+- **What was chosen.** The owner picked a `mailto:` link over an email sent by Bumpdraft. The Share page has a new "Email it" card: an optional address box and "Open my email app". The link carries a subject and a short message with the share link (`inviteMailto` in `apps/web/src/subscribe-views.ts`). The page script copies the typed addresses into the link's To line when it is tapped.
+- **Why not sent by Bumpdraft.** That would let any account make Bumpdraft email a stranger, count against the sending cap, need a "don't email me again" list, and put followers' addresses in the database. An email from the organizer's own address is also the sender a parent already knows.
+- **Privacy.** The address box has no `name` and sits in no form, so it is never posted. Nothing about the address reaches Bumpdraft. The Privacy page needs no change.
+- **Limits.** Plain text only. It needs a mail app set up on the device; on a computer with only webmail the link may do nothing. Without the page script the link still opens the message, with an empty To line.
+- **Not checked.** How the message looks in any particular mail app.
+- **Tests.** `apps/web/src/share-email.test.ts`.
