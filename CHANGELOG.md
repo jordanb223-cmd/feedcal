@@ -7,6 +7,9 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Changed
+- The dot beside the Bumpdraft name is forest green. It was burnt orange.
+
 ## [0.21.0] - 2026-11-27
 
 ### Added
