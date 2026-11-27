@@ -173,7 +173,7 @@ export function shareKitPage(opts: {
     <input id="invite-to" type="email" multiple autocomplete="off" spellcheck="false" maxlength="1000" aria-describedby="invite-hint"></p>
   <p><a class="button secondary" href="${inviteMailto(opts.name, opts.feedUrl, true)}" data-mailto="invite-to">Open my email app</a></p>
   <p class="muted">This opens your own email app with the message written and the link in it. You press send. Bumpdraft doesn't see or keep the address.</p>
-  <p class="muted">This calendar is private, so Bumpdraft can't send a designed invitation with a button for it. Set it to "Anyone with the link" in Settings to use that.</p>`}
+  <p class="muted">This calendar has no subscribe page, so Bumpdraft can't send a designed invitation with a button for it. (That's only true of a few calendars made in Bumpdraft's first days.)</p>`}
 </div>
 </div>
 <aside>
