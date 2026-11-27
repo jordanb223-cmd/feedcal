@@ -159,7 +159,7 @@ export function shareKitPage(opts: {
   <p><label for="invite-to">Their email address</label>
     <span class="muted" id="invite-hint">Optional. For several people, put a comma between addresses.</span>
     <input id="invite-to" type="email" multiple autocomplete="off" spellcheck="false" maxlength="1000" aria-describedby="invite-hint"></p>
-  <p><a class="button secondary" href="${inviteMailto(opts.name, opts.pageUrl ?? opts.feedUrl)}" data-mailto="invite-to">Open my email app</a></p>
+  <p><a class="button secondary" href="${inviteMailto(opts.name, opts.pageUrl ?? opts.feedUrl, !opts.pageUrl)}" data-mailto="invite-to">Open my email app</a></p>
   <p class="muted">This opens your own email app with the message written and the link in it. You press send. Bumpdraft doesn't see or keep the address.</p>
 </div>
 </div>
@@ -191,10 +191,22 @@ ${opts.stats
   );
 }
 
-/** D93: a mailto: link that opens the organizer's own mail app with the invitation written. */
-export function inviteMailto(name: string, url: string): string {
+/**
+ * D93: a mailto: link that opens the organizer's own mail app with the invitation written.
+ * `direct` is true when the link is the calendar link itself (a private calendar, which has no page).
+ */
+export function inviteMailto(name: string, url: string, direct = false): string {
   const subject = `Add ${name} to your phone's calendar`;
-  const body = `Hi,\n\nI've set up a calendar for ${name}. Open this link to add it to your phone's calendar:\n\n${url}\n\nIt updates on its own when dates change.\n\nIt's filled in automatically by Bumpdraft from the emails we get, so it can make mistakes. If something looks wrong, check with me.`;
+  const steps = direct
+    ? ["Tap the link below.", "Your calendar app opens and asks if you want to subscribe. Say yes."]
+    : ["Tap the link below.", "Tap the subscribe button on the page. Your calendar app opens and asks if you want to subscribe. Say yes."];
+  const body = [
+    "Hi,",
+    `I've set up a calendar for ${name}. Here's how to get it on your phone:`,
+    [...steps, "That's it. New dates and changes show up on their own from then on."].map((t, n) => `${n + 1}. ${t}`).join("\n"),
+    url,
+    "It's filled in automatically by Bumpdraft from the emails we get, so it can make mistakes. If something looks wrong, check with me.",
+  ].join("\n\n");
   return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body.replace(/\n/g, "\r\n"))}`;
 }
 

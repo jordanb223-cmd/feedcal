@@ -7,6 +7,9 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Changed
+- "Email it": the message now gives numbered steps: tap the link, say yes when the calendar app asks to subscribe, and it updates on its own from then on.
+
 ## [0.22.0] - 2026-11-27
 
 ### Added

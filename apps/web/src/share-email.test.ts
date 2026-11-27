@@ -15,6 +15,14 @@ describe("Email it (D93)", () => {
     expect(body).toContain("https://bumpdraft.test/c/room-f");
     expect(body).toContain("it can make mistakes");
     expect(body).toContain("\r\n\r\n");
+    expect(body).toContain("1. Tap the link below.\r\n2. Tap the subscribe button on the page.");
+    expect(body).toContain("3. That's it. New dates and changes show up on their own from then on.");
+  });
+
+  it("a private calendar's steps skip the page, because the link opens the calendar app itself", () => {
+    const body = new URL(inviteMailto("Room F", "webcal://x/f/tok.ics", true)).searchParams.get("body") ?? "";
+    expect(body).toContain("2. Your calendar app opens and asks if you want to subscribe. Say yes.");
+    expect(body).not.toContain("subscribe button");
   });
 
   it("the Share page shows the section, with an address box that is never posted anywhere", async () => {
