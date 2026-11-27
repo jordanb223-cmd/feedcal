@@ -7,6 +7,8 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+## [0.23.1] - 2026-11-27
+
 ### Fixed
 - Share page: the note shown on a calendar with no subscribe page no longer points to a setting that doesn't exist.
 
