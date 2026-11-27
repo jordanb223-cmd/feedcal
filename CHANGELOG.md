@@ -7,6 +7,9 @@ A production release is a tag `vX.Y.Z`. The deploy refuses to run unless this fi
 
 ## [Unreleased]
 
+### Fixed
+- The Bumpdraft name at the top of every page now goes to the home page. On Find a calendar, calendar pages, sign-in and the policy pages it used to go to Find a calendar.
+
 ## [0.23.1] - 2026-11-27
 
 ### Fixed
