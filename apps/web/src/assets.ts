@@ -32,7 +32,7 @@ code{font-size:.9375em;background:#efe6d3;border-radius:4px;padding:.05em .3em}
 /* Site header and footer */
 .site{display:flex;flex-wrap:wrap;gap:.25rem 1.125rem;align-items:center;margin:0 0 1.75rem;font-size:.9375rem}
 .site .brand{font:400 1.3125rem/1 var(--display);letter-spacing:-.01em;margin-right:auto;text-decoration:none;display:inline-flex;align-items:center;gap:.4375rem}
-.site .brand::before{content:"";width:.5625rem;height:.5625rem;border-radius:50%;background:var(--accent)}
+.site .brand::before{content:"";width:.5625rem;height:.5625rem;border-radius:50%;background:#2f6f4e}
 .site a{padding:.6875rem 0;margin:-.6875rem 0}
 footer{border-top:1px solid var(--line);margin-top:2rem;padding-top:1.25rem;font-size:.875rem;color:var(--soft)}
 footer p{margin:0 0 .75rem}
