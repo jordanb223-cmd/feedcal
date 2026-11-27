@@ -157,7 +157,7 @@ const INVITE_NOTICES: Record<string, string> = {
   opted_out: "That person has asked Bumpdraft not to send them invitations. You can still email them yourself.",
   limit: "You've sent 10 invitations today, which is the daily limit. You can still email people yourself, or send more tomorrow.",
   busy: "Bumpdraft has sent all the invitations it can today. You can still email people yourself, or try again tomorrow.",
-  private: "This calendar is private, so Bumpdraft can't send an invitation for it. You can still email the link yourself.",
+  private: "This calendar has no subscribe page, so Bumpdraft can't send an invitation for it. You can still email the link yourself.",
   not_allowed: "Only the people who run this calendar can send invitations.",
   error: "The invitation couldn't be sent. Please try again in a minute.",
 };

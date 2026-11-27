@@ -41,14 +41,16 @@ describe("Email it (D93)", () => {
     expect(html).toMatch(/<h2>Email it<\/h2>\s*<p role="status"><strong>Invitation on its way\.<\/strong><\/p>/);
   });
 
-  it("a private calendar offers only the mail-app link, with a box that is never posted", async () => {
+  it("an old calendar with no subscribe page offers only the mail-app link, with a box that is never posted", async () => {
     const html = String(await shareKitPage({ ...kit, visibility: "private", pageUrl: null }));
     expect(html).not.toContain("/invite");
     expect(html).toMatch(/<input id="invite-to" type="email" multiple[^>]*>/);
     expect(html).not.toMatch(/<input id="invite-to"[^>]* name=/);
     expect(html).toMatch(/<a class="button secondary" href="mailto:\?subject=[^"]+" data-mailto="invite-to">Open my email app<\/a>/);
     expect(html).toContain("Bumpdraft doesn't see or keep the address.");
-    expect(html).toContain("Set it to \"Anyone with the link\" in Settings");
+    expect(html).toContain("This calendar has no subscribe page");
+    // The site's only choices are Private and Public; the page must not name a setting that doesn't exist.
+    expect(html).not.toContain("Anyone with the link");
   });
 
   it("a private calendar's message carries the calendar link", async () => {
