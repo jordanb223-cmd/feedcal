@@ -14,12 +14,14 @@ type Html = HtmlEscapedString | Promise<HtmlEscapedString>;
  * Every page has a way to move on (2026-11-21). Organizer pages: Feedcal · Your calendars · Account.
  * Public pages (what families and visitors see): Feedcal · Find a calendar, with no organizer
  * links. Messages and errors: just the Feedcal home link.
+ * The name always links to the home page, "/" (2026-11-27). On public pages it used to link to
+ * Find a calendar, so tapping it there went nowhere.
  */
 export type Audience = "organizer" | "public" | "minimal";
 
 function siteHeader(audience: Audience): Html {
   if (audience === "public") {
-    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/directory">Bumpdraft</a><a href="/directory">Find a calendar</a></nav>`;
+    return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Bumpdraft</a><a href="/directory">Find a calendar</a></nav>`;
   }
   if (audience === "minimal") {
     return html`<nav class="site no-print" aria-label="Site"><a class="brand" href="/">Bumpdraft</a></nav>`;
